@@ -32,8 +32,7 @@ export const getMandiRates = async (state: string, district: string): Promise<Ma
   const params = new URLSearchParams({
     'api-key': apiKey,
     format: 'json',
-    limit: '100',
-    'filters[state]': state,
+    'filters[state.keyword]': state,
     'filters[district]': district,
   });
 
