@@ -1,0 +1,43 @@
+import type { Translations } from './types';
+
+export const translations: Translations = {
+  en: {
+    title: 'Settings',
+    language: 'Language',
+    english: 'English',
+    hindi: 'Hindi',
+    marathi: 'Marathi',
+    notifications: 'Notifications',
+    push_notifications: 'Push Notifications',
+    email_notifications: 'Email Notifications',
+    sms_notifications: 'SMS Notifications',
+    save_preferences: 'Save Preferences',
+    preferences_saved: 'Preferences saved!',
+  },
+  hi: {
+    title: 'सेटिंग्स',
+    language: 'भाषा',
+    english: 'अंग्रेजी',
+    hindi: 'हिंदी',
+    marathi: 'मराठी',
+    notifications: 'सूचनाएं',
+    push_notifications: 'पुश सूचनाएं',
+    email_notifications: 'ईमेल सूचनाएं',
+    sms_notifications: 'एसएमएस सूचनाएं',
+    save_preferences: 'सेटिंग्स सहेजें',
+    preferences_saved: 'सेटिंग्स सहेज ली गईं!',
+  },
+  mr: {
+    title: 'सेटिंग्ज',
+    language: 'भाषा',
+    english: 'इंग्रजी',
+    hindi: 'हिंदी',
+    marathi: 'मराठी',
+    notifications: 'सूचना',
+    push_notifications: 'पुश सूचना',
+    email_notifications: 'ईमेल सूचना',
+    sms_notifications: 'एसएमएस सूचना',
+    save_preferences: 'प्राधान्ये जतन करा',
+    preferences_saved: 'प्राधान्ये जतन केली!',
+  },
+};
