@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -22,7 +22,7 @@ export default function MandiRatesClient() {
   const [selectedState, setSelectedState] = useState<string>('Maharashtra');
   const [selectedDistrict, setSelectedDistrict] = useState<string>('Pune');
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [rates, setRates] = useState<MandiRate[]>([]);
+  const [allRates, setAllRates] = useState<MandiRate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
@@ -36,44 +36,41 @@ export default function MandiRatesClient() {
     hasRecognitionSupport,
   } = useSpeechRecognition();
 
-  const fetchRates = useCallback(async () => {
+  const fetchRates = useCallback(async (state: string, district: string) => {
     setIsLoading(true);
     setError(null);
     try {
-      // Fetch all rates for the district first
-      const fetchedRates = await getMandiRates(selectedState, selectedDistrict);
-      
-      // Then filter by the selected date on the client side
-      const dateFilteredRates = fetchedRates.filter(rate => {
-        if (!rate.arrival_date) return false;
-        
-        // The API returns dates in DD/MM/YYYY format. We need to parse it correctly.
-        const [day, month, year] = rate.arrival_date.split('/');
-        // Note: The month in JavaScript's Date constructor is 0-indexed (0-11)
-        const apiDate = new Date(Number(year), Number(month) - 1, Number(day));
-
-        // Compare the formatted dates to ignore time differences
-        return format(apiDate, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd');
-      });
-
-      setRates(dateFilteredRates);
+      const fetchedRates = await getMandiRates(state, district);
+      setAllRates(fetchedRates);
     } catch (e) {
       console.error(e);
-      setError('Failed to fetch mandi rates. Please try again later.');
+      setError('Failed to fetch mandi rates. The data.gov.in API might be temporarily unavailable.');
       toast({
         variant: 'destructive',
         title: 'API Error',
         description: 'Could not fetch data from data.gov.in.',
       });
+      setAllRates([]);
     } finally {
       setIsLoading(false);
     }
-  }, [selectedState, selectedDistrict, selectedDate, toast]);
-
-
+  }, [toast]);
+  
   useEffect(() => {
-    fetchRates();
-  }, [fetchRates]);
+    fetchRates(selectedState, selectedDistrict);
+  }, [selectedState, selectedDistrict, fetchRates]);
+
+
+  const filteredRates = useMemo(() => {
+    return allRates.filter(rate => {
+      if (!rate.arrival_date) return false;
+      const [day, month, year] = rate.arrival_date.split('/');
+      if (!day || !month || !year) return false;
+      const apiDate = new Date(Number(year), Number(month) - 1, Number(day));
+      return format(apiDate, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd');
+    });
+  }, [allRates, selectedDate]);
+
 
   useEffect(() => {
     if (speechError) {
@@ -94,15 +91,16 @@ export default function MandiRatesClient() {
     try {
       const result = await understandMandiRateQuery({ query });
       
-      const matchedState = states.find(s => s.toLowerCase() === result.market.toLowerCase() || result.market.toLowerCase().includes(s.toLowerCase()));
-      const matchedDistrict = districts[matchedState || selectedState]?.find(d => d.toLowerCase() === result.market.toLowerCase());
-
-      if (matchedState) setSelectedState(matchedState);
-      if (matchedDistrict) setSelectedDistrict(matchedDistrict);
+      const matchedState = states.find(s => result.market.toLowerCase().includes(s.toLowerCase()));
+      
+      if (matchedState) {
+          const matchedDistrict = districts[matchedState]?.find(d => result.market.toLowerCase().includes(d.toLowerCase()));
+          setSelectedState(matchedState);
+          setSelectedDistrict(matchedDistrict || districts[matchedState][0]);
+      }
       
       setSelectedDate(new Date(result.date));
       
-      // Mock text-to-speech summary
       const summary = `Showing rates for ${result.commodity} in ${result.market} for ${format(new Date(result.date), 'PPP')}.`;
       const utterance = new SpeechSynthesisUtterance(summary);
       window.speechSynthesis.speak(utterance);
@@ -110,12 +108,11 @@ export default function MandiRatesClient() {
     } catch (e) {
       toast({ variant: 'destructive', title: 'AI Error', description: 'Could not understand your query.' });
     } finally {
-        // fetchRates will be called by useEffect dependencies changing
+        // Data fetching will be triggered by state changes in useEffect
     }
   };
 
   const handleUseLocation = () => {
-    // This would typically use browser geolocation and a reverse geocoding API
     toast({ title: 'Locating...', description: 'Fetching your current location.' });
     setTimeout(() => {
       setSelectedState('Maharashtra');
@@ -142,7 +139,6 @@ export default function MandiRatesClient() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Select value={selectedState} onValueChange={(value) => {
               setSelectedState(value);
-              // Reset district when state changes
               setSelectedDistrict(districts[value][0]);
             }}>
               <SelectTrigger><SelectValue placeholder="Select State" /></SelectTrigger>
@@ -223,8 +219,8 @@ export default function MandiRatesClient() {
                     <TableCell className="text-right"><Skeleton className="h-5 w-16 ml-auto" /></TableCell>
                   </TableRow>
                 ))
-              ) : rates.length > 0 ? (
-                rates.map((rate, index) => (
+              ) : filteredRates.length > 0 ? (
+                filteredRates.map((rate, index) => (
                   <TableRow key={`${rate.commodity}-${rate.variety}-${index}`}>
                     <TableCell className="font-medium">{rate.commodity}</TableCell>
                     <TableCell>{rate.variety}</TableCell>
@@ -235,7 +231,7 @@ export default function MandiRatesClient() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center">No data available for the selected criteria.</TableCell>
+                  <TableCell colSpan={5} className="text-center h-24">No data available for the selected criteria. The market may be closed on this day.</TableCell>
                 </TableRow>
               )}
             </TableBody>
