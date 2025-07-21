@@ -19,8 +19,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function MandiRatesClient() {
-  const [selectedState, setSelectedState] = useState<string>('Maharashtra');
-  const [selectedDistrict, setSelectedDistrict] = useState<string>('Pune');
+  const [selectedState, setSelectedState] = useState<string>('Kerala');
+  const [selectedDistrict, setSelectedDistrict] = useState<string>('Ernakulam');
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [allRates, setAllRates] = useState<MandiRate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
