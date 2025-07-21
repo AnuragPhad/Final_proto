@@ -8,7 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { CalendarIcon, Mic, LocateFixed, Bot } from 'lucide-react';
+import { CalendarIcon, Mic, LocateFixed, Bot, Info } from 'lucide-react';
 import { format } from 'date-fns';
 import { states, districts } from '@/data/locations';
 import { getMockMandiRates, type MandiRate } from '@/data/mandi-rates';
@@ -103,6 +103,14 @@ export default function MandiRatesClient() {
           Find the latest commodity prices from markets across India.
         </p>
       </div>
+
+      <Alert className="mb-8 bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
+          <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+          <AlertTitle className="text-blue-800 dark:text-blue-300">Demonstration Data</AlertTitle>
+          <AlertDescription className="text-blue-700 dark:text-blue-400">
+              The prices shown here are for demonstration purposes only. In a real app, this data would be sourced from official government APIs like data.gov.in.
+          </AlertDescription>
+      </Alert>
 
       <Card>
         <CardHeader>
