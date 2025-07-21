@@ -40,13 +40,19 @@ export default function MandiRatesClient() {
     setIsLoading(true);
     setError(null);
     try {
+      // Fetch all rates for the district first
       const fetchedRates = await getMandiRates(selectedState, selectedDistrict);
       
+      // Then filter by the selected date on the client side
       const dateFilteredRates = fetchedRates.filter(rate => {
-        // API returns dates like "03/07/2024", need to parse them
         if (!rate.arrival_date) return false;
+        
+        // The API returns dates in DD/MM/YYYY format. We need to parse it correctly.
         const [day, month, year] = rate.arrival_date.split('/');
-        const apiDate = new Date(`${year}-${month}-${day}`);
+        // Note: The month in JavaScript's Date constructor is 0-indexed (0-11)
+        const apiDate = new Date(Number(year), Number(month) - 1, Number(day));
+
+        // Compare the formatted dates to ignore time differences
         return format(apiDate, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd');
       });
 
@@ -79,6 +85,7 @@ export default function MandiRatesClient() {
     if (!isListening && transcript) {
       handleVoiceSearch(transcript);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isListening, transcript]);
 
   const handleVoiceSearch = async (query: string) => {
