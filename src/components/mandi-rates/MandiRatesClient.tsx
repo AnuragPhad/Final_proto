@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -8,10 +9,10 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { CalendarIcon, Mic, LocateFixed, Bot, Info } from 'lucide-react';
+import { CalendarIcon, Mic, LocateFixed, Bot } from 'lucide-react';
 import { format } from 'date-fns';
 import { states, districts } from '@/data/locations';
-import { getMockMandiRates, type MandiRate } from '@/data/mandi-rates';
+import { getMandiRates, type MandiRate } from '@/data/mandi-rates';
 import { useSpeechRecognition } from '@/hooks/use-speech-recognition';
 import { understandMandiRateQuery } from '@/ai/flows/mandi-rate-nlu';
 import { useToast } from '@/hooks/use-toast';
@@ -22,7 +23,8 @@ export default function MandiRatesClient() {
   const [selectedDistrict, setSelectedDistrict] = useState<string>('Pune');
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [rates, setRates] = useState<MandiRate[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   const {
@@ -34,18 +36,38 @@ export default function MandiRatesClient() {
     hasRecognitionSupport,
   } = useSpeechRecognition();
 
-  const fetchRates = () => {
+  const fetchRates = useCallback(async () => {
     setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setRates(getMockMandiRates(selectedDistrict, format(selectedDate, 'yyyy-MM-dd')));
+    setError(null);
+    try {
+      const fetchedRates = await getMandiRates(selectedState, selectedDistrict);
+      
+      const dateFilteredRates = fetchedRates.filter(rate => {
+        // API returns dates like "03/07/2024", need to parse them
+        if (!rate.arrival_date) return false;
+        const [day, month, year] = rate.arrival_date.split('/');
+        const apiDate = new Date(`${year}-${month}-${day}`);
+        return format(apiDate, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd');
+      });
+
+      setRates(dateFilteredRates);
+    } catch (e) {
+      console.error(e);
+      setError('Failed to fetch mandi rates. Please try again later.');
+      toast({
+        variant: 'destructive',
+        title: 'API Error',
+        description: 'Could not fetch data from data.gov.in.',
+      });
+    } finally {
       setIsLoading(false);
-    }, 500);
-  };
+    }
+  }, [selectedState, selectedDistrict, selectedDate, toast]);
+
 
   useEffect(() => {
     fetchRates();
-  }, [selectedState, selectedDistrict, selectedDate]);
+  }, [fetchRates]);
 
   useEffect(() => {
     if (speechError) {
@@ -104,14 +126,6 @@ export default function MandiRatesClient() {
         </p>
       </div>
 
-      <Alert className="mb-8 bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
-          <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-          <AlertTitle className="text-blue-800 dark:text-blue-300">Demonstration Data</AlertTitle>
-          <AlertDescription className="text-blue-700 dark:text-blue-400">
-              The prices shown here are for demonstration purposes only. In a real app, this data would be sourced from official government APIs like data.gov.in.
-          </AlertDescription>
-      </Alert>
-
       <Card>
         <CardHeader>
           <CardTitle>Filters</CardTitle>
@@ -119,7 +133,11 @@ export default function MandiRatesClient() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Select value={selectedState} onValueChange={setSelectedState}>
+            <Select value={selectedState} onValueChange={(value) => {
+              setSelectedState(value);
+              // Reset district when state changes
+              setSelectedDistrict(districts[value][0]);
+            }}>
               <SelectTrigger><SelectValue placeholder="Select State" /></SelectTrigger>
               <SelectContent>
                 {states.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
@@ -170,6 +188,12 @@ export default function MandiRatesClient() {
         <h2 className="font-headline text-2xl font-bold mb-4">
           Rates for {selectedDistrict} on {format(selectedDate, 'do MMMM yyyy')}
         </h2>
+         {error && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
         <Card>
           <Table>
             <TableHeader>
@@ -193,8 +217,8 @@ export default function MandiRatesClient() {
                   </TableRow>
                 ))
               ) : rates.length > 0 ? (
-                rates.map((rate) => (
-                  <TableRow key={rate.commodity}>
+                rates.map((rate, index) => (
+                  <TableRow key={`${rate.commodity}-${rate.variety}-${index}`}>
                     <TableCell className="font-medium">{rate.commodity}</TableCell>
                     <TableCell>{rate.variety}</TableCell>
                     <TableCell className="text-right">{rate.minPrice}</TableCell>
