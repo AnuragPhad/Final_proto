@@ -39,6 +39,9 @@ const tomatoData = generateDummyData('Tomato', 1500, 200);
 const wheatData = generateDummyData('Wheat', 2000, 120);
 const cabbageData = generateDummyData('Cabbage', 800, 90);
 const lemonData = generateDummyData('Lemon', 3000, 300);
+const grapesData = generateDummyData('Grapes', 4500, 400);
+const appleData = generateDummyData('Apple', 8000, 700);
+
 
 export const puneMandiRates: MandiRate[] = [
   ...onionData,
@@ -47,4 +50,6 @@ export const puneMandiRates: MandiRate[] = [
   ...wheatData,
   ...cabbageData,
   ...lemonData,
+  ...grapesData,
+  ...appleData,
 ];
