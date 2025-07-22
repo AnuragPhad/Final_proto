@@ -18,6 +18,7 @@ import { useSpeechRecognition } from '@/hooks/use-speech-recognition';
 import { understandMandiRateQuery } from '@/ai/flows/mandi-rate-nlu';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Separator } from '@/components/ui/separator';
 
 type ViewMode = 'table' | 'tile';
 
@@ -50,7 +51,7 @@ export default function MandiRatesClient() {
   const [allRates, setAllRates] = useState<MandiRate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>('table');
+  const [viewMode, setViewMode] = useState<ViewMode>('tile');
   const { toast } = useToast();
 
   const {
@@ -390,31 +391,26 @@ export default function MandiRatesClient() {
                         <AccordionTrigger className="px-4 py-3 font-headline hover:no-underline">
                             {market}
                         </AccordionTrigger>
-                        <AccordionContent>
-                           <div className="overflow-x-auto">
-                             <Table className="border-t">
-                                <TableHeader>
-                                <TableRow>
-                                    <TableHead>Commodity</TableHead>
-                                    <TableHead>Variety</TableHead>
-                                    <TableHead className="text-right">Price (₹/Quintal)</TableHead>
-                                </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                {rates.map((rate, index) => (
-                                    <TableRow key={`${rate.commodity}-${rate.variety}-${index}`}>
-                                        <TableCell className="font-medium flex items-center">{getCommodityIcon(rate.commodity)} {rate.commodity}</TableCell>
-                                        <TableCell>{rate.variety}</TableCell>
-                                        <TableCell className="text-right">
-                                          <div className="font-bold text-lg text-primary">{rate.modalPrice}</div>
-                                          <div className="text-xs text-muted-foreground">
-                                            Min: {rate.minPrice} | Max: {rate.maxPrice}
-                                          </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                                </TableBody>
-                            </Table>
+                        <AccordionContent className="p-0">
+                           <div className="space-y-2 p-4">
+                            {rates.map((rate, index) => (
+                                <div key={`${rate.commodity}-${rate.variety}-${index}`} className="flex items-center justify-between p-3 rounded-md bg-muted/50">
+                                    <div className="flex items-center">
+                                        <div className="mr-4 text-primary">{getCommodityIcon(rate.commodity)}</div>
+                                        <div>
+                                            <div className="font-bold">{rate.commodity}</div>
+                                            <div className="text-sm text-muted-foreground">{rate.variety}</div>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <div className="font-bold text-lg text-primary">₹{rate.modalPrice}</div>
+                                        <div className="text-xs text-muted-foreground">
+                                            Min: ₹{rate.minPrice} | Max: ₹{rate.maxPrice}
+                                        </div>
+                                         <div className="text-xs text-muted-foreground">per Quintal</div>
+                                    </div>
+                                </div>
+                            ))}
                            </div>
                         </AccordionContent>
                     </AccordionItem>
