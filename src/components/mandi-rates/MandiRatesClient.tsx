@@ -508,9 +508,9 @@ export default function MandiRatesClient() {
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <div className="font-bold text-lg text-primary">RS {rate.modalPrice}</div>
+                                        <div className="font-bold text-lg text-primary">Rs {rate.modalPrice}</div>
                                         <div className="text-xs text-muted-foreground">
-                                            Min: RS {rate.minPrice} | Max: RS {rate.maxPrice}
+                                            Min: Rs {rate.minPrice} | Max: Rs {rate.maxPrice}
                                         </div>
                                          <div className="text-xs text-muted-foreground">per Quintal</div>
                                     </div>

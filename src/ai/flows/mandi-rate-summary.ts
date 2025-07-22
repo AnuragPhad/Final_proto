@@ -29,7 +29,7 @@ const MandiRateSummaryInputSchema = z.object({
 export type MandiRateSummaryInput = z.infer<typeof MandiRateSummaryInputSchema>;
 
 const MandiRateSummaryOutputSchema = z.object({
-  summary: z.string().describe("A concise, friendly summary of the market rates. For example, 'Today in Pune, the price for Onion is between RS X and RS Y, with an average price of RS Z per quintal.' or 'No rates found for Onion in Pune today.'"),
+  summary: z.string().describe("A concise, friendly summary of the market rates. For example, 'Today in Pune, the price for Onion is between Rs X and Rs Y, with an average price of Rs Z per quintal.' or 'No rates found for Onion in Pune today.'"),
 });
 
 export type MandiRateSummaryOutput = z.infer<typeof MandiRateSummaryOutputSchema>;
@@ -51,7 +51,7 @@ const prompt = ai.definePrompt({
 
   {{#if rates}}
   Based on the available data, here is the summary:
-  Today in {{district}}, the price for {{commodity}} is between RS {{rates.0.minPrice}} and RS {{rates.0.maxPrice}}, with a modal price of RS {{rates.0.modalPrice}} per quintal in the {{rates.0.market}} market.
+  Today in {{district}}, the price for {{commodity}} is between Rs {{rates.0.minPrice}} and Rs {{rates.0.maxPrice}}, with a modal price of Rs {{rates.0.modalPrice}} per quintal in the {{rates.0.market}} market.
   {{else}}
   I could not find any rates for "{{commodity}}" in "{{district}}" for {{date}}. The market may be closed or data may not be available.
   {{/if}}
