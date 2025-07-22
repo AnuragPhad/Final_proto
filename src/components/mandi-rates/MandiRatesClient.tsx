@@ -7,7 +7,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { CalendarIcon, Mic, LocateFixed, Bot, LayoutGrid, List, Wheat, Apple, Carrot, Grape, LeafyGreen, Citrus, HandPlatter } from 'lucide-react';
@@ -18,7 +17,7 @@ import { useSpeechRecognition } from '@/hooks/use-speech-recognition';
 import { understandMandiRateQuery } from '@/ai/flows/mandi-rate-nlu';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
 
 type ViewMode = 'table' | 'tile';
 
@@ -212,7 +211,7 @@ export default function MandiRatesClient() {
                 return;
               }
               
-              const cleanedDistrict = district.toLowerCase().replace(' (district)', '').trim();
+              const cleanedDistrict = district.toLowerCase().replace(' (district)', '').replace(' district', '').trim();
               const stateExists = states.find(s => s.toLowerCase() === state?.toLowerCase());
               
               if (stateExists) {
@@ -379,55 +378,26 @@ export default function MandiRatesClient() {
           )}
 
           {isLoading ? (
-             <Card><Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Commodity</TableHead>
-                    <TableHead>Variety</TableHead>
-                    <TableHead>Market</TableHead>
-                    <TableHead className="text-right">Price (₹/Quintal)</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {Array.from({ length: 5 }).map((_, i) => (
-                    <TableRow key={i}>
-                        <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-                        <TableCell><Skeleton className="h-5 w-20" /></TableCell>
-                        <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-                        <TableCell className="text-right"><Skeleton className="h-5 w-24 ml-auto" /></TableCell>
-                    </TableRow>
-                    ))}
-                </TableBody>
-             </Table></Card>
-          ) : viewMode === 'table' && filteredRates.length > 0 ? (
-            <Card>
-            <Table>
-                <TableHeader>
-                <TableRow>
-                    <TableHead>Commodity</TableHead>
-                    <TableHead>Variety</TableHead>
-                    <TableHead>Market</TableHead>
-                    <TableHead className="text-right">Price (₹/Quintal)</TableHead>
-                </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {filteredRates.map((rate, index) => (
-                    <TableRow key={`${rate.commodity}-${rate.market}-${rate.variety}-${index}`}>
-                        <TableCell className="font-medium flex items-center">{getCommodityIcon(rate.commodity)} {rate.commodity}</TableCell>
-                        <TableCell>{rate.variety}</TableCell>
-                        <TableCell>{rate.market}</TableCell>
-                        <TableCell className="text-right">
-                          <div className="font-bold text-lg text-primary">{rate.modalPrice}</div>
-                          <div className="text-xs text-muted-foreground">
-                            Min: {rate.minPrice} | Max: {rate.maxPrice}
-                          </div>
-                        </TableCell>
-                    </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-            </Card>
-          ) : viewMode === 'tile' && filteredRates.length > 0 ? (
+            <div className="space-y-2">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Card key={i} className="p-4">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-4">
+                      <Skeleton className="h-10 w-10 rounded-full" />
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-3 w-32" />
+                      </div>
+                    </div>
+                    <div className="text-right space-y-2">
+                       <Skeleton className="h-6 w-20 ml-auto" />
+                       <Skeleton className="h-3 w-28 ml-auto" />
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          ) : filteredRates.length > 0 ? (
             <Accordion type="single" collapsible className="w-full space-y-2" defaultValue={Object.keys(ratesByMarket)[0] || undefined}>
                 {Object.entries(ratesByMarket).map(([market, rates]) => (
                     <AccordionItem value={market} key={market} className="bg-card border rounded-lg">
@@ -438,10 +408,10 @@ export default function MandiRatesClient() {
                            <div className="space-y-2 p-4">
                             {rates.map((rate, index) => (
                                 <div key={`${rate.commodity}-${rate.variety}-${index}`} className="flex items-center justify-between p-3 rounded-md bg-muted/50">
-                                    <div className="flex items-center">
-                                        <div className="mr-4 text-primary">{getCommodityIcon(rate.commodity)}</div>
+                                    <div className="flex items-center gap-4">
+                                        <div className="text-primary text-2xl">{getCommodityIcon(rate.commodity)}</div>
                                         <div>
-                                            <div className="font-bold">{rate.commodity}</div>
+                                            <div className="font-bold text-base">{rate.commodity}</div>
                                             <div className="text-sm text-muted-foreground">{rate.variety}</div>
                                         </div>
                                     </div>
@@ -468,5 +438,3 @@ export default function MandiRatesClient() {
     </div>
   );
 }
-
-    
