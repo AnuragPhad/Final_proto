@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Carrot, HeartPulse, ScrollText, Settings, BrainCircuit } from 'lucide-react';
+import { Carrot, HeartPulse, ScrollText, Settings, BrainCircuit, Tractor } from 'lucide-react';
 import { useLanguage } from '@/hooks/use-language';
 
 export default function DashboardClient() {
@@ -20,6 +20,12 @@ export default function DashboardClient() {
       description: t.crop_doctor_desc,
       href: '/crop-doctor',
       icon: <HeartPulse className="h-8 w-8 text-primary" />,
+    },
+    {
+        title: t.my_farm_title,
+        description: t.my_farm_desc,
+        href: '/my-farm',
+        icon: <Tractor className="h-8 w-8 text-primary" />,
     },
     {
       title: t.commodity_intel_title,

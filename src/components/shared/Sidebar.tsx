@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -6,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Sheet, SheetContent, SheetHeader } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { Carrot, HeartPulse, ScrollText, Settings, BrainCircuit, Flower2, X } from 'lucide-react';
+import { Carrot, HeartPulse, ScrollText, Settings, BrainCircuit, Flower2, X, Tractor } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/hooks/use-language';
 
@@ -44,6 +43,11 @@ export function Sidebar({ open, onOpenChange }: { open: boolean, onOpenChange: (
       title: t.crop_doctor_title,
       href: '/crop-doctor',
       icon: <HeartPulse className="h-5 w-5" />,
+    },
+    {
+        title: t.my_farm_title,
+        href: '/my-farm',
+        icon: <Tractor className="h-5 w-5" />,
     },
     {
       title: t.commodity_intel_title,

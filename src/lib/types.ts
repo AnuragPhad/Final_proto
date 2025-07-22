@@ -30,6 +30,8 @@ export interface Translation {
   govt_schemes_desc: string;
   settings_title: string;
   settings_desc: string;
+  my_farm_title: string;
+  my_farm_desc: string;
 
   // Mandi Rates
   mandi_rates_page_title: string;
@@ -106,6 +108,26 @@ export interface Translation {
   login_with_google: string;
   no_account: string;
   sign_up: string;
+
+  // My Farm
+  my_farm_subtitle: string;
+  start_new_cycle: string;
+  add_new_crop_cycle: string;
+  add_new_crop_cycle_desc: string;
+  crop_label: string;
+  select_a_crop: string;
+  sowing_date_label: string;
+  add_cycle_button: string;
+  no_active_cycles_title: string;
+  no_active_cycles_desc: string;
+  start_your_first_cycle: string;
+  sown_on: string;
+  day: string;
+  days: string;
+  estimated_harvest: string;
+  next_watering_due_in: string;
+  weekly_photo_check_due: string;
+  upload_health_photo: string;
 }
 
 export interface Translations {

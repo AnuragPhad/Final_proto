@@ -20,7 +20,7 @@ export const translations: Translations = {
 
     // Dashboard
     welcome_to_kisan_ai: 'Welcome to Kisan AI',
-    welcome_subtitle: 'Your AI-powered friend for smarter farming. Get real-time data and insights to make informed decisions.',
+    welcome_subtitle: "Your AI-powered friend for smarter farming. Get real-time data and insights to make informed decisions.",
     mandi_rates_title: 'Mandi Rates',
     mandi_rates_desc: 'Check latest commodity prices',
     crop_doctor_title: 'Crop Doctor',
@@ -31,6 +31,8 @@ export const translations: Translations = {
     govt_schemes_desc: 'Find relevant farmer schemes',
     settings_title: 'Settings',
     settings_desc: 'Customize your app experience',
+    my_farm_title: 'My Farm',
+    my_farm_desc: 'Manage your crop cycles & planning',
     
     // Mandi Rates
     mandi_rates_page_title: 'Mandi Rates',
@@ -107,6 +109,26 @@ export const translations: Translations = {
     login_with_google: 'Login with Google',
     no_account: "Don't have an account?",
     sign_up: 'Sign up',
+
+    // My Farm
+    my_farm_subtitle: 'Track your crop cycles, from sowing to harvest.',
+    start_new_cycle: 'Start New Crop Cycle',
+    add_new_crop_cycle: 'Add a New Crop Cycle',
+    add_new_crop_cycle_desc: 'Fill in the details below to start tracking your new crop.',
+    crop_label: 'Crop',
+    select_a_crop: 'Select a crop',
+    sowing_date_label: 'Sowing Date',
+    add_cycle_button: 'Add Cycle',
+    no_active_cycles_title: 'No Active Crop Cycles',
+    no_active_cycles_desc: 'Get started by adding your first crop cycle.',
+    start_your_first_cycle: 'Start Your First Cycle',
+    sown_on: 'Sown on',
+    day: 'Day',
+    days: 'days',
+    estimated_harvest: 'Est. Harvest',
+    next_watering_due_in: 'Next watering due in',
+    weekly_photo_check_due: 'Weekly photo health check is due',
+    upload_health_photo: 'Upload Health Photo',
   },
   hi: {
     // Settings
@@ -138,6 +160,8 @@ export const translations: Translations = {
     govt_schemes_desc: 'संबंधित किसान योजनाएं खोजें',
     settings_title: 'सेटिंग्स',
     settings_desc: 'अपने ऐप अनुभव को अनुकूलित करें',
+    my_farm_title: 'मेरा खेत',
+    my_farm_desc: 'अपने फसल चक्र और योजना का प्रबंधन करें',
 
     // Mandi Rates
     mandi_rates_page_title: 'मंडी दरें',
@@ -214,6 +238,26 @@ export const translations: Translations = {
     login_with_google: 'Google के साथ પ્રવેશ करें',
     no_account: 'कोई खाता नहीं है?',
     sign_up: 'साइन अप करें',
+    
+    // My Farm
+    my_farm_subtitle: 'बुवाई से लेकर कटाई तक, अपने फसल चक्रों को ट्रैक करें।',
+    start_new_cycle: 'नया फसल चक्र शुरू करें',
+    add_new_crop_cycle: 'एक नया फसल चक्र जोड़ें',
+    add_new_crop_cycle_desc: 'अपनी नई फसल पर नज़र रखना शुरू करने के लिए नीचे दिए गए विवरण भरें।',
+    crop_label: 'फसल',
+    select_a_crop: 'एक फसल चुनें',
+    sowing_date_label: 'बुवाई की तारीख',
+    add_cycle_button: 'चक्र जोड़ें',
+    no_active_cycles_title: 'कोई सक्रिय फसल चक्र नहीं',
+    no_active_cycles_desc: 'अपना पहला फसल चक्र जोड़कर शुरुआत करें।',
+    start_your_first_cycle: 'अपना पहला चक्र शुरू करें',
+    sown_on: 'को बोया गया',
+    day: 'दिन',
+    days: 'दिन',
+    estimated_harvest: 'अनुमानित कटाई',
+    next_watering_due_in: 'अगली सिंचाई के लिए बचे हैं',
+    weekly_photo_check_due: 'साप्ताहिक फोटो स्वास्थ्य जांच बाकी है',
+    upload_health_photo: 'स्वास्थ्य फोटो अपलोड करें',
   },
   mr: {
     // Settings
@@ -245,7 +289,9 @@ export const translations: Translations = {
     govt_schemes_desc: 'संबंधित शेतकरी योजना शोधा',
     settings_title: 'सेटिंग्ज',
     settings_desc: 'तुमचा ॲप अनुभव सानुकूलित करा',
-
+    my_farm_title: 'माझे शेत',
+    my_farm_desc: 'तुमची पीक चक्रे आणि नियोजन व्यवस्थापित करा',
+    
     // Mandi Rates
     mandi_rates_page_title: 'मंडी दर',
     mandi_rates_page_subtitle: 'संपूर्ण भारतातील बाजारांमधून नवीनतम वस्तूंच्या किमती शोधा.',
@@ -321,5 +367,25 @@ export const translations: Translations = {
     login_with_google: 'Google ने लॉगिन करा',
     no_account: 'खाते नाही?',
     sign_up: 'साइन अप करा',
+
+    // My Farm
+    my_farm_subtitle: 'पेरणीपासून कापणीपर्यंत तुमच्या पीक चक्रांचा मागोवा घ्या.',
+    start_new_cycle: 'नवीन पीक चक्र सुरू करा',
+    add_new_crop_cycle: 'नवीन पीक चक्र जोडा',
+    add_new_crop_cycle_desc: 'तुमच्या नवीन पिकाचा मागोवा घेण्यासाठी खालील तपशील भरा.',
+    crop_label: 'पीक',
+    select_a_crop: 'एक पीक निवडा',
+    sowing_date_label: 'पेरणीची तारीख',
+    add_cycle_button: 'चक्र जोडा',
+    no_active_cycles_title: 'सक्रिय पीक चक्रे नाहीत',
+    no_active_cycles_desc: 'तुमचे पहिले पीक चक्र जोडून प्रारंभ करा.',
+    start_your_first_cycle: 'तुमचे पहिले चक्र सुरू करा',
+    sown_on: ' रोजी पेरले',
+    day: 'दिवस',
+    days: 'दिवस',
+    estimated_harvest: 'अंदाजे कापणी',
+    next_watering_due_in: 'पुढील पाणी देण्यासाठी शिल्लक दिवस',
+    weekly_photo_check_due: 'साप्ताहिक फोटो आरोग्य तपासणी देय आहे',
+    upload_health_photo: 'आरोग्य फोटो अपलोड करा',
   },
 };
