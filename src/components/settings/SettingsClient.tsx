@@ -12,15 +12,9 @@ import type { Translation } from '@/lib/types';
 
 type Language = 'en' | 'hi' | 'mr';
 
-export default function SettingsClient() {
+const useLanguage = () => {
   const [language, setLanguage] = useState<Language>('en');
-  const [notifications, setNotifications] = useState({
-    push: true,
-    email: false,
-    sms: false,
-  });
   const [t, setT] = useState<Translation>(translations.en);
-  const { toast } = useToast();
 
   useEffect(() => {
     const savedLang = localStorage.getItem('kisan-ai-lang') as Language | null;
@@ -31,10 +25,26 @@ export default function SettingsClient() {
   }, []);
 
   const handleLanguageChange = (newLang: Language) => {
-    setLanguage(newLang);
-    setT(translations[newLang]);
-    localStorage.setItem('kisan-ai-lang', newLang);
+    if (translations[newLang]) {
+      setLanguage(newLang);
+      setT(translations[newLang]);
+      localStorage.setItem('kisan-ai-lang', newLang);
+      // Force a reload to apply translations throughout the app
+      window.location.reload();
+    }
   };
+
+  return { language, t, handleLanguageChange };
+}
+
+export default function SettingsClient() {
+  const { language, t, handleLanguageChange } = useLanguage();
+  const [notifications, setNotifications] = useState({
+    push: true,
+    email: false,
+    sms: false,
+  });
+  const { toast } = useToast();
 
   const handleSave = () => {
     toast({
