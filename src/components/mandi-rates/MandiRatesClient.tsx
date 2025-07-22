@@ -37,6 +37,7 @@ export default function MandiRatesClient() {
   } = useSpeechRecognition();
 
   useEffect(() => {
+    // Set date only on client-side to avoid hydration mismatch
     setSelectedDate(new Date());
   }, []);
 
@@ -61,7 +62,9 @@ export default function MandiRatesClient() {
   }, [toast]);
   
   useEffect(() => {
-    fetchRates(selectedState, selectedDistrict);
+    if (selectedState && selectedDistrict) {
+        fetchRates(selectedState, selectedDistrict);
+    }
   }, [selectedState, selectedDistrict, fetchRates]);
 
 
@@ -175,7 +178,7 @@ export default function MandiRatesClient() {
             </Select>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="w-full justify-start text-left font-normal" disabled={!selectedDate}>
+                <Button variant="outline" className="w-full justify-start text-left font-normal">
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {selectedDate ? format(selectedDate, 'PPP') : <span>Pick a date</span>}
                 </Button>
