@@ -94,8 +94,19 @@ export const translations: Translations = {
 
     // Govt Schemes
     govt_schemes_page_title: 'Government Schemes for Farmers',
-    govt_schemes_page_subtitle: 'Discover central government schemes to support your farming activities.',
+    govt_schemes_page_subtitle: 'Discover central and state government schemes to support your farming activities.',
     learn_more: 'Learn More',
+
+    // Login
+    login_title: 'Login to Your Account',
+    login_desc: 'Enter your email below to login to your account',
+    email_label: 'Email',
+    password_label: 'Password',
+    forgot_password: 'Forgot your password?',
+    login_button: 'Login',
+    login_with_google: 'Login with Google',
+    no_account: "Don't have an account?",
+    sign_up: 'Sign up',
   },
   hi: {
     // Settings
@@ -192,6 +203,17 @@ export const translations: Translations = {
     govt_schemes_page_title: 'किसानों के लिए सरकारी योजनाएं',
     govt_schemes_page_subtitle: 'अपनी खेती की गतिविधियों का समर्थन करने के लिए केंद्र सरकार की योजनाएं खोजें।',
     learn_more: ' और जानें',
+
+    // Login
+    login_title: 'अपने खाते में પ્રવેશ करें',
+    login_desc: 'अपने खाते में પ્રવેશ करने के लिए नीचे अपना ईमेल दर्ज करें',
+    email_label: 'ईमेल',
+    password_label: 'पासवर्ड',
+    forgot_password: 'अपना पासवर्ड भूल गए?',
+    login_button: 'પ્રવેશ करें',
+    login_with_google: 'Google के साथ પ્રવેશ करें',
+    no_account: 'कोई खाता नहीं है?',
+    sign_up: 'साइन अप करें',
   },
   mr: {
     // Settings
@@ -288,5 +310,16 @@ export const translations: Translations = {
     govt_schemes_page_title: 'शेतकऱ्यांसाठी सरकारी योजना',
     govt_schemes_page_subtitle: 'आपल्या शेती कार्यांना समर्थन देण्यासाठी केंद्र सरकारच्या योजना शोधा.',
     learn_more: 'अधिक जाणून घ्या',
+
+    // Login
+    login_title: 'तुमच्या खात्यात लॉगिन करा',
+    login_desc: 'तुमच्या खात्यात लॉगिन करण्यासाठी खाली तुमचा ईमेल प्रविष्ट करा',
+    email_label: 'ईमेल',
+    password_label: 'पासवर्ड',
+    forgot_password: 'तुमचा पासवर्ड विसरलात?',
+    login_button: 'लॉगिन करा',
+    login_with_google: 'Google ने लॉगिन करा',
+    no_account: 'खाते नाही?',
+    sign_up: 'साइन अप करा',
   },
 };

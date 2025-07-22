@@ -95,6 +95,17 @@ export interface Translation {
   govt_schemes_page_title: string;
   govt_schemes_page_subtitle: string;
   learn_more: string;
+
+  // Login
+  login_title: string;
+  login_desc: string;
+  email_label: string;
+  password_label: string;
+  forgot_password: string;
+  login_button: string;
+  login_with_google: string;
+  no_account: string;
+  sign_up: string;
 }
 
 export interface Translations {
