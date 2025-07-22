@@ -9,7 +9,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { CalendarIcon, Mic, LocateFixed, Bot } from 'lucide-react';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { CalendarIcon, Mic, LocateFixed, Bot, LayoutGrid, List } from 'lucide-react';
 import { format } from 'date-fns';
 import { states, districts } from '@/data/locations';
 import { getMandiRates, type MandiRate } from '@/data/mandi-rates';
@@ -18,6 +19,8 @@ import { understandMandiRateQuery } from '@/ai/flows/mandi-rate-nlu';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 
+type ViewMode = 'table' | 'tile';
+
 export default function MandiRatesClient() {
   const [selectedState, setSelectedState] = useState<string>('Maharashtra');
   const [selectedDistrict, setSelectedDistrict] = useState<string>('Pune');
@@ -25,6 +28,7 @@ export default function MandiRatesClient() {
   const [allRates, setAllRates] = useState<MandiRate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>('table');
   const { toast } = useToast();
 
   const {
@@ -84,6 +88,17 @@ export default function MandiRatesClient() {
       }
     });
   }, [allRates, selectedDate]);
+  
+  const ratesByMarket = useMemo(() => {
+    return filteredRates.reduce((acc, rate) => {
+      const { market } = rate;
+      if (!acc[market]) {
+        acc[market] = [];
+      }
+      acc[market].push(rate);
+      return acc;
+    }, {} as Record<string, MandiRate[]>);
+  }, [filteredRates]);
 
 
   useEffect(() => {
@@ -150,23 +165,25 @@ export default function MandiRatesClient() {
             if (response.ok) {
               const { state, district } = data;
               
-              if (state && states.includes(state)) {
-                 if (district && districts[state]?.map(d => d.toLowerCase()).includes(district.toLowerCase())) {
-                    toast({ title: 'Location Found!', description: `Setting location to ${district}, ${state}.` });
-                    setSelectedState(state);
-                    setSelectedDistrict(districts[state].find(d => d.toLowerCase() === district.toLowerCase()) || district);
+              const stateExists = states.find(s => s.toLowerCase() === state?.toLowerCase());
+              if (stateExists) {
+                 const districtExists = districts[stateExists]?.find(d => d.toLowerCase() === district?.toLowerCase());
+                 if (districtExists) {
+                    toast({ title: 'Location Found!', description: `Setting location to ${districtExists}, ${stateExists}.` });
+                    setSelectedState(stateExists);
+                    setSelectedDistrict(districtExists);
                  } else {
                     toast({
                       variant: 'destructive',
                       title: 'District Not Supported',
-                      description: `Your district (${district}) is not currently in our supported list for ${state}.`,
+                      description: `Your district (${district}) is not currently in our supported list for ${state}. You can select it manually.`,
                     });
                  }
               } else {
                 toast({
                   variant: 'destructive',
                   title: 'State Not Supported',
-                  description: `Your state (${state}) is not currently in our supported list.`,
+                  description: `Your state (${state}) is not currently in our supported list. You can select it manually.`,
                 });
               }
             } else {
@@ -230,7 +247,7 @@ export default function MandiRatesClient() {
                 {states.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
               </SelectContent>
             </Select>
-            <Select value={selectedDistrict} onValueChange={setSelectedDistrict}>
+            <Select value={selectedDistrict} onValueChange={setSelectedDistrict} disabled={!selectedState}>
               <SelectTrigger><SelectValue placeholder="Select District" /></SelectTrigger>
               <SelectContent>
                 {districts[selectedState]?.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
@@ -272,58 +289,122 @@ export default function MandiRatesClient() {
       </Card>
 
       <div className="mt-8">
-        <h2 className="font-headline text-2xl font-bold mb-4">
-          Rates for {selectedDistrict} on {selectedDate ? format(selectedDate, 'do MMMM yyyy') : '...'}
-        </h2>
+        <div className="flex justify-between items-center mb-4">
+            <h2 className="font-headline text-2xl font-bold">
+              Rates for {selectedDistrict} on {selectedDate ? format(selectedDate, 'do MMMM yyyy') : '...'}
+            </h2>
+            <div className="flex items-center gap-1 rounded-full border bg-muted p-1">
+                 <Button variant={viewMode === 'table' ? 'secondary' : 'ghost'} size="icon" onClick={() => setViewMode('table')} className="rounded-full h-8 w-8">
+                    <List className="h-4 w-4" />
+                    <span className="sr-only">Table View</span>
+                </Button>
+                <Button variant={viewMode === 'tile' ? 'secondary' : 'ghost'} size="icon" onClick={() => setViewMode('tile')} className="rounded-full h-8 w-8">
+                    <LayoutGrid className="h-4 w-4" />
+                    <span className="sr-only">Tile View</span>
+                </Button>
+            </div>
+        </div>
+
          {error && (
             <Alert variant="destructive" className="mb-4">
               <AlertTitle>Error</AlertTitle>
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
-        <Card>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Commodity</TableHead>
-                <TableHead>Variety</TableHead>
-                <TableHead>Market</TableHead>
-                <TableHead className="text-right">Min Price (₹/Quintal)</TableHead>
-                <TableHead className="text-right">Max Price (₹/Quintal)</TableHead>
-                <TableHead className="text-right">Modal Price (₹/Quintal)</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                Array.from({ length: 5 }).map((_, i) => (
-                  <TableRow key={i}>
-                    <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-                    <TableCell><Skeleton className="h-5 w-20" /></TableCell>
-                    <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-                    <TableCell className="text-right"><Skeleton className="h-5 w-16 ml-auto" /></TableCell>
-                    <TableCell className="text-right"><Skeleton className="h-5 w-16 ml-auto" /></TableCell>
-                    <TableCell className="text-right"><Skeleton className="h-5 w-16 ml-auto" /></TableCell>
+
+          {isLoading ? (
+             <Card><Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Commodity</TableHead>
+                    <TableHead>Variety</TableHead>
+                    <TableHead>Market</TableHead>
+                    <TableHead className="text-right">Min Price (₹/Quintal)</TableHead>
+                    <TableHead className="text-right">Max Price (₹/Quintal)</TableHead>
+                    <TableHead className="text-right">Modal Price (₹/Quintal)</TableHead>
                   </TableRow>
-                ))
-              ) : filteredRates.length > 0 ? (
-                filteredRates.map((rate, index) => (
-                  <TableRow key={`${rate.commodity}-${rate.variety}-${index}`}>
-                    <TableCell className="font-medium">{rate.commodity}</TableCell>
-                    <TableCell>{rate.variety}</TableCell>
-                    <TableCell>{rate.market}</TableCell>
-                    <TableCell className="text-right">{rate.minPrice}</TableCell>
-                    <TableCell className="text-right">{rate.maxPrice}</TableCell>
-                    <TableCell className="text-right font-bold text-primary">{rate.modalPrice}</TableCell>
-                  </TableRow>
-                ))
-              ) : (
+                </TableHeader>
+                <TableBody>
+                    {Array.from({ length: 5 }).map((_, i) => (
+                    <TableRow key={i}>
+                        <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-20" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                        <TableCell className="text-right"><Skeleton className="h-5 w-16 ml-auto" /></TableCell>
+                        <TableCell className="text-right"><Skeleton className="h-5 w-16 ml-auto" /></TableCell>
+                        <TableCell className="text-right"><Skeleton className="h-5 w-16 ml-auto" /></TableCell>
+                    </TableRow>
+                    ))}
+                </TableBody>
+             </Table></Card>
+          ) : viewMode === 'table' && filteredRates.length > 0 ? (
+            <Card>
+            <Table>
+                <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center h-24">No data available for the selected criteria. The market may be closed on this day.</TableCell>
+                    <TableHead>Commodity</TableHead>
+                    <TableHead>Variety</TableHead>
+                    <TableHead>Market</TableHead>
+                    <TableHead className="text-right">Min Price (₹/Quintal)</TableHead>
+                    <TableHead className="text-right">Max Price (₹/Quintal)</TableHead>
+                    <TableHead className="text-right">Modal Price (₹/Quintal)</TableHead>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </Card>
+                </TableHeader>
+                <TableBody>
+                    {filteredRates.map((rate, index) => (
+                    <TableRow key={`${rate.commodity}-${rate.variety}-${index}`}>
+                        <TableCell className="font-medium">{rate.commodity}</TableCell>
+                        <TableCell>{rate.variety}</TableCell>
+                        <TableCell>{rate.market}</TableCell>
+                        <TableCell className="text-right">{rate.minPrice}</TableCell>
+                        <TableCell className="text-right">{rate.maxPrice}</TableCell>
+                        <TableCell className="text-right font-bold text-primary">{rate.modalPrice}</TableCell>
+                    </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+            </Card>
+          ) : viewMode === 'tile' && filteredRates.length > 0 ? (
+            <Accordion type="single" collapsible className="w-full space-y-2">
+                {Object.entries(ratesByMarket).map(([market, rates]) => (
+                    <AccordionItem value={market} key={market} className="bg-card border rounded-lg">
+                        <AccordionTrigger className="px-4 py-3 font-headline hover:no-underline">
+                            {market}
+                        </AccordionTrigger>
+                        <AccordionContent>
+                           <div className="overflow-x-auto">
+                             <Table className="border-t">
+                                <TableHeader>
+                                <TableRow>
+                                    <TableHead>Commodity</TableHead>
+                                    <TableHead>Variety</TableHead>
+                                    <TableHead className="text-right">Min Price</TableHead>
+                                    <TableHead className="text-right">Max Price</TableHead>
+                                    <TableHead className="text-right">Modal Price</TableHead>
+                                </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                {rates.map((rate, index) => (
+                                    <TableRow key={`${rate.commodity}-${rate.variety}-${index}`}>
+                                        <TableCell className="font-medium">{rate.commodity}</TableCell>
+                                        <TableCell>{rate.variety}</TableCell>
+                                        <TableCell className="text-right">{rate.minPrice}</TableCell>
+                                        <TableCell className="text-right">{rate.maxPrice}</TableCell>
+                                        <TableCell className="text-right font-bold text-primary">{rate.modalPrice}</TableCell>
+                                    </TableRow>
+                                ))}
+                                </TableBody>
+                            </Table>
+                           </div>
+                        </AccordionContent>
+                    </AccordionItem>
+                ))}
+            </Accordion>
+          ) : (
+            <Card className="h-40 flex items-center justify-center">
+                 <p className="text-center text-muted-foreground">No data available for the selected criteria. The market may be closed on this day.</p>
+            </Card>
+          )}
       </div>
     </div>
   );
