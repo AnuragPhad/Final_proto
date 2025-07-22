@@ -15,6 +15,7 @@ import { states, districts } from '@/data/locations';
 import { getMandiRates, type MandiRate } from '@/data/mandi-rates';
 import { useSpeechRecognition } from '@/hooks/use-speech-recognition';
 import { understandMandiRateQuery } from '@/ai/flows/mandi-rate-nlu';
+import { mandiRateSummary } from '@/ai/flows/mandi-rate-summary';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
@@ -62,18 +63,23 @@ export default function MandiRatesClient() {
     setAiSummary('Understanding your query...');
     setIsLoading(true);
     setCommodityFilter(null);
+    let currentDistrict = selectedDistrict;
+    let currentState = selectedState;
+
     try {
-      const result = await understandMandiRateQuery({ query });
-      setAiSummary(result.summary);
+      const nluResult = await understandMandiRateQuery({ query });
+      setAiSummary(nluResult.summary);
       
       let locationChanged = false;
-      if (result.market) {
+      if (nluResult.market) {
         for (const state of states) {
-            const district = districts[state]?.find(d => result.market!.toLowerCase().includes(d.toLowerCase()));
+            const district = districts[state]?.find(d => nluResult.market!.toLowerCase().includes(d.toLowerCase()));
             if (district) {
                 if (selectedState !== state || selectedDistrict !== district) {
                     setSelectedState(state);
                     setSelectedDistrict(district);
+                    currentDistrict = district;
+                    currentState = state;
                     locationChanged = true;
                 }
                 break;
@@ -81,16 +87,31 @@ export default function MandiRatesClient() {
         }
       }
 
-      setCommodityFilter(result.commodity);
-
-      if (result.date) {
+      setCommodityFilter(nluResult.commodity);
+      
+      let dateToQuery = selectedDate;
+      if (nluResult.date) {
         try {
-            setSelectedDate(new Date(result.date));
+            const newDate = new Date(nluResult.date);
+            setSelectedDate(newDate);
+            dateToQuery = newDate;
         } catch (e) {
-            console.error("Invalid date from NLU:", result.date);
-            setSelectedDate(new Date());
+            console.error("Invalid date from NLU:", nluResult.date);
+            const newDate = new Date();
+            setSelectedDate(newDate);
+            dateToQuery = newDate;
         }
       }
+
+      setAiSummary('Fetching latest prices...');
+      const summaryResult = await mandiRateSummary({
+        commodity: nluResult.commodity,
+        state: currentState,
+        district: currentDistrict,
+        date: format(dateToQuery!, 'yyyy-MM-dd'),
+      });
+      setAiSummary(summaryResult.summary);
+
 
       if (!locationChanged) {
         // If location didn't change, we still need to re-render with filters
@@ -99,7 +120,7 @@ export default function MandiRatesClient() {
       // If location DID change, the useEffect for state/district will handle fetching and loading state.
       
     } catch (e) {
-      toast({ variant: 'destructive', title: 'AI Error', description: 'Could not understand your query.' });
+      toast({ variant: 'destructive', title: 'AI Error', description: 'Could not process your voice command.' });
       setAiSummary('Sorry, I had trouble understanding. Please try again.');
       setIsLoading(false);
     }
@@ -121,8 +142,10 @@ export default function MandiRatesClient() {
   const fetchRates = useCallback(async (state: string, district: string) => {
     setIsLoading(true);
     setError(null);
-    setAiSummary(null);
-    setCommodityFilter(null);
+    if (!commodityFilter) { // Don't clear summary if it's from a voice search
+      setAiSummary(null);
+    }
+    // setCommodityFilter(null); // Keep commodity filter from voice search
     try {
       const fetchedRates = await getMandiRates(state, district);
       setAllRates(fetchedRates);
@@ -138,7 +161,7 @@ export default function MandiRatesClient() {
     } finally {
       setIsLoading(false);
     }
-  }, [toast]);
+  }, [toast, commodityFilter]);
   
   useEffect(() => {
     if (selectedState && selectedDistrict) {
@@ -211,7 +234,7 @@ export default function MandiRatesClient() {
                 return;
               }
               
-              const cleanedDistrict = district.toLowerCase().replace(' (district)', '').replace(' district', '').trim();
+              const cleanedDistrict = district.toLowerCase().replace(/\s*\(district\)/i, '').trim();
               const stateExists = states.find(s => s.toLowerCase() === state?.toLowerCase());
               
               if (stateExists) {
@@ -314,6 +337,9 @@ export default function MandiRatesClient() {
             </Popover>
           </div>
           <div className="flex flex-col md:flex-row gap-2">
+            <Button onClick={() => { setCommodityFilter(null); fetchRates(selectedState, selectedDistrict); }} variant="outline" className="w-full">
+              Clear Filters & Refresh
+            </Button>
             <Button onClick={handleUseLocation} variant="secondary" className="w-full">
               <LocateFixed className="mr-2 h-4 w-4" /> Use My Location
             </Button>
@@ -333,7 +359,7 @@ export default function MandiRatesClient() {
               </AlertDescription>
             </Alert>
           )}
-          {aiSummary && !isLoading && (
+          {aiSummary && (
             <Alert className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
                 <Bot className="h-4 w-4 text-blue-600" />
                 <AlertTitle className="font-headline text-blue-800 dark:text-blue-300">AI Summary</AlertTitle>
