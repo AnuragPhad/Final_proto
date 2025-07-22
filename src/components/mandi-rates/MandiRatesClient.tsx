@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -9,7 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { CalendarIcon, Mic, LocateFixed, Bot, LayoutGrid, List, Wheat, Apple, Carrot, Grape, LeafyGreen, Citrus, HandPlatter } from 'lucide-react';
+import { CalendarIcon, Mic, LocateFixed, Bot, LayoutGrid, List, Wheat, Apple, Carrot, Grape, LeafyGreen, Citrus, HandPlatter, Volume2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { states, districts } from '@/data/locations';
 import { getMandiRates, type MandiRate } from '@/data/mandi-rates';
@@ -59,13 +59,13 @@ export default function MandiRatesClient() {
   const [commodityFilter, setCommodityFilter] = useState<string | null>(null);
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [lastNluResult, setLastNluResult] = useState<MandiRateQueryOutput | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const { toast } = useToast();
 
   const handleVoiceSearch = async (query: string) => {
     if (!query) return;
     setIsLoading(true);
-    setCommodityFilter(null);
     setAiSummary('Understanding your query...');
     setAudioSummaryUrl(null);
   
@@ -228,6 +228,11 @@ export default function MandiRatesClient() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filteredRates, lastNluResult, isLoading, isSummarizing, toast, selectedDate, selectedDistrict, aiSummary]);
 
+  const handlePlayAudio = () => {
+    if (audioRef.current) {
+        audioRef.current.play();
+    }
+  };
 
   const ratesByMarket = useMemo(() => {
     return filteredRates.reduce((acc, rate) => {
@@ -399,15 +404,19 @@ export default function MandiRatesClient() {
           {aiSummary && (
             <Alert className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
                 <Bot className="h-4 w-4 text-blue-600" />
-                <AlertTitle className="font-headline text-blue-800 dark:text-blue-300">AI Summary</AlertTitle>
+                <div className='flex items-center justify-between'>
+                  <AlertTitle className="font-headline text-blue-800 dark:text-blue-300">AI Summary</AlertTitle>
+                  {audioSummaryUrl && (
+                      <Button variant="ghost" size="icon" onClick={handlePlayAudio} className="h-7 w-7 text-blue-600 hover:bg-blue-200/50">
+                          <Volume2 className="h-4 w-4" />
+                          <span className="sr-only">Play Summary</span>
+                      </Button>
+                  )}
+                </div>
                 <AlertDescription className="text-blue-700 dark:text-blue-400">
                   {aiSummary}
                 </AlertDescription>
-                {audioSummaryUrl && (
-                    <div className="mt-2">
-                        <audio controls autoPlay src={audioSummaryUrl} className="w-full h-8" />
-                    </div>
-                )}
+                <audio ref={audioRef} src={audioSummaryUrl || ''} className="hidden" />
             </Alert>
           )}
         </CardContent>
