@@ -24,12 +24,13 @@ type ViewMode = 'table' | 'tile';
 
 const commodityIcons: { [key: string]: React.ReactNode } = {
   'Onion': <HandPlatter className="inline-block mr-2 text-red-500" />,
-  'Potato': <Carrot className="inline-block mr-2 text-yellow-600" />, // No potato icon, using carrot as a substitute for root vegetable
-  'Tomato': <Apple className="inline-block mr-2 text-red-600" />, // No tomato icon, using apple as a substitute
+  'Potato': <Carrot className="inline-block mr-2 text-yellow-600" />,
+  'Tomato': <Apple className="inline-block mr-2 text-red-600" />,
   'Wheat': <Wheat className="inline-block mr-2 text-yellow-500" />,
   'Grapes': <Grape className="inline-block mr-2 text-purple-600" />,
   'Lemon': <Citrus className="inline-block mr-2 text-yellow-400" />,
   'Cabbage': <LeafyGreen className="inline-block mr-2 text-green-600" />,
+  'Apple': <Apple className="inline-block mr-2 text-red-600" />,
   'default': <HandPlatter className="inline-block mr-2 text-gray-500" />,
 };
 
@@ -52,6 +53,8 @@ export default function MandiRatesClient() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('tile');
+  const [aiSummary, setAiSummary] = useState<string | null>(null);
+  const [commodityFilter, setCommodityFilter] = useState<string | null>(null);
   const { toast } = useToast();
 
   const {
@@ -64,13 +67,14 @@ export default function MandiRatesClient() {
   } = useSpeechRecognition();
 
   useEffect(() => {
-    // Set date only on client-side to avoid hydration mismatch
     setSelectedDate(new Date());
   }, []);
 
   const fetchRates = useCallback(async (state: string, district: string) => {
     setIsLoading(true);
     setError(null);
+    setAiSummary(null);
+    setCommodityFilter(null);
     try {
       const fetchedRates = await getMandiRates(state, district);
       setAllRates(fetchedRates);
@@ -97,9 +101,8 @@ export default function MandiRatesClient() {
 
   const filteredRates = useMemo(() => {
     if (!selectedDate) return [];
-    return allRates.filter(rate => {
+    let rates = allRates.filter(rate => {
       if (!rate.arrival_date) return false;
-      // The API returns dates in DD/MM/YYYY format.
       const [day, month, year] = rate.arrival_date.split('/');
       if (!day || !month || !year) return false;
       try {
@@ -110,7 +113,13 @@ export default function MandiRatesClient() {
         return false;
       }
     });
-  }, [allRates, selectedDate]);
+
+    if (commodityFilter) {
+      rates = rates.filter(rate => rate.commodity.toLowerCase().includes(commodityFilter.toLowerCase()));
+    }
+
+    return rates;
+  }, [allRates, selectedDate, commodityFilter]);
   
   const ratesByMarket = useMemo(() => {
     return filteredRates.reduce((acc, rate) => {
@@ -139,37 +148,49 @@ export default function MandiRatesClient() {
 
   const handleVoiceSearch = async (query: string) => {
     if (!query) return;
+    setAiSummary('Understanding your query...');
     setIsLoading(true);
+    setCommodityFilter(null);
     try {
       const result = await understandMandiRateQuery({ query });
+      setAiSummary(result.summary);
       
-      const matchedState = states.find(s => result.market.toLowerCase().includes(s.toLowerCase()));
-      
-      if (matchedState) {
-          const matchedDistrict = districts[matchedState]?.find(d => result.market.toLowerCase().includes(d.toLowerCase()));
-          setSelectedState(matchedState);
-          if (matchedDistrict) {
-            setSelectedDistrict(matchedDistrict);
-          } else if (districts[matchedState] && districts[matchedState].length > 0) {
-            setSelectedDistrict(districts[matchedState][0]);
-          }
+      let locationChanged = false;
+      if (result.market) {
+        for (const state of states) {
+            const district = districts[state]?.find(d => result.market!.toLowerCase().includes(d.toLowerCase()));
+            if (district) {
+                if (selectedState !== state || selectedDistrict !== district) {
+                    setSelectedState(state);
+                    setSelectedDistrict(district);
+                    locationChanged = true;
+                }
+                break;
+            }
+        }
       }
-      
+
+      setCommodityFilter(result.commodity);
+
       if (result.date) {
         try {
             setSelectedDate(new Date(result.date));
-            const summary = `Showing rates for ${result.commodity} in ${result.market} for ${format(new Date(result.date), 'PPP')}.`;
-            const utterance = new SpeechSynthesisUtterance(summary);
-            window.speechSynthesis.speak(utterance);
         } catch (e) {
             console.error("Invalid date from NLU:", result.date);
+            setSelectedDate(new Date());
         }
       }
+
+      if (!locationChanged) {
+        // If location didn't change, we still need to re-render with filters
+        setIsLoading(false);
+      }
+      // If location DID change, the useEffect for state/district will handle fetching and loading state.
       
     } catch (e) {
       toast({ variant: 'destructive', title: 'AI Error', description: 'Could not understand your query.' });
-    } finally {
-        // Data fetching will be triggered by state changes in useEffect
+      setAiSummary('Sorry, I had trouble understanding. Please try again.');
+      setIsLoading(false);
     }
   };
 
@@ -186,11 +207,11 @@ export default function MandiRatesClient() {
             const data = await response.json();
             
             if (response.ok) {
-              const { state, district } = data;
+              let { state, district } = data;
               
               const stateExists = states.find(s => s.toLowerCase() === state?.toLowerCase());
               if (stateExists) {
-                 const districtExists = districts[stateExists]?.find(d => d.toLowerCase() === district?.toLowerCase());
+                 const districtExists = districts[stateExists]?.find(d => district?.toLowerCase().includes(d.toLowerCase()));
                  if (districtExists) {
                     toast({ title: 'Location Found!', description: `Setting location to ${districtExists}, ${stateExists}.` });
                     setSelectedState(stateExists);
@@ -308,14 +329,31 @@ export default function MandiRatesClient() {
               </AlertDescription>
             </Alert>
           )}
+          {aiSummary && !isLoading && (
+            <Alert className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+                <Bot className="h-4 w-4 text-blue-600" />
+                <AlertTitle className="font-headline text-blue-800 dark:text-blue-300">AI Summary</AlertTitle>
+                <AlertDescription className="text-blue-700 dark:text-blue-400">
+                  {aiSummary}
+                </AlertDescription>
+            </Alert>
+          )}
         </CardContent>
       </Card>
 
       <div className="mt-8">
         <div className="flex justify-between items-center mb-4">
-            <h2 className="font-headline text-2xl font-bold">
-              Rates for {selectedDistrict} on {selectedDate ? format(selectedDate, 'do MMMM yyyy') : '...'}
-            </h2>
+            <div className="flex-1">
+              <h2 className="font-headline text-2xl font-bold">
+                Rates for {selectedDistrict} on {selectedDate ? format(selectedDate, 'do MMMM yyyy') : '...'}
+              </h2>
+              {commodityFilter && (
+                <div className="flex items-center gap-2 mt-1">
+                  <Badge variant="secondary">Filtered by: {commodityFilter}</Badge>
+                  <Button variant="ghost" size="sm" onClick={() => setCommodityFilter(null)}>Clear Filter</Button>
+                </div>
+              )}
+            </div>
             <div className="flex items-center gap-1 rounded-full border bg-muted p-1">
                  <Button variant={viewMode === 'table' ? 'secondary' : 'ghost'} size="icon" onClick={() => setViewMode('table')} className="rounded-full h-8 w-8">
                     <List className="h-4 w-4" />
@@ -385,11 +423,11 @@ export default function MandiRatesClient() {
             </Table>
             </Card>
           ) : viewMode === 'tile' && filteredRates.length > 0 ? (
-            <Accordion type="single" collapsible className="w-full space-y-2">
+            <Accordion type="single" collapsible className="w-full space-y-2" defaultValue={Object.keys(ratesByMarket)[0] || undefined}>
                 {Object.entries(ratesByMarket).map(([market, rates]) => (
                     <AccordionItem value={market} key={market} className="bg-card border rounded-lg">
                         <AccordionTrigger className="px-4 py-3 font-headline hover:no-underline">
-                            {market}
+                            {market} ({rates.length} {rates.length > 1 ? 'commodities' : 'commodity'})
                         </AccordionTrigger>
                         <AccordionContent className="p-0">
                            <div className="space-y-2 p-4">
