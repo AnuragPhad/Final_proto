@@ -17,6 +17,8 @@ import { format, differenceInDays, addDays } from 'date-fns';
 import { useLanguage } from '@/hooks/use-language';
 import Link from 'next/link';
 import GrowingPlant from './GrowingPlant';
+import { useFarm } from '@/hooks/use-farm';
+import type { CropCycle } from '@/hooks/use-farm';
 
 
 const supportedCrops = [
@@ -28,13 +30,6 @@ const supportedCrops = [
     { name: 'Lemon', icon: <Citrus className="h-10 w-10" />, duration: 180 }, // Example duration
 ];
 
-interface CropCycle {
-    id: string;
-    cropName: string;
-    sowingDate: Date;
-    duration: number; // in days
-}
-
 const getCropIcon = (cropName: string) => {
     const crop = supportedCrops.find(c => c.name === cropName);
     return crop ? crop.icon : <Tractor className="h-10 w-10" />;
@@ -42,7 +37,7 @@ const getCropIcon = (cropName: string) => {
 
 export default function MyFarmClient() {
     const { t } = useLanguage();
-    const [cropCycles, setCropCycles] = useState<CropCycle[]>([]);
+    const { cropCycles, addCropCycle, updateCropCycle } = useFarm();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingCycle, setEditingCycle] = useState<CropCycle | null>(null);
     
@@ -64,31 +59,25 @@ export default function MyFarmClient() {
 
     const handleSaveChanges = () => {
         if (!selectedCrop || !sowingDate) return;
+        const cropDetails = supportedCrops.find(c => c.name === selectedCrop);
+        if (!cropDetails) return;
 
         if (editingCycle) {
             // Update existing cycle
-            const cropDetails = supportedCrops.find(c => c.name === selectedCrop);
-            if (!cropDetails) return;
-
-            setCropCycles(prev => 
-                prev.map(c => 
-                    c.id === editingCycle.id 
-                    ? { ...c, cropName: selectedCrop, sowingDate: sowingDate, duration: cropDetails.duration } 
-                    : c
-                )
-            );
+            updateCropCycle({ 
+                ...editingCycle, 
+                cropName: selectedCrop, 
+                sowingDate: sowingDate, 
+                duration: cropDetails.duration 
+            });
         } else {
             // Add new cycle
-            const cropDetails = supportedCrops.find(c => c.name === selectedCrop);
-            if (!cropDetails) return;
-
-            const newCycle: CropCycle = {
+            addCropCycle({
                 id: new Date().toISOString(),
                 cropName: selectedCrop,
                 sowingDate: sowingDate,
                 duration: cropDetails.duration,
-            };
-            setCropCycles(prev => [...prev, newCycle]);
+            });
         }
         
         // Reset form and close dialog

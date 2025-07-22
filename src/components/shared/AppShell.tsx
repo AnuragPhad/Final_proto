@@ -6,17 +6,20 @@ import Header from './Header';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useIsClient } from '@/hooks/use-is-client';
 import { AuthProvider } from '@/hooks/use-auth';
+import { FarmProvider } from '@/hooks/use-farm';
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <AuthProvider>
-      <SidebarProvider>
-        <div className="relative flex min-h-screen flex-col">
-          <Header />
-          <main className="flex-1">{children}</main>
-          <MobileSidebar />
-        </div>
-      </SidebarProvider>
+      <FarmProvider>
+        <SidebarProvider>
+          <div className="relative flex min-h-screen flex-col">
+            <Header />
+            <main className="flex-1">{children}</main>
+            <MobileSidebar />
+          </div>
+        </SidebarProvider>
+      </FarmProvider>
     </AuthProvider>
   );
 }
