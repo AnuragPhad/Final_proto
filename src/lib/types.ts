@@ -38,7 +38,7 @@ export interface Translation {
   listening: string;
   voice_search_not_supported: string;
   ai_summary: string;
-  or_filter_manually: string;
+  filter_by_location_date: string;
   filter_desc: string;
   select_state: string;
   select_district: string;

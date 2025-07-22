@@ -460,7 +460,7 @@ export default function MandiRatesClient() {
 
       <Card>
         <CardHeader>
-          <CardTitle>{t.or_filter_manually}</CardTitle>
+          <CardTitle>{t.filter_by_location_date}</CardTitle>
           <CardDescription>{t.filter_desc}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
