@@ -48,7 +48,7 @@ const getCommodityIcon = (commodity: string) => {
 export default function MandiRatesClient() {
   const [selectedState, setSelectedState] = useState<string>('Maharashtra');
   const [selectedDistrict, setSelectedDistrict] = useState<string>('Pune');
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [allRates, setAllRates] = useState<MandiRate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -94,6 +94,8 @@ export default function MandiRatesClient() {
           console.error("Invalid date from NLU:", nluResult.date);
           setSelectedDate(new Date());
         }
+      } else {
+        setSelectedDate(new Date());
       }
   
       if (!locationChanged) {
@@ -117,11 +119,6 @@ export default function MandiRatesClient() {
     hasRecognitionSupport,
   } = useSpeechRecognition({onTranscript: handleVoiceSearch});
 
-  const handleStartListening = () => {
-    setAiSummary(null);
-    startListening();
-  };
-  
   const clearFiltersAndRefresh = () => {
     setCommodityFilter(null);
     setAiSummary(null);
@@ -129,9 +126,12 @@ export default function MandiRatesClient() {
     fetchRates(selectedState, selectedDistrict);
   };
 
-  useEffect(() => {
-    setSelectedDate(new Date());
-  }, []);
+  const handleStartListening = () => {
+    setCommodityFilter(null);
+    setAiSummary(null);
+    setLastNluResult(null);
+    startListening();
+  };
 
   const fetchRates = useCallback(async (state: string, district: string) => {
     setIsLoading(true);
@@ -187,7 +187,10 @@ export default function MandiRatesClient() {
     if (lastNluResult && !isLoading && !isSummarizing) {
       const generateSummary = async () => {
         setIsSummarizing(true);
-        setAiSummary('Generating detailed summary...');
+        // Do not change the AI summary if it's already showing the NLU result
+        if (aiSummary !== lastNluResult.summary) {
+            setAiSummary('Generating detailed summary...');
+        }
         try {
           const summaryResult = await mandiRateSummary({
             commodity: lastNluResult.commodity,
@@ -212,7 +215,7 @@ export default function MandiRatesClient() {
       generateSummary();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filteredRates, lastNluResult, isLoading, isSummarizing]);
+  }, [filteredRates, lastNluResult, isLoading, isSummarizing, toast, selectedDate, selectedDistrict, aiSummary]);
 
 
   const ratesByMarket = useMemo(() => {
