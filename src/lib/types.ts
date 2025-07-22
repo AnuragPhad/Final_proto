@@ -32,6 +32,8 @@ export interface Translation {
   settings_desc: string;
   my_farm_title: string;
   my_farm_desc: string;
+  community_title: string;
+  community_desc: string;
 
   // Mandi Rates
   mandi_rates_page_title: string;
@@ -129,6 +131,15 @@ export interface Translation {
   weekly_photo_check_due: string;
   upload_health_photo: string;
   weather_advisory_text: string;
+
+  // Community
+  community_subtitle: string;
+  create_post_title: string;
+  create_post_placeholder: string;
+  create_post_button: string;
+  like_button: string;
+  comment_button: string;
+  share_button: string;
 }
 
 export interface Translations {

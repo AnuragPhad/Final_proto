@@ -33,6 +33,8 @@ export const translations: Translations = {
     settings_desc: 'Customize your app experience',
     my_farm_title: 'My Farm',
     my_farm_desc: 'Manage your crop cycles & planning',
+    community_title: 'Community',
+    community_desc: 'Connect with other farmers',
     
     // Mandi Rates
     mandi_rates_page_title: 'Mandi Rates',
@@ -130,6 +132,16 @@ export const translations: Translations = {
     weekly_photo_check_due: 'Weekly photo health check is due.',
     upload_health_photo: 'Upload Health Photo',
     weather_advisory_text: 'High humidity may increase fungal risk. Ensure good air circulation around plants.',
+
+    // Community
+    community_subtitle: 'Connect with fellow farmers, share knowledge, and ask questions.',
+    create_post_title: 'Create a new post',
+    create_post_placeholder: "What's on your mind, farmer?",
+    create_post_button: 'Post',
+    like_button: 'Like',
+    comment_button: 'Comment',
+    share_button: 'Share',
+
   },
   hi: {
     // Settings
@@ -163,6 +175,8 @@ export const translations: Translations = {
     settings_desc: 'अपने ऐप अनुभव को अनुकूलित करें',
     my_farm_title: 'मेरा खेत',
     my_farm_desc: 'अपने फसल चक्र और योजना का प्रबंधन करें',
+    community_title: 'समुदाय',
+    community_desc: 'अन्य किसानों से जुड़ें',
 
     // Mandi Rates
     mandi_rates_page_title: 'मंडी दरें',
@@ -260,6 +274,16 @@ export const translations: Translations = {
     weekly_photo_check_due: 'साप्ताहिक फोटो स्वास्थ्य जांच बाकी है।',
     upload_health_photo: 'स्वास्थ्य फोटो अपलोड करें',
     weather_advisory_text: 'अधिक नमी से फंगल रोग का खतरा बढ़ सकता है। पौधों के आसपास अच्छी हवा का संचार सुनिश्चित करें।',
+
+    // Community
+    community_subtitle: 'अन्य किसानों से जुड़ें, ज्ञान साझा करें और प्रश्न पूछें।',
+    create_post_title: 'एक नई पोस्ट बनाएं',
+    create_post_placeholder: 'किसान, आपके मन में क्या है?',
+    create_post_button: 'पोस्ट करें',
+    like_button: 'लाइक',
+    comment_button: 'टिप्पणी',
+    share_button: 'शेयर करें',
+
   },
   mr: {
     // Settings
@@ -293,6 +317,8 @@ export const translations: Translations = {
     settings_desc: 'तुमचा ॲप अनुभव सानुकूलित करा',
     my_farm_title: 'माझे शेत',
     my_farm_desc: 'तुमची पीक चक्रे आणि नियोजन व्यवस्थापित करा',
+    community_title: 'समुदाय',
+    community_desc: 'इतर शेतकऱ्यांशी कनेक्ट व्हा',
     
     // Mandi Rates
     mandi_rates_page_title: 'मंडी दर',
@@ -390,5 +416,14 @@ export const translations: Translations = {
     weekly_photo_check_due: 'साप्ताहिक फोटो आरोग्य तपासणी देय आहे.',
     upload_health_photo: 'आरोग्य फोटो अपलोड करा',
     weather_advisory_text: 'उच्च आर्द्रतेमुळे बुरशीजन्य रोगाचा धोका वाढू शकतो. रोपांभोवती चांगली हवा खेळती राहील याची खात्री करा.',
+
+    // Community
+    community_subtitle: 'इतर शेतकऱ्यांशी कनेक्ट व्हा, ज्ञान सामायिक करा आणि प्रश्न विचारा.',
+    create_post_title: 'एक नवीन पोस्ट तयार करा',
+    create_post_placeholder: 'शेतकरी, तुमच्या मनात काय आहे?',
+    create_post_button: 'पोस्ट करा',
+    like_button: 'लाइक',
+    comment_button: 'टिप्पणी',
+    share_button: 'शेअर करा',
   },
 };
