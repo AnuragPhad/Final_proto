@@ -62,9 +62,10 @@ export default function MandiRatesClient() {
 
   const handleVoiceSearch = async (query: string) => {
     if (!query) return;
-    setAiSummary('Understanding your query...');
+    setAiSummary(null);
     setIsLoading(true);
     setCommodityFilter(null);
+    setAiSummary('Understanding your query...');
   
     try {
       const nluResult = await understandMandiRateQuery({ query });
@@ -353,7 +354,7 @@ export default function MandiRatesClient() {
             </Popover>
           </div>
           <div className="flex flex-col md:flex-row gap-2">
-            <Button onClick={() => { setCommodityFilter(null); fetchRates(selectedState, selectedDistrict); }} variant="outline" className="w-full">
+            <Button onClick={() => { setCommodityFilter(null); setAiSummary(null); fetchRates(selectedState, selectedDistrict); }} variant="outline" className="w-full">
               Clear Filters & Refresh
             </Button>
             <Button onClick={handleUseLocation} variant="secondary" className="w-full">
@@ -480,5 +481,3 @@ export default function MandiRatesClient() {
     </div>
   );
 }
-
-    
