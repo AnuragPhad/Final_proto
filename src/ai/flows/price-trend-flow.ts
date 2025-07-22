@@ -11,13 +11,13 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 
-export const PriceTrendInputSchema = z.object({
+const PriceTrendInputSchema = z.object({
   commodity: z.string().describe('The commodity being analyzed.'),
   prices: z.array(z.number()).describe('An array of historical modal prices for the last 30 days.'),
 });
 export type PriceTrendInput = z.infer<typeof PriceTrendInputSchema>;
 
-export const PriceTrendOutputSchema = z.object({
+const PriceTrendOutputSchema = z.object({
   trend: z.string().describe("A very short description of the price trend (e.g., 'Prices are rising', 'Prices are falling', 'Prices are stable')."),
   suggestion: z.string().describe('A concise, one-sentence suggestion for the farmer on whether to sell now or wait.'),
 });
