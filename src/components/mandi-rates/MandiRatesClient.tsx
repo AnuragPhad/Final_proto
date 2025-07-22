@@ -16,6 +16,7 @@ import { getMandiRates, type MandiRate } from '@/data/mandi-rates';
 import { useSpeechRecognition } from '@/hooks/use-speech-recognition';
 import { understandMandiRateQuery, MandiRateQueryOutput } from '@/ai/flows/mandi-rate-nlu';
 import { mandiRateSummary } from '@/ai/flows/mandi-rate-summary';
+import { textToSpeech } from '@/ai/flows/tts';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
@@ -54,6 +55,7 @@ export default function MandiRatesClient() {
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('tile');
   const [aiSummary, setAiSummary] = useState<string | null>(null);
+  const [audioSummaryUrl, setAudioSummaryUrl] = useState<string | null>(null);
   const [commodityFilter, setCommodityFilter] = useState<string | null>(null);
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [lastNluResult, setLastNluResult] = useState<MandiRateQueryOutput | null>(null);
@@ -65,6 +67,7 @@ export default function MandiRatesClient() {
     setIsLoading(true);
     setCommodityFilter(null);
     setAiSummary('Understanding your query...');
+    setAudioSummaryUrl(null);
   
     try {
       const nluResult = await understandMandiRateQuery({ query });
@@ -122,14 +125,13 @@ export default function MandiRatesClient() {
   const clearFiltersAndRefresh = () => {
     setCommodityFilter(null);
     setAiSummary(null);
+    setAudioSummaryUrl(null);
     setLastNluResult(null);
     fetchRates(selectedState, selectedDistrict);
   };
 
   const handleStartListening = () => {
-    setCommodityFilter(null);
-    setAiSummary(null);
-    setLastNluResult(null);
+    clearFiltersAndRefresh();
     startListening();
   };
 
@@ -187,6 +189,7 @@ export default function MandiRatesClient() {
     if (lastNluResult && !isLoading && !isSummarizing) {
       const generateSummary = async () => {
         setIsSummarizing(true);
+        setAudioSummaryUrl(null);
         // Do not change the AI summary if it's already showing the NLU result
         if (aiSummary !== lastNluResult.summary) {
             setAiSummary('Generating detailed summary...');
@@ -204,6 +207,14 @@ export default function MandiRatesClient() {
             })),
           });
           setAiSummary(summaryResult.summary);
+          
+          if(summaryResult.summary) {
+            const ttsResult = await textToSpeech({text: summaryResult.summary});
+            if(ttsResult.audioDataUri) {
+                setAudioSummaryUrl(ttsResult.audioDataUri);
+            }
+          }
+
         } catch (e) {
           toast({ variant: 'destructive', title: 'AI Summary Error', description: 'Could not generate the detailed summary.' });
           setAiSummary('Could not generate a detailed summary.');
@@ -392,6 +403,11 @@ export default function MandiRatesClient() {
                 <AlertDescription className="text-blue-700 dark:text-blue-400">
                   {aiSummary}
                 </AlertDescription>
+                {audioSummaryUrl && (
+                    <div className="mt-2">
+                        <audio controls autoPlay src={audioSummaryUrl} className="w-full h-8" />
+                    </div>
+                )}
             </Alert>
           )}
         </CardContent>
