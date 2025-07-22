@@ -267,16 +267,14 @@ export default function MarketIntelligenceClient() {
                                         {marketComparisonData
                                             .sort((a,b) => b.price - a.price)
                                             .map(market => (
-                                                <TableRow 
-                                                    key={market.market}
-                                                    className={cn(
-                                                        market.market === highestPriceMarket && 'border-l-4 border-green-500',
-                                                        market.market === lowestPriceMarket && 'border-l-4 border-red-500'
-                                                    )}
-                                                >
+                                                <TableRow key={market.market}>
                                                     <TableCell className="font-medium">{market.market}</TableCell>
                                                     <TableCell className="text-muted-foreground">{market.date}</TableCell>
-                                                    <TableCell className="text-right font-semibold">Rs {market.price}</TableCell>
+                                                    <TableCell className={cn(
+                                                        "text-right font-semibold",
+                                                        market.market === highestPriceMarket && 'text-green-600',
+                                                        market.market === lowestPriceMarket && 'text-red-600'
+                                                    )}>Rs {market.price}</TableCell>
                                                 </TableRow>
                                             ))}
                                     </TableBody>
