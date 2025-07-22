@@ -10,7 +10,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { CalendarIcon, Mic, LocateFixed, Bot, LayoutGrid, List } from 'lucide-react';
+import { CalendarIcon, Mic, LocateFixed, Bot, LayoutGrid, List, Wheat, Apple, Carrot, Grape, LeafyGreen, Lemon, Onion, HandPlatter } from 'lucide-react';
 import { format } from 'date-fns';
 import { states, districts } from '@/data/locations';
 import { getMandiRates, type MandiRate } from '@/data/mandi-rates';
@@ -20,6 +20,28 @@ import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 
 type ViewMode = 'table' | 'tile';
+
+const commodityIcons: { [key: string]: React.ReactNode } = {
+  'Onion': <Onion className="inline-block mr-2 text-red-500" />,
+  'Potato': <Carrot className="inline-block mr-2 text-yellow-600" />, // No potato icon, using carrot as a substitute for root vegetable
+  'Tomato': <Apple className="inline-block mr-2 text-red-600" />, // No tomato icon, using apple as a substitute
+  'Wheat': <Wheat className="inline-block mr-2 text-yellow-500" />,
+  'Grapes': <Grape className="inline-block mr-2 text-purple-600" />,
+  'Lemon': <Lemon className="inline-block mr-2 text-yellow-400" />,
+  'Cabbage': <LeafyGreen className="inline-block mr-2 text-green-600" />,
+  'default': <HandPlatter className="inline-block mr-2 text-gray-500" />,
+};
+
+const getCommodityIcon = (commodity: string) => {
+    const lowerCommodity = commodity.toLowerCase();
+    for (const key in commodityIcons) {
+        if (lowerCommodity.includes(key.toLowerCase())) {
+            return commodityIcons[key];
+        }
+    }
+    return commodityIcons['default'];
+};
+
 
 export default function MandiRatesClient() {
   const [selectedState, setSelectedState] = useState<string>('Maharashtra');
@@ -319,9 +341,7 @@ export default function MandiRatesClient() {
                     <TableHead>Commodity</TableHead>
                     <TableHead>Variety</TableHead>
                     <TableHead>Market</TableHead>
-                    <TableHead className="text-right">Min Price (₹/Quintal)</TableHead>
-                    <TableHead className="text-right">Max Price (₹/Quintal)</TableHead>
-                    <TableHead className="text-right">Modal Price (₹/Quintal)</TableHead>
+                    <TableHead className="text-right">Price (₹/Quintal)</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -330,9 +350,7 @@ export default function MandiRatesClient() {
                         <TableCell><Skeleton className="h-5 w-24" /></TableCell>
                         <TableCell><Skeleton className="h-5 w-20" /></TableCell>
                         <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-                        <TableCell className="text-right"><Skeleton className="h-5 w-16 ml-auto" /></TableCell>
-                        <TableCell className="text-right"><Skeleton className="h-5 w-16 ml-auto" /></TableCell>
-                        <TableCell className="text-right"><Skeleton className="h-5 w-16 ml-auto" /></TableCell>
+                        <TableCell className="text-right"><Skeleton className="h-5 w-24 ml-auto" /></TableCell>
                     </TableRow>
                     ))}
                 </TableBody>
@@ -345,20 +363,21 @@ export default function MandiRatesClient() {
                     <TableHead>Commodity</TableHead>
                     <TableHead>Variety</TableHead>
                     <TableHead>Market</TableHead>
-                    <TableHead className="text-right">Min Price (₹/Quintal)</TableHead>
-                    <TableHead className="text-right">Max Price (₹/Quintal)</TableHead>
-                    <TableHead className="text-right">Modal Price (₹/Quintal)</TableHead>
+                    <TableHead className="text-right">Price (₹/Quintal)</TableHead>
                 </TableRow>
                 </TableHeader>
                 <TableBody>
                     {filteredRates.map((rate, index) => (
                     <TableRow key={`${rate.commodity}-${rate.market}-${rate.variety}-${index}`}>
-                        <TableCell className="font-medium">{rate.commodity}</TableCell>
+                        <TableCell className="font-medium flex items-center">{getCommodityIcon(rate.commodity)} {rate.commodity}</TableCell>
                         <TableCell>{rate.variety}</TableCell>
                         <TableCell>{rate.market}</TableCell>
-                        <TableCell className="text-right">{rate.minPrice}</TableCell>
-                        <TableCell className="text-right">{rate.maxPrice}</TableCell>
-                        <TableCell className="text-right font-bold text-primary">{rate.modalPrice}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="font-bold text-lg text-primary">{rate.modalPrice}</div>
+                          <div className="text-xs text-muted-foreground">
+                            Min: {rate.minPrice} | Max: {rate.maxPrice}
+                          </div>
+                        </TableCell>
                     </TableRow>
                     ))}
                 </TableBody>
@@ -378,19 +397,20 @@ export default function MandiRatesClient() {
                                 <TableRow>
                                     <TableHead>Commodity</TableHead>
                                     <TableHead>Variety</TableHead>
-                                    <TableHead className="text-right">Min Price</TableHead>
-                                    <TableHead className="text-right">Max Price</TableHead>
-                                    <TableHead className="text-right">Modal Price</TableHead>
+                                    <TableHead className="text-right">Price (₹/Quintal)</TableHead>
                                 </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                 {rates.map((rate, index) => (
                                     <TableRow key={`${rate.commodity}-${rate.variety}-${index}`}>
-                                        <TableCell className="font-medium">{rate.commodity}</TableCell>
+                                        <TableCell className="font-medium flex items-center">{getCommodityIcon(rate.commodity)} {rate.commodity}</TableCell>
                                         <TableCell>{rate.variety}</TableCell>
-                                        <TableCell className="text-right">{rate.minPrice}</TableCell>
-                                        <TableCell className="text-right">{rate.maxPrice}</TableCell>
-                                        <TableCell className="text-right font-bold text-primary">{rate.modalPrice}</TableCell>
+                                        <TableCell className="text-right">
+                                          <div className="font-bold text-lg text-primary">{rate.modalPrice}</div>
+                                          <div className="text-xs text-muted-foreground">
+                                            Min: {rate.minPrice} | Max: {rate.maxPrice}
+                                          </div>
+                                        </TableCell>
                                     </TableRow>
                                 ))}
                                 </TableBody>
