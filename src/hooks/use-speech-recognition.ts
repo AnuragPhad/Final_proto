@@ -61,6 +61,7 @@ export const useSpeechRecognition = (
 
       if (event.results[0]?.isFinal && onTranscript) {
         onTranscript(currentTranscript.trim());
+        recognition.stop();
       }
     };
 

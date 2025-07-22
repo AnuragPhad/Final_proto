@@ -55,91 +55,54 @@ export default function MandiRatesClient() {
   const [viewMode, setViewMode] = useState<ViewMode>('tile');
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [commodityFilter, setCommodityFilter] = useState<string | null>(null);
+  const [isSummarizing, setIsSummarizing] = useState(false);
+  const [lastNluResult, setLastNluResult] = useState<any>(null);
+
   const { toast } = useToast();
 
-  
   const handleVoiceSearch = async (query: string) => {
     if (!query) return;
     setAiSummary('Understanding your query...');
     setIsLoading(true);
     setCommodityFilter(null);
-    let currentDistrict = selectedDistrict;
-    let currentState = selectedState;
-
+  
     try {
       const nluResult = await understandMandiRateQuery({ query });
       setAiSummary(nluResult.summary);
-      
+      setLastNluResult(nluResult);
+  
       let locationChanged = false;
       if (nluResult.market) {
         for (const state of states) {
-            const district = districts[state]?.find(d => nluResult.market!.toLowerCase().includes(d.toLowerCase()));
-            if (district) {
-                if (selectedState !== state || selectedDistrict !== district) {
-                    setSelectedState(state);
-                    setSelectedDistrict(district);
-                    currentDistrict = district;
-                    currentState = state;
-                    locationChanged = true;
-                }
-                break;
+          const district = districts[state]?.find(d => nluResult.market!.toLowerCase().includes(d.toLowerCase()));
+          if (district) {
+            if (selectedState !== state || selectedDistrict !== district) {
+              setSelectedState(state);
+              setSelectedDistrict(district);
+              locationChanged = true;
             }
+            break;
+          }
         }
       }
-      
-      let dateToQuery = selectedDate;
+  
       if (nluResult.date) {
         try {
-            const newDate = new Date(nluResult.date);
-            setSelectedDate(newDate);
-            dateToQuery = newDate;
+          const newDate = new Date(nluResult.date);
+          setSelectedDate(newDate);
         } catch (e) {
-            console.error("Invalid date from NLU:", nluResult.date);
-            const newDate = new Date();
-            setSelectedDate(newDate);
-            dateToQuery = newDate;
+          console.error("Invalid date from NLU:", nluResult.date);
+          setSelectedDate(new Date());
         }
       }
-
-      setAiSummary('Fetching latest prices...');
-      
-      // We must await new rates if the location changed
-      const ratesForSummary = locationChanged ? await getMandiRates(currentState, currentDistrict) : allRates;
-      
-      const filteredForSummary = ratesForSummary.filter(rate => {
-        if (!rate.arrival_date) return false;
-        const [day, month, year] = rate.arrival_date.split('/');
-        if (!day || !month || !year) return false;
-        try {
-          const apiDate = new Date(Number(year), Number(month) - 1, Number(day));
-          return format(apiDate, 'yyyy-MM-dd') === format(dateToQuery!, 'yyyy-MM-dd');
-        } catch (e) { return false; }
-      }).filter(rate => rate.commodity.toLowerCase().includes(nluResult.commodity.toLowerCase()));
-
-
-      const summaryResult = await mandiRateSummary({
-        commodity: nluResult.commodity,
-        district: currentDistrict,
-        date: format(dateToQuery!, 'do MMMM yyyy'),
-        rates: filteredForSummary.length > 0 ? filteredForSummary.map(r => ({
-            market: r.market,
-            minPrice: r.minPrice,
-            maxPrice: r.maxPrice,
-            modalPrice: r.modalPrice,
-        })) : undefined,
-      });
-
-      setAiSummary(summaryResult.summary);
-      setCommodityFilter(nluResult.commodity);
-
-
-      if (locationChanged) {
-        setAllRates(ratesForSummary);
-        setIsLoading(false);
-      } else {
+  
+      // If location didn't change, we already have the rates.
+      // If it did change, the useEffect for [selectedState, selectedDistrict] will trigger a fetch.
+      if (!locationChanged) {
         setIsLoading(false);
       }
-      
+      setCommodityFilter(nluResult.commodity); // Apply commodity filter
+  
     } catch (e) {
       toast({ variant: 'destructive', title: 'AI Error', description: 'Could not process your voice command.' });
       setAiSummary('Sorry, I had trouble understanding. Please try again.');
@@ -163,7 +126,7 @@ export default function MandiRatesClient() {
   const fetchRates = useCallback(async (state: string, district: string) => {
     setIsLoading(true);
     setError(null);
-    if (!commodityFilter) { 
+    if (!commodityFilter) {
       setAiSummary(null);
     }
     try {
@@ -182,10 +145,10 @@ export default function MandiRatesClient() {
       setIsLoading(false);
     }
   }, [toast, commodityFilter]);
-  
+
   useEffect(() => {
     if (selectedState && selectedDistrict) {
-        fetchRates(selectedState, selectedDistrict);
+      fetchRates(selectedState, selectedDistrict);
     }
   }, [selectedState, selectedDistrict, fetchRates]);
 
@@ -212,6 +175,39 @@ export default function MandiRatesClient() {
     return rates;
   }, [allRates, selectedDate, commodityFilter]);
   
+  // This effect runs when filteredRates changes, and generates the AI summary.
+  useEffect(() => {
+    if (lastNluResult && filteredRates.length > 0 && !isSummarizing) {
+      const generateSummary = async () => {
+        setIsSummarizing(true);
+        setAiSummary('Generating detailed summary...');
+        try {
+          const summaryResult = await mandiRateSummary({
+            commodity: lastNluResult.commodity,
+            district: lastNluResult.market || selectedDistrict,
+            date: format(selectedDate!, 'do MMMM yyyy'),
+            rates: filteredRates.map(r => ({
+                market: r.market,
+                minPrice: r.minPrice,
+                maxPrice: r.maxPrice,
+                modalPrice: r.modalPrice,
+            })),
+          });
+          setAiSummary(summaryResult.summary);
+        } catch (e) {
+          toast({ variant: 'destructive', title: 'AI Summary Error', description: 'Could not generate the detailed summary.' });
+          setAiSummary('Could not generate a detailed summary.');
+        } finally {
+          setIsSummarizing(false);
+          setLastNluResult(null); // Reset after summarizing
+        }
+      };
+      generateSummary();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filteredRates, lastNluResult, isSummarizing]);
+
+
   const ratesByMarket = useMemo(() => {
     return filteredRates.reduce((acc, rate) => {
       const { market } = rate;
@@ -484,3 +480,5 @@ export default function MandiRatesClient() {
     </div>
   );
 }
+
+    
