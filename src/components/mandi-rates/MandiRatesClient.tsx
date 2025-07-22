@@ -63,7 +63,6 @@ export default function MandiRatesClient() {
   const [audioSummaryUrl, setAudioSummaryUrl] = useState<string | null>(null);
   const [commodityFilter, setCommodityFilter] = useState<string | null>(null);
   const [isSummarizing, setIsSummarizing] = useState(false);
-  const [lastNluResult, setLastNluResult] = useState<MandiRateQueryOutput | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [trendData, setTrendData] = useState<any[]>([]);
   const [trendAdvice, setTrendAdvice] = useState<PriceTrendOutput | null>(null);
@@ -81,53 +80,86 @@ export default function MandiRatesClient() {
 
   const handleVoiceSearch = async (query: string) => {
     if (!query) return;
+    setIsSummarizing(true);
     setIsLoading(true);
-    setAiSummary(t.listening);
     setAudioSummaryUrl(null);
-  
+    setAiSummary(t.listening);
+    
     try {
+      // 1. Understand the user's query
       const nluResult = await understandMandiRateQuery({ query });
       setAiSummary(nluResult.summary);
-      setLastNluResult(nluResult);
-  
+      
+      // 2. Set filters based on NLU result
+      let newDistrict = selectedDistrict;
+      let newState = selectedState;
       let locationChanged = false;
+
       if (nluResult.market) {
         for (const state of states) {
           const district = districts[state]?.find(d => nluResult.market!.toLowerCase().includes(d.toLowerCase()));
           if (district) {
-            if (selectedState !== state || selectedDistrict !== district) {
-              setSelectedState(state);
-              setSelectedDistrict(district);
-              locationChanged = true;
-            }
+            newState = state;
+            newDistrict = district;
+            locationChanged = true;
             break;
           }
         }
       }
-  
-      if (nluResult.date) {
-        try {
-          const newDate = new Date(nluResult.date);
-          setSelectedDate(newDate);
-        } catch (e) {
-          console.error("Invalid date from NLU:", nluResult.date);
-          setSelectedDate(new Date());
-        }
-      } else {
-        setSelectedDate(new Date());
-      }
-  
-      if (!locationChanged) {
-        setIsLoading(false);
-      }
+      setSelectedState(newState);
+      setSelectedDistrict(newDistrict);
       setCommodityFilter(nluResult.commodity);
-  
-    } catch (e) {
-      toast({ variant: 'destructive', title: 'AI Error', description: 'Could not process your voice command.' });
+      const newDate = nluResult.date ? new Date(nluResult.date) : new Date();
+      setSelectedDate(newDate);
+
+      // 3. Fetch rates if location changed, otherwise use existing `allRates`
+      let ratesToProcess = allRates;
+      if (locationChanged) {
+        ratesToProcess = await getMandiRates(newState, newDistrict);
+        setAllRates(ratesToProcess);
+      }
+      
+      // 4. Filter rates for the summary
+      const ratesForSummary = ratesToProcess.filter(rate => {
+        const [day, month, year] = rate.arrival_date.split('/');
+        const apiDate = new Date(Number(year), Number(month) - 1, Number(day));
+        const isDateMatch = format(apiDate, 'yyyy-MM-dd') === format(newDate, 'yyyy-MM-dd');
+        const isCommodityMatch = rate.commodity.toLowerCase().includes(nluResult.commodity.toLowerCase());
+        return isDateMatch && isCommodityMatch;
+      });
+
+      // 5. Generate detailed AI summary and TTS
+      setAiSummary('Generating detailed summary...');
+      const summaryResult = await mandiRateSummary({
+        commodity: nluResult.commodity,
+        district: nluResult.market || newDistrict,
+        date: format(newDate, 'do MMMM yyyy'),
+        rates: ratesForSummary.map(r => ({
+            market: r.market,
+            minPrice: r.minPrice,
+            maxPrice: r.maxPrice,
+            modalPrice: r.modalPrice,
+        })),
+      });
+
+      setAiSummary(summaryResult.summary);
+      if (summaryResult.summary) {
+        const ttsResult = await textToSpeech({ text: summaryResult.summary });
+        if (ttsResult.audioDataUri) {
+          setAudioSummaryUrl(ttsResult.audioDataUri);
+        }
+      }
+
+    } catch (e: any) {
+      console.error(e);
+      toast({ variant: 'destructive', title: 'AI Error', description: e.message || 'Could not process your voice command.' });
       setAiSummary('Sorry, I had trouble understanding. Please try again.');
+    } finally {
+      setIsSummarizing(false);
       setIsLoading(false);
     }
   };
+
 
   const {
     isListening,
@@ -142,7 +174,6 @@ export default function MandiRatesClient() {
     setCommodityFilter(null);
     setAiSummary(null);
     setAudioSummaryUrl(null);
-    setLastNluResult(null);
     setTrendData([]);
     setTrendAdvice(null);
     fetchRates(selectedState, selectedDistrict);
@@ -202,52 +233,6 @@ export default function MandiRatesClient() {
     return rates;
   }, [allRates, selectedDate, commodityFilter]);
   
-  // This effect runs when filteredRates changes, and generates the AI summary.
-  useEffect(() => {
-    if (lastNluResult && !isLoading && !isSummarizing) {
-      const generateSummary = async () => {
-        setIsSummarizing(true);
-        setAudioSummaryUrl(null);
-        
-        if (aiSummary !== lastNluResult.summary) {
-           setAiSummary('Generating detailed summary...');
-        }
-        
-        try {
-          const summaryResult = await mandiRateSummary({
-            commodity: lastNluResult.commodity,
-            district: lastNluResult.market || selectedDistrict,
-            date: format(selectedDate!, 'do MMMM yyyy'),
-            rates: filteredRates.map(r => ({
-                market: r.market,
-                minPrice: r.minPrice,
-                maxPrice: r.maxPrice,
-                modalPrice: r.modalPrice,
-            })),
-          });
-          setAiSummary(summaryResult.summary);
-          
-          if(summaryResult.summary) {
-            const ttsResult = await textToSpeech({text: summaryResult.summary});
-            if(ttsResult.audioDataUri) {
-                setAudioSummaryUrl(ttsResult.audioDataUri);
-            }
-          }
-
-        } catch (e) {
-          toast({ variant: 'destructive', title: 'AI Summary Error', description: 'Could not generate the detailed summary.' });
-          setAiSummary('Could not generate a detailed summary.');
-        } finally {
-          setIsSummarizing(false);
-          setLastNluResult(null); // Reset after summarizing
-        }
-      };
-      if (filteredRates.length > 0) {
-        generateSummary();
-      }
-    }
-  }, [filteredRates, isLoading, isSummarizing, lastNluResult, aiSummary, selectedDistrict, selectedDate, toast, t.listening]);
-
 
   // This effect generates the trend data and advice when a commodity filter is applied.
   useEffect(() => {
@@ -448,12 +433,12 @@ export default function MandiRatesClient() {
         )}
       </div>
 
-      {aiSummary && (
+      {(aiSummary || isSummarizing) && (
         <Alert className="mb-8 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
             <Bot className="h-4 w-4 text-blue-600" />
             <div className='flex items-center justify-between'>
               <AlertTitle className="font-headline text-blue-800 dark:text-blue-300">{t.ai_summary}</AlertTitle>
-              {audioSummaryUrl && (
+              {audioSummaryUrl && !isSummarizing && (
                   <Button variant="ghost" size="icon" onClick={handlePlayAudio} className="h-7 w-7 text-blue-600 hover:bg-blue-200/50">
                       <Volume2 className="h-4 w-4" />
                       <span className="sr-only">Play Summary</span>
@@ -461,7 +446,7 @@ export default function MandiRatesClient() {
               )}
             </div>
             <AlertDescription className="text-blue-700 dark:text-blue-400">
-              {aiSummary}
+              {isSummarizing && !aiSummary ? 'Listening...' : aiSummary}
             </AlertDescription>
             {audioSummaryUrl && <audio ref={audioRef} src={audioSummaryUrl} className="hidden" />}
         </Alert>
