@@ -24,6 +24,7 @@ import { Badge } from '@/components/ui/badge';
 import { priceTrendFlow, PriceTrendInput, PriceTrendOutput } from '@/ai/flows/price-trend-flow';
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
+import { useLanguage } from '@/hooks/use-language';
 
 
 type ViewMode = 'table' | 'tile';
@@ -58,7 +59,6 @@ export default function MandiRatesClient() {
   const [allRates, setAllRates] = useState<MandiRate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>('tile');
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [audioSummaryUrl, setAudioSummaryUrl] = useState<string | null>(null);
   const [commodityFilter, setCommodityFilter] = useState<string | null>(null);
@@ -68,6 +68,7 @@ export default function MandiRatesClient() {
   const [trendData, setTrendData] = useState<any[]>([]);
   const [trendAdvice, setTrendAdvice] = useState<PriceTrendOutput | null>(null);
   const [isTrendLoading, setIsTrendLoading] = useState(false);
+  const { t } = useLanguage();
 
   const { toast } = useToast();
   
@@ -81,7 +82,7 @@ export default function MandiRatesClient() {
   const handleVoiceSearch = async (query: string) => {
     if (!query) return;
     setIsLoading(true);
-    setAiSummary('Understanding your query...');
+    setAiSummary(t.listening);
     setAudioSummaryUrl(null);
   
     try {
@@ -245,7 +246,7 @@ export default function MandiRatesClient() {
         generateSummary();
       }
     }
-  }, [filteredRates, isLoading, isSummarizing, lastNluResult, aiSummary, selectedDistrict, selectedDate, toast]);
+  }, [filteredRates, isLoading, isSummarizing, lastNluResult, aiSummary, selectedDistrict, selectedDate, toast, t.listening]);
 
 
   // This effect generates the trend data and advice when a commodity filter is applied.
@@ -422,9 +423,9 @@ export default function MandiRatesClient() {
   return (
     <div className="container mx-auto p-4 md:p-8">
       <div className="text-center mb-8">
-        <h1 className="font-headline text-3xl md:text-4xl font-bold tracking-tighter">Mandi Rates</h1>
+        <h1 className="font-headline text-3xl md:text-4xl font-bold tracking-tighter">{t.mandi_rates_page_title}</h1>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto mt-2">
-          Find the latest commodity prices from markets across India.
+          {t.mandi_rates_page_subtitle}
         </p>
       </div>
 
@@ -439,11 +440,11 @@ export default function MandiRatesClient() {
               <Mic className="h-10 w-10" />
             </Button>
             <p className="text-sm text-muted-foreground">
-              {isListening ? `Listening... "${transcript}"` : 'Tap the microphone to search with your voice'}
+              {isListening ? `${t.listening} "${transcript}"` : t.tap_to_search_voice}
             </p>
           </>
         ) : (
-          <p className="text-destructive">Voice search is not supported on your browser.</p>
+          <p className="text-destructive">{t.voice_search_not_supported}</p>
         )}
       </div>
 
@@ -451,7 +452,7 @@ export default function MandiRatesClient() {
         <Alert className="mb-8 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
             <Bot className="h-4 w-4 text-blue-600" />
             <div className='flex items-center justify-between'>
-              <AlertTitle className="font-headline text-blue-800 dark:text-blue-300">AI Summary</AlertTitle>
+              <AlertTitle className="font-headline text-blue-800 dark:text-blue-300">{t.ai_summary}</AlertTitle>
               {audioSummaryUrl && (
                   <Button variant="ghost" size="icon" onClick={handlePlayAudio} className="h-7 w-7 text-blue-600 hover:bg-blue-200/50">
                       <Volume2 className="h-4 w-4" />
@@ -468,8 +469,8 @@ export default function MandiRatesClient() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Or, Filter Manually</CardTitle>
-          <CardDescription>Select location and date to find rates.</CardDescription>
+          <CardTitle>{t.or_filter_manually}</CardTitle>
+          <CardDescription>{t.filter_desc}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -479,13 +480,13 @@ export default function MandiRatesClient() {
                 setSelectedDistrict(districts[value][0]);
               }
             }}>
-              <SelectTrigger><SelectValue placeholder="Select State" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={t.select_state} /></SelectTrigger>
               <SelectContent>
                 {states.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
               </SelectContent>
             </Select>
             <Select value={selectedDistrict} onValueChange={setSelectedDistrict} disabled={!selectedState}>
-              <SelectTrigger><SelectValue placeholder="Select District" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={t.select_district} /></SelectTrigger>
               <SelectContent>
                 {districts[selectedState]?.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
               </SelectContent>
@@ -494,7 +495,7 @@ export default function MandiRatesClient() {
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-full justify-start text-left font-normal">
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {selectedDate ? format(selectedDate, 'PPP') : <span>Pick a date</span>}
+                  {selectedDate ? format(selectedDate, 'PPP') : <span>{t.pick_a_date}</span>}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
@@ -504,10 +505,10 @@ export default function MandiRatesClient() {
           </div>
           <div className="flex flex-col md:flex-row gap-2">
             <Button onClick={clearFiltersAndRefresh} variant="outline" className="w-full">
-              Clear Filters & Refresh
+              {t.clear_filters_refresh}
             </Button>
             <Button onClick={handleUseLocation} variant="secondary" className="w-full">
-              <LocateFixed className="mr-2 h-4 w-4" /> Use My Location
+              <LocateFixed className="mr-2 h-4 w-4" /> {t.use_my_location}
             </Button>
           </div>
         </CardContent>
@@ -517,9 +518,9 @@ export default function MandiRatesClient() {
         <Card className="mt-8">
             <CardHeader>
                 <CardTitle className="font-headline text-2xl flex items-center gap-2">
-                    <LineChart /> Price Trends for {commodityFilter}
+                    <LineChart /> {t.price_trends_for} {commodityFilter}
                 </CardTitle>
-                <CardDescription>Last 30 days of modal prices in {selectedDistrict}.</CardDescription>
+                <CardDescription>{t.last_30_days_prices} {selectedDistrict}.</CardDescription>
             </CardHeader>
             <CardContent className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2 h-80">
@@ -569,7 +570,7 @@ export default function MandiRatesClient() {
                   ) : trendAdvice ? (
                      <Alert className="h-full bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
                         <TrendingUp className="h-4 w-4 text-green-600" />
-                        <AlertTitle className="font-headline text-green-800 dark:text-green-300">AI Selling Advice</AlertTitle>
+                        <AlertTitle className="font-headline text-green-800 dark:text-green-300">{t.ai_selling_advice}</AlertTitle>
                         <AlertDescription className="text-green-700 dark:text-green-400">
                            <p className="font-bold">{trendAdvice.trend}</p>
                            <p>{trendAdvice.suggestion}</p>
@@ -577,7 +578,7 @@ export default function MandiRatesClient() {
                     </Alert>
                   ) : (
                     <div className="flex items-center justify-center h-full text-muted-foreground">
-                        Not enough data for a trend analysis.
+                        {t.not_enough_data_for_trend}
                     </div>
                   )}
                 </div>
@@ -589,28 +590,18 @@ export default function MandiRatesClient() {
         <div className="flex justify-between items-center mb-4">
             <div className="flex-1">
               <h2 className="font-headline text-2xl font-bold">
-                Rates for {selectedDistrict} on {selectedDate ? format(selectedDate, 'do MMMM yyyy') : '...'}
+                {t.rates_for} {selectedDistrict} {t.on} {selectedDate ? format(selectedDate, 'do MMMM yyyy') : '...'}
               </h2>
               {commodityFilter && (
                 <div className="flex items-center gap-2 mt-1">
-                  <Badge variant="secondary">Filtered by: {commodityFilter}</Badge>
+                  <Badge variant="secondary">{t.filtered_by} {commodityFilter}</Badge>
                   <Button variant="ghost" size="sm" onClick={() => {
                     setCommodityFilter(null);
                     setTrendData([]);
                     setTrendAdvice(null);
-                  }}>Clear Filter</Button>
+                  }}>{t.clear_filter}</Button>
                 </div>
               )}
-            </div>
-            <div className="flex items-center gap-1 rounded-full border bg-muted p-1">
-                 <Button variant={viewMode === 'table' ? 'secondary' : 'ghost'} size="icon" onClick={() => setViewMode('table')} className="rounded-full h-8 w-8">
-                    <List className="h-4 w-4" />
-                    <span className="sr-only">Table View</span>
-                </Button>
-                <Button variant={viewMode === 'tile' ? 'secondary' : 'ghost'} size="icon" onClick={() => setViewMode('tile')} className="rounded-full h-8 w-8">
-                    <LayoutGrid className="h-4 w-4" />
-                    <span className="sr-only">Tile View</span>
-                </Button>
             </div>
         </div>
 
@@ -683,7 +674,7 @@ export default function MandiRatesClient() {
             </Accordion>
           ) : (
             <Card className="h-40 flex items-center justify-center">
-                 <p className="text-center text-muted-foreground">No data available for the selected criteria. The market may be closed on this day.</p>
+                 <p className="text-center text-muted-foreground">{t.no_data_for_criteria}</p>
             </Card>
           )}
       </div>
