@@ -131,21 +131,41 @@ export default function MandiRatesClient() {
   };
 
   const handleUseLocation = () => {
-    toast({ title: 'Locating...', description: 'Fetching your current location.' });
+    toast({ title: 'Locating...', description: 'Please wait while we fetch your location.' });
     
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (position) => {
-          // In a real app, you would use these coordinates with a reverse geocoding API
-          // to get the state and district.
-          // const { latitude, longitude } = position.coords;
+        async (position) => {
+          const { latitude, longitude } = position.coords;
           
-          // For this demo, we'll simulate the reverse geocoding result.
-          toast({ title: 'Location Found!', description: 'Reverse geocoding is simulated. Setting location to Nashik, Maharashtra.' });
-          setTimeout(() => {
-            setSelectedState('Maharashtra');
-            setSelectedDistrict('Nashik');
-          }, 500);
+          try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`);
+            const data = await response.json();
+            
+            if (data && data.address) {
+              const state = data.address.state;
+              const district = data.address.state_district || data.address.county || data.address.city;
+
+              if (state && district && states.includes(state) && districts[state]?.includes(district)) {
+                toast({ title: 'Location Found!', description: `Setting location to ${district}, ${state}.` });
+                setSelectedState(state);
+                setSelectedDistrict(district);
+              } else {
+                toast({
+                  variant: 'destructive',
+                  title: 'Location Not Supported',
+                  description: 'We could not find your location in our supported areas.',
+                });
+              }
+            }
+          } catch (error) {
+              console.error("Reverse geocoding error:", error);
+              toast({
+                  variant: 'destructive',
+                  title: 'Geocoding Error',
+                  description: 'Could not fetch location details. Please try again.',
+              });
+          }
         },
         (error) => {
           console.error("Geolocation error:", error);
