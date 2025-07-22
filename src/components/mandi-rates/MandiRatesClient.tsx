@@ -19,8 +19,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function MandiRatesClient() {
-  const [selectedState, setSelectedState] = useState<string>('Kerala');
-  const [selectedDistrict, setSelectedDistrict] = useState<string>('Ernakulam');
+  const [selectedState, setSelectedState] = useState<string>('Maharashtra');
+  const [selectedDistrict, setSelectedDistrict] = useState<string>('Pune');
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [allRates, setAllRates] = useState<MandiRate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -117,11 +117,16 @@ export default function MandiRatesClient() {
           }
       }
       
-      setSelectedDate(new Date(result.date));
-      
-      const summary = `Showing rates for ${result.commodity} in ${result.market} for ${format(new Date(result.date), 'PPP')}.`;
-      const utterance = new SpeechSynthesisUtterance(summary);
-      window.speechSynthesis.speak(utterance);
+      if (result.date) {
+        try {
+            setSelectedDate(new Date(result.date));
+            const summary = `Showing rates for ${result.commodity} in ${result.market} for ${format(new Date(result.date), 'PPP')}.`;
+            const utterance = new SpeechSynthesisUtterance(summary);
+            window.speechSynthesis.speak(utterance);
+        } catch (e) {
+            console.error("Invalid date from NLU:", result.date);
+        }
+      }
       
     } catch (e) {
       toast({ variant: 'destructive', title: 'AI Error', description: 'Could not understand your query.' });
@@ -139,18 +144,17 @@ export default function MandiRatesClient() {
           const { latitude, longitude } = position.coords;
           
           try {
-            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`);
+            const response = await fetch(`/api/geocode?lat=${latitude}&lon=${longitude}`);
             const data = await response.json();
             
-            if (data && data.address) {
-              const state = data.address.state;
-              const district = data.address.state_district || data.address.county || data.address.city;
-
+            if (response.ok) {
+              const { state, district } = data;
+              
               if (state && states.includes(state)) {
-                 if (district && districts[state]?.includes(district)) {
+                 if (district && districts[state]?.map(d => d.toLowerCase()).includes(district.toLowerCase())) {
                     toast({ title: 'Location Found!', description: `Setting location to ${district}, ${state}.` });
                     setSelectedState(state);
-                    setSelectedDistrict(district);
+                    setSelectedDistrict(districts[state].find(d => d.toLowerCase() === district.toLowerCase()) || district);
                  } else {
                     toast({
                       variant: 'destructive',
@@ -169,7 +173,7 @@ export default function MandiRatesClient() {
                  toast({
                   variant: 'destructive',
                   title: 'Location Not Found',
-                  description: 'Could not determine your location from the coordinates.',
+                  description: data.error || 'Could not determine your location from the coordinates.',
                 });
             }
           } catch (error) {
