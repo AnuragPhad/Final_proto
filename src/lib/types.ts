@@ -69,6 +69,7 @@ export interface Translation {
   no_trend_advice_available: string;
   cross_market_analysis: string;
   cross_market_desc: string;
+  ai_market_insight: string;
   no_market_analysis_available: string;
 
   // Crop Doctor

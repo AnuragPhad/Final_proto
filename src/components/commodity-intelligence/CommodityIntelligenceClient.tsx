@@ -18,6 +18,7 @@ import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { states, districts } from '@/data/locations';
+import { useLanguage } from '@/hooks/use-language';
 
 const commodities = [
     { name: 'Onion', icon: <HandPlatter className="h-10 w-10" /> },
@@ -51,6 +52,7 @@ export default function CommodityIntelligenceClient() {
     const [trendAdvice, setTrendAdvice] = useState<PriceTrendOutput | null>(null);
     const [marketAnalysis, setMarketAnalysis] = useState<CommodityAnalysisOutput | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+    const { t } = useLanguage();
 
     useEffect(() => {
         if (selectedCommodity && selectedDistrict) {
@@ -137,15 +139,15 @@ export default function CommodityIntelligenceClient() {
     return (
         <div className="container mx-auto p-4 md:p-8">
             <div className="text-center mb-8">
-                <h1 className="font-headline text-3xl md:text-4xl font-bold tracking-tighter">Commodity Intelligence</h1>
+                <h1 className="font-headline text-3xl md:text-4xl font-bold tracking-tighter">{t.commodity_intel_page_title}</h1>
                 <p className="text-lg text-muted-foreground max-w-2xl mx-auto mt-2">
-                    Select a commodity and location to analyze price trends and compare markets.
+                    {t.commodity_intel_page_subtitle}
                 </p>
             </div>
 
             <Card className="mb-8">
                 <CardHeader>
-                    <CardTitle>Select Commodity & Location</CardTitle>
+                    <CardTitle>{t.select_commodity_loc}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -154,13 +156,13 @@ export default function CommodityIntelligenceClient() {
                           const firstDistrict = Object.keys(allSimulatedRates).find(d => districts[value]?.includes(d));
                           setSelectedDistrict(firstDistrict || districts[value]?.[0] || '');
                         }}>
-                          <SelectTrigger><SelectValue placeholder="Select State" /></SelectTrigger>
+                          <SelectTrigger><SelectValue placeholder={t.select_state} /></SelectTrigger>
                           <SelectContent>
                             {['Maharashtra'].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                           </SelectContent>
                         </Select>
                         <Select value={selectedDistrict} onValueChange={setSelectedDistrict} disabled={!selectedState}>
-                          <SelectTrigger><SelectValue placeholder="Select District" /></SelectTrigger>
+                          <SelectTrigger><SelectValue placeholder={t.select_district} /></SelectTrigger>
                           <SelectContent>
                             {Object.keys(allSimulatedRates).map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
                           </SelectContent>
@@ -185,14 +187,14 @@ export default function CommodityIntelligenceClient() {
             {selectedCommodity && (
                 <div className="space-y-8">
                     <h2 className="font-headline text-2xl font-bold text-center">
-                        Analysis for {selectedCommodity} in {selectedDistrict}
+                        {t.analysis_for} {selectedCommodity} {t.in} {selectedDistrict}
                     </h2>
 
                     {/* Price Trend Analysis */}
                     <Card>
                         <CardHeader>
-                            <CardTitle className="font-headline flex items-center gap-2"><LineChart /> Price Trend</CardTitle>
-                            <CardDescription>Last 30 days of modal prices in {selectedDistrict} market.</CardDescription>
+                            <CardTitle className="font-headline flex items-center gap-2"><LineChart /> {t.price_trend}</CardTitle>
+                            <CardDescription>{t.last_30_days_modal_prices} {selectedDistrict}.</CardDescription>
                         </CardHeader>
                         <CardContent className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                             <div className="lg:col-span-2 h-80">
@@ -213,7 +215,7 @@ export default function CommodityIntelligenceClient() {
                                       </AreaChart>
                                     </ChartContainer>
                                 ) : (
-                                    <div className="flex items-center justify-center h-full text-muted-foreground">No data available for trend analysis.</div>
+                                    <div className="flex items-center justify-center h-full text-muted-foreground">{t.no_data_for_trend_analysis}</div>
                                 )}
                             </div>
                             <div className="lg:col-span-1 flex items-center">
@@ -221,14 +223,14 @@ export default function CommodityIntelligenceClient() {
                                 trendAdvice ? (
                                     <Alert className="h-full bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
                                         <TrendingUp className="h-4 w-4 text-green-600" />
-                                        <AlertTitle className="font-headline text-green-800 dark:text-green-300">AI Selling Advice</AlertTitle>
+                                        <AlertTitle className="font-headline text-green-800 dark:text-green-300">{t.ai_selling_advice}</AlertTitle>
                                         <AlertDescription className="text-green-700 dark:text-green-400">
                                             <p className="font-bold">{trendAdvice.trend}</p>
                                             <p>{trendAdvice.suggestion}</p>
                                         </AlertDescription>
                                     </Alert>
                                 ) : (
-                                    <div className="flex items-center justify-center h-full text-muted-foreground">No trend advice available.</div>
+                                    <div className="flex items-center justify-center h-full text-muted-foreground">{t.no_trend_advice_available}</div>
                                 )}
                             </div>
                         </CardContent>
@@ -237,8 +239,8 @@ export default function CommodityIntelligenceClient() {
                     {/* Cross-Market Analysis */}
                     <Card>
                         <CardHeader>
-                            <CardTitle className="font-headline flex items-center gap-2"><BrainCircuit /> Cross-Market Analysis</CardTitle>
-                            <CardDescription>Comparison of current prices across different major districts.</CardDescription>
+                            <CardTitle className="font-headline flex items-center gap-2"><BrainCircuit /> {t.cross_market_analysis}</CardTitle>
+                            <CardDescription>{t.cross_market_desc}</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-2">
                            {isLoading ? (
@@ -248,7 +250,7 @@ export default function CommodityIntelligenceClient() {
                                     <div className="mb-4">
                                         <Alert>
                                             <BrainCircuit className="h-4 w-4" />
-                                            <AlertTitle>AI Market Insight</AlertTitle>
+                                            <AlertTitle>{t.ai_market_insight}</AlertTitle>
                                             <AlertDescription>
                                                 {marketAnalysis.summary}
                                             </AlertDescription>
@@ -264,7 +266,7 @@ export default function CommodityIntelligenceClient() {
                                     ))}
                                 </>
                             ) : (
-                                 <div className="flex items-center justify-center h-20 text-muted-foreground">No market analysis available.</div>
+                                 <div className="flex items-center justify-center h-20 text-muted-foreground">{t.no_market_analysis_available}</div>
                             )}
                         </CardContent>
                     </Card>

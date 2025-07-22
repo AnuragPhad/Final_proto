@@ -70,6 +70,7 @@ export const translations: Translations = {
     no_trend_advice_available: 'No trend advice available.',
     cross_market_analysis: 'Cross-Market Analysis',
     cross_market_desc: 'Comparison of current prices across different major districts.',
+    ai_market_insight: 'AI Market Insight',
     no_market_analysis_available: 'No market analysis available.',
 
     // Crop Doctor
@@ -165,6 +166,7 @@ export const translations: Translations = {
     no_trend_advice_available: 'कोई प्रवृत्ति सलाह उपलब्ध नहीं है।',
     cross_market_analysis: 'क्रॉस-मार्केट विश्लेषण',
     cross_market_desc: 'विभिन्न प्रमुख जिलों में मौजूदा कीमतों की तुलना।',
+    ai_market_insight: 'AI बाजार अंतर्दृष्टि',
     no_market_analysis_available: 'कोई बाजार विश्लेषण उपलब्ध नहीं है।',
     
     // Crop Doctor
@@ -260,6 +262,7 @@ export const translations: Translations = {
     no_trend_advice_available: 'कोणताही ट्रेंड सल्ला उपलब्ध नाही.',
     cross_market_analysis: 'क्रॉस-मार्केट विश्लेषण',
     cross_market_desc: 'विविध प्रमुख जिल्ह्यांमधील सध्याच्या किमतींची तुलना.',
+    ai_market_insight: 'AI बाजार अंतर्दृष्टी',
     no_market_analysis_available: 'बाजार विश्लेषण उपलब्ध नाही.',
 
     // Crop Doctor
