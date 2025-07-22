@@ -23,7 +23,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { priceTrendFlow, PriceTrendInput, PriceTrendOutput } from '@/ai/flows/price-trend-flow';
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { ChartTooltipContent } from '@/components/ui/chart';
+import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 
 
 type ViewMode = 'table' | 'tile';
@@ -412,6 +412,13 @@ export default function MandiRatesClient() {
     }
   };
   
+  const chartConfig = {
+    price: {
+      label: "Price",
+      color: "hsl(var(--primary))",
+    },
+  };
+
   return (
     <div className="container mx-auto p-4 md:p-8">
       <div className="text-center mb-8">
@@ -519,21 +526,36 @@ export default function MandiRatesClient() {
                     {isTrendLoading ? (
                         <Skeleton className="h-full w-full" />
                     ) : (
-                        <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={trendData}>
-                                <defs>
-                                    <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8}/>
-                                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
-                                    </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} domain={['dataMin - 100', 'dataMax + 100']} />
-                                <Tooltip content={<ChartTooltipContent formatter={(value) => `Rs ${value}`} />} />
-                                <Area type="monotone" dataKey="price" stroke="hsl(var(--primary))" fill="url(#colorPrice)" />
-                            </AreaChart>
-                        </ResponsiveContainer>
+                      <ChartContainer config={chartConfig} className="h-full w-full">
+                        <AreaChart
+                          accessibilityLayer
+                          data={trendData}
+                          margin={{
+                            left: 12,
+                            right: 12,
+                          }}
+                        >
+                          <CartesianGrid vertical={false} />
+                          <XAxis
+                            dataKey="date"
+                            tickLine={false}
+                            axisLine={false}
+                            tickMargin={8}
+                            tickFormatter={(value) => value.slice(0, 6)}
+                          />
+                          <Tooltip
+                            cursor={false}
+                            content={<ChartTooltipContent indicator="dot" formatter={(value) => `Rs ${value}`} />}
+                          />
+                          <Area
+                            dataKey="price"
+                            type="natural"
+                            fill="var(--color-price)"
+                            fillOpacity={0.4}
+                            stroke="var(--color-price)"
+                          />
+                        </AreaChart>
+                      </ChartContainer>
                     )}
                 </div>
                 <div className="lg:col-span-1">
@@ -660,3 +682,5 @@ export default function MandiRatesClient() {
     </div>
   );
 }
+
+    
