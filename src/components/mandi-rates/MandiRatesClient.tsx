@@ -102,9 +102,9 @@ export default function MandiRatesClient() {
       }
   
       if (!locationChanged) {
-        setIsLoading(false); // Manually set loading to false if location didn't change
+        setIsLoading(false);
       }
-      setCommodityFilter(nluResult.commodity); // Apply commodity filter
+      setCommodityFilter(nluResult.commodity);
   
     } catch (e) {
       toast({ variant: 'destructive', title: 'AI Error', description: 'Could not process your voice command.' });
@@ -190,10 +190,14 @@ export default function MandiRatesClient() {
       const generateSummary = async () => {
         setIsSummarizing(true);
         setAudioSummaryUrl(null);
-        // Do not change the AI summary if it's already showing the NLU result
-        if (aiSummary !== lastNluResult.summary) {
+        
+        // Do not show interim "generating" message if we already have the NLU summary
+        if (aiSummary === lastNluResult.summary) {
+            // Keep the NLU summary while we generate the detailed one
+        } else {
             setAiSummary('Generating detailed summary...');
         }
+        
         try {
           const summaryResult = await mandiRateSummary({
             commodity: lastNluResult.commodity,
@@ -226,7 +230,7 @@ export default function MandiRatesClient() {
       generateSummary();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filteredRates, lastNluResult, isLoading, isSummarizing, toast, selectedDate, selectedDistrict, aiSummary]);
+  }, [filteredRates, isLoading]); // Depend on filteredRates and isLoading
 
   useEffect(() => {
       if (audioSummaryUrl && audioRef.current) {
