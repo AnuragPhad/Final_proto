@@ -228,6 +228,12 @@ export default function MandiRatesClient() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filteredRates, lastNluResult, isLoading, isSummarizing, toast, selectedDate, selectedDistrict, aiSummary]);
 
+  useEffect(() => {
+      if (audioSummaryUrl && audioRef.current) {
+          audioRef.current.play().catch(e => console.error("Audio playback failed:", e));
+      }
+  }, [audioSummaryUrl]);
+
   const handlePlayAudio = () => {
     if (audioRef.current) {
         audioRef.current.play();
@@ -520,5 +526,3 @@ export default function MandiRatesClient() {
     </div>
   );
 }
-
-    
