@@ -14,7 +14,7 @@ import { format } from 'date-fns';
 import { states, districts } from '@/data/locations';
 import { getMandiRates, type MandiRate } from '@/data/mandi-rates';
 import { useSpeechRecognition } from '@/hooks/use-speech-recognition';
-import { understandMandiRateQuery } from '@/ai/flows/mandi-rate-nlu';
+import { understandMandiRateQuery, MandiRateQueryOutput } from '@/ai/flows/mandi-rate-nlu';
 import { mandiRateSummary } from '@/ai/flows/mandi-rate-summary';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -56,13 +56,12 @@ export default function MandiRatesClient() {
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [commodityFilter, setCommodityFilter] = useState<string | null>(null);
   const [isSummarizing, setIsSummarizing] = useState(false);
-  const [lastNluResult, setLastNluResult] = useState<any>(null);
+  const [lastNluResult, setLastNluResult] = useState<MandiRateQueryOutput | null>(null);
 
   const { toast } = useToast();
 
   const handleVoiceSearch = async (query: string) => {
     if (!query) return;
-    setAiSummary(null);
     setIsLoading(true);
     setCommodityFilter(null);
     setAiSummary('Understanding your query...');
@@ -97,10 +96,8 @@ export default function MandiRatesClient() {
         }
       }
   
-      // If location didn't change, we already have the rates.
-      // If it did change, the useEffect for [selectedState, selectedDistrict] will trigger a fetch.
       if (!locationChanged) {
-        setIsLoading(false);
+        setIsLoading(false); // Manually set loading to false if location didn't change
       }
       setCommodityFilter(nluResult.commodity); // Apply commodity filter
   
@@ -120,6 +117,18 @@ export default function MandiRatesClient() {
     hasRecognitionSupport,
   } = useSpeechRecognition({onTranscript: handleVoiceSearch});
 
+  const handleStartListening = () => {
+    setAiSummary(null);
+    startListening();
+  };
+  
+  const clearFiltersAndRefresh = () => {
+    setCommodityFilter(null);
+    setAiSummary(null);
+    setLastNluResult(null);
+    fetchRates(selectedState, selectedDistrict);
+  };
+
   useEffect(() => {
     setSelectedDate(new Date());
   }, []);
@@ -127,9 +136,6 @@ export default function MandiRatesClient() {
   const fetchRates = useCallback(async (state: string, district: string) => {
     setIsLoading(true);
     setError(null);
-    if (!commodityFilter) {
-      setAiSummary(null);
-    }
     try {
       const fetchedRates = await getMandiRates(state, district);
       setAllRates(fetchedRates);
@@ -145,7 +151,7 @@ export default function MandiRatesClient() {
     } finally {
       setIsLoading(false);
     }
-  }, [toast, commodityFilter]);
+  }, [toast]);
 
   useEffect(() => {
     if (selectedState && selectedDistrict) {
@@ -178,7 +184,7 @@ export default function MandiRatesClient() {
   
   // This effect runs when filteredRates changes, and generates the AI summary.
   useEffect(() => {
-    if (lastNluResult && filteredRates.length > 0 && !isSummarizing) {
+    if (lastNluResult && !isLoading && !isSummarizing) {
       const generateSummary = async () => {
         setIsSummarizing(true);
         setAiSummary('Generating detailed summary...');
@@ -206,7 +212,7 @@ export default function MandiRatesClient() {
       generateSummary();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filteredRates, lastNluResult, isSummarizing]);
+  }, [filteredRates, lastNluResult, isLoading, isSummarizing]);
 
 
   const ratesByMarket = useMemo(() => {
@@ -354,14 +360,14 @@ export default function MandiRatesClient() {
             </Popover>
           </div>
           <div className="flex flex-col md:flex-row gap-2">
-            <Button onClick={() => { setCommodityFilter(null); setAiSummary(null); fetchRates(selectedState, selectedDistrict); }} variant="outline" className="w-full">
+            <Button onClick={clearFiltersAndRefresh} variant="outline" className="w-full">
               Clear Filters & Refresh
             </Button>
             <Button onClick={handleUseLocation} variant="secondary" className="w-full">
               <LocateFixed className="mr-2 h-4 w-4" /> Use My Location
             </Button>
             {hasRecognitionSupport && (
-                <Button onClick={isListening ? stopListening : startListening} className="w-full" variant={isListening ? "destructive" : "default"}>
+                <Button onClick={isListening ? stopListening : handleStartListening} className="w-full" variant={isListening ? "destructive" : "default"}>
                   <Mic className={`mr-2 h-4 w-4 ${isListening ? 'animate-pulse' : ''}`} />
                   {isListening ? 'Listening...' : 'Search with Voice'}
                 </Button>
