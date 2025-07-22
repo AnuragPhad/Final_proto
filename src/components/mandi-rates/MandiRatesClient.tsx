@@ -352,7 +352,7 @@ export default function MandiRatesClient() {
                 </TableHeader>
                 <TableBody>
                     {filteredRates.map((rate, index) => (
-                    <TableRow key={`${rate.commodity}-${rate.variety}-${index}`}>
+                    <TableRow key={`${rate.commodity}-${rate.market}-${rate.variety}-${index}`}>
                         <TableCell className="font-medium">{rate.commodity}</TableCell>
                         <TableCell>{rate.variety}</TableCell>
                         <TableCell>{rate.market}</TableCell>
@@ -409,3 +409,5 @@ export default function MandiRatesClient() {
     </div>
   );
 }
+
+    
