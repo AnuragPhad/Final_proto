@@ -86,3 +86,21 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+@keyframes sway {
+  0%, 100% {
+    transform: rotate(0deg) translateX(0);
+  }
+  50% {
+    transform: rotate(1.5deg) translateX(2px);
+  }
+}
+
+@keyframes sparkle {
+  0%, 100% {
+    filter: drop-shadow(0 0 1px hsla(var(--primary), 0));
+  }
+  50% {
+    filter: drop-shadow(0 0 3px hsla(var(--primary), 0.5));
+  }
+}
