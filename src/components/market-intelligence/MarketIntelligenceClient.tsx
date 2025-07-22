@@ -254,30 +254,34 @@ export default function MarketIntelligenceClient() {
                            )}
 
                             {marketComparisonData.length > 0 ? (
+                                <div className="border rounded-lg overflow-hidden">
                                 <Table>
-                                    <TableHeader>
+                                    <TableHeader className="bg-muted/50">
                                         <TableRow>
-                                            <TableHead>Market (District)</TableHead>
+                                            <TableHead className="w-[150px]">Market (District)</TableHead>
                                             <TableHead>Latest Date</TableHead>
-                                            <TableHead className="text-right">Latest Price (per Quintal)</TableHead>
+                                            <TableHead className="text-right">Price (per Quintal)</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {marketComparisonData.map(market => (
-                                            <TableRow 
-                                                key={market.market}
-                                                className={cn(
-                                                    market.market === highestPriceMarket && 'bg-green-100/50 dark:bg-green-900/20 hover:bg-green-100/60',
-                                                    market.market === lowestPriceMarket && 'bg-red-100/50 dark:bg-red-900/20 hover:bg-red-100/60'
-                                                )}
-                                            >
-                                                <TableCell className="font-medium">{market.market}</TableCell>
-                                                <TableCell>{market.date}</TableCell>
-                                                <TableCell className="text-right font-bold">Rs {market.price}</TableCell>
-                                            </TableRow>
-                                        ))}
+                                        {marketComparisonData
+                                            .sort((a,b) => b.price - a.price)
+                                            .map(market => (
+                                                <TableRow 
+                                                    key={market.market}
+                                                    className={cn(
+                                                        market.market === highestPriceMarket && 'border-l-4 border-green-500',
+                                                        market.market === lowestPriceMarket && 'border-l-4 border-red-500'
+                                                    )}
+                                                >
+                                                    <TableCell className="font-medium">{market.market}</TableCell>
+                                                    <TableCell className="text-muted-foreground">{market.date}</TableCell>
+                                                    <TableCell className="text-right font-semibold">Rs {market.price}</TableCell>
+                                                </TableRow>
+                                            ))}
                                     </TableBody>
                                 </Table>
+                                </div>
                             ) : !isLoading && (
                                 <div className="flex items-center justify-center h-20 text-muted-foreground">{t.no_data_for_trend_analysis}</div>
                             )}
