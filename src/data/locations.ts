@@ -444,6 +444,7 @@ export const districts: {[key: string]: string[]} = {
     'Jalna',
     'Kolhapur',
     'Latur',
+    'Mumbai',
     'Mumbai City',
     'Mumbai Suburban',
     'Nagpur',
