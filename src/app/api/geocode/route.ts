@@ -29,7 +29,11 @@ export async function GET(request: Request) {
     if (data.results && data.results.length > 0) {
       const components = data.results[0].components;
       const state = components.state;
-      const district = components.state_district || components.county || components.city;
+      let district = components.state_district || components.county || components.city;
+
+      if (district && district.endsWith(' (District)')) {
+        district = district.replace(' (District)', '').trim();
+      }
       
       return NextResponse.json({ state, district });
     } else {
