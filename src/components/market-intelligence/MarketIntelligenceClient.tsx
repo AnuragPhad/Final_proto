@@ -19,7 +19,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { states, districts } from '@/data/locations';
 import { useLanguage } from '@/hooks/use-language';
 import { translateCommodity } from '@/lib/commodity-translations';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 
 
@@ -102,7 +101,7 @@ export default function MarketIntelligenceClient() {
                     });
                 }
             }
-            setMarketComparisonData(comparisonData);
+            setMarketComparisonData(comparisonData.sort((a, b) => b.price - a.price));
 
             // Generate AI market analysis
             const generateMarketAnalysis = async () => {
@@ -254,31 +253,25 @@ export default function MarketIntelligenceClient() {
                            )}
 
                             {marketComparisonData.length > 0 ? (
-                                <div className="border rounded-lg overflow-hidden">
-                                <Table>
-                                    <TableHeader className="bg-muted/50">
-                                        <TableRow>
-                                            <TableHead className="w-[150px]">Market (District)</TableHead>
-                                            <TableHead>Latest Date</TableHead>
-                                            <TableHead className="text-right">Price (per Quintal)</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {marketComparisonData
-                                            .sort((a,b) => b.price - a.price)
-                                            .map(market => (
-                                                <TableRow key={market.market}>
-                                                    <TableCell className="font-medium">{market.market}</TableCell>
-                                                    <TableCell className="text-muted-foreground">{market.date}</TableCell>
-                                                    <TableCell className={cn(
-                                                        "text-right font-semibold",
-                                                        market.market === highestPriceMarket && 'text-green-600',
-                                                        market.market === lowestPriceMarket && 'text-red-600'
-                                                    )}>Rs {market.price}</TableCell>
-                                                </TableRow>
-                                            ))}
-                                    </TableBody>
-                                </Table>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {marketComparisonData.map(market => (
+                                        <Card key={market.market} className={cn(
+                                            "flex flex-col justify-between transition-shadow hover:shadow-lg",
+                                            market.market === highestPriceMarket && 'border-green-500 border-2',
+                                            market.market === lowestPriceMarket && 'border-red-500 border-2'
+                                        )}>
+                                            <CardHeader className="pb-2">
+                                                <CardTitle className="font-headline text-xl">{market.market}</CardTitle>
+                                                <CardDescription>Latest price on {market.date}</CardDescription>
+                                            </CardHeader>
+                                            <CardContent>
+                                                <p className="text-3xl font-bold">
+                                                    Rs {market.price}
+                                                </p>
+                                                <p className="text-sm text-muted-foreground">per Quintal</p>
+                                            </CardContent>
+                                        </Card>
+                                    ))}
                                 </div>
                             ) : !isLoading && (
                                 <div className="flex items-center justify-center h-20 text-muted-foreground">{t.no_data_for_trend_analysis}</div>
