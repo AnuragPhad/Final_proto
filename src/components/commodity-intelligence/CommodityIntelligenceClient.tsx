@@ -189,31 +189,16 @@ export default function CommodityIntelligenceClient() {
                             <CardTitle className="font-headline flex items-center gap-2"><BrainCircuit /> Cross-Market Analysis</CardTitle>
                             <CardDescription>Comparison of current prices across different districts.</CardDescription>
                         </CardHeader>
-                        <CardContent className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                            <div className="lg:col-span-2 space-y-2">
-                                {isLoading ? Array.from({length: 5}).map((_, i) => <Skeleton key={i} className="h-10 w-full" />) :
-                                 mockMarketData.map(market => (
-                                    <div key={market.market} className="flex justify-between items-center p-3 rounded-md bg-muted/50">
-                                        <p className="font-semibold">{market.market}</p>
-                                        <Badge variant={market.market === marketAnalysis?.highestPriceMarket ? "default" : market.market === marketAnalysis?.lowestPriceMarket ? "destructive" : "secondary"}>
-                                            Rs {market.price} / Quintal
-                                        </Badge>
-                                    </div>
-                                 ))}
-                            </div>
-                            <div className="lg:col-span-1">
-                                 {isLoading ? <Skeleton className="h-24 w-full" /> : 
-                                 marketAnalysis ? (
-                                    <Alert className="h-full bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
-                                        <AlertTitle className="font-headline text-blue-800 dark:text-blue-300">AI Market Insight</AlertTitle>
-                                        <AlertDescription className="text-blue-700 dark:text-blue-400">
-                                            {marketAnalysis.summary}
-                                        </AlertDescription>
-                                    </Alert>
-                                 ) : (
-                                    <div className="flex items-center justify-center h-full text-muted-foreground">No market insights available.</div>
-                                 )}
-                            </div>
+                        <CardContent className="space-y-2">
+                            {isLoading ? Array.from({length: 5}).map((_, i) => <Skeleton key={i} className="h-10 w-full" />) :
+                                mockMarketData.map(market => (
+                                <div key={market.market} className="flex justify-between items-center p-3 rounded-md bg-muted/50">
+                                    <p className="font-semibold">{market.market}</p>
+                                    <Badge variant={market.market === marketAnalysis?.highestPriceMarket ? "default" : market.market === marketAnalysis?.lowestPriceMarket ? "destructive" : "secondary"}>
+                                        Rs {market.price} / Quintal
+                                    </Badge>
+                                </div>
+                                ))}
                         </CardContent>
                     </Card>
 
