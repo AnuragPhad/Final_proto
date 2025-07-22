@@ -3,49 +3,52 @@
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Carrot, HeartPulse, ScrollText, Settings, BrainCircuit } from 'lucide-react';
-
-const features = [
-  {
-    title: 'Mandi Rates',
-    description: 'Check latest commodity prices',
-    href: '/mandi-rates',
-    icon: <Carrot className="h-8 w-8 text-primary" />,
-  },
-  {
-    title: 'Crop Doctor',
-    description: 'Diagnose crop diseases with AI',
-    href: '/crop-doctor',
-    icon: <HeartPulse className="h-8 w-8 text-primary" />,
-  },
-  {
-    title: 'Commodity Intel',
-    description: 'Analyze market trends for crops',
-    href: '/commodity-intelligence',
-    icon: <BrainCircuit className="h-8 w-8 text-primary" />,
-  },
-  {
-    title: 'Govt. Schemes',
-    description: 'Find relevant farmer schemes',
-    href: '/schemes',
-    icon: <ScrollText className="h-8 w-8 text-primary" />,
-  },
-  {
-    title: 'Settings',
-    description: 'Customize your app experience',
-    href: '/settings',
-    icon: <Settings className="h-8 w-8 text-primary" />,
-  },
-];
+import { useLanguage } from '@/hooks/use-language';
 
 export default function DashboardClient() {
+  const { t } = useLanguage();
+
+  const features = [
+    {
+      title: t.mandi_rates_title,
+      description: t.mandi_rates_desc,
+      href: '/mandi-rates',
+      icon: <Carrot className="h-8 w-8 text-primary" />,
+    },
+    {
+      title: t.crop_doctor_title,
+      description: t.crop_doctor_desc,
+      href: '/crop-doctor',
+      icon: <HeartPulse className="h-8 w-8 text-primary" />,
+    },
+    {
+      title: t.commodity_intel_title,
+      description: t.commodity_intel_desc,
+      href: '/commodity-intelligence',
+      icon: <BrainCircuit className="h-8 w-8 text-primary" />,
+    },
+    {
+      title: t.govt_schemes_title,
+      description: t.govt_schemes_desc,
+      href: '/schemes',
+      icon: <ScrollText className="h-8 w-8 text-primary" />,
+    },
+    {
+      title: t.settings_title,
+      description: t.settings_desc,
+      href: '/settings',
+      icon: <Settings className="h-8 w-8 text-primary" />,
+    },
+  ];
+
   return (
     <div className="container mx-auto p-4 md:p-8">
       <div className="mb-8 text-center">
         <h1 className="font-headline text-4xl md:text-5xl font-bold tracking-tighter mb-2">
-          Welcome to Kisan AI
+          {t.welcome_to_kisan_ai}
         </h1>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          Your AI-powered friend for smarter farming. Get real-time data and insights to make informed decisions.
+          {t.welcome_subtitle}
         </p>
       </div>
 

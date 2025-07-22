@@ -1,3 +1,5 @@
+export type Language = 'en' | 'hi' | 'mr';
+
 export interface Translation {
   // Settings
   title: string;

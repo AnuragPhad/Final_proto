@@ -1,41 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { translations } from '@/lib/i18n';
-import type { Translation } from '@/lib/types';
-
-type Language = 'en' | 'hi' | 'mr';
-
-const useLanguage = () => {
-  const [language, setLanguage] = useState<Language>('en');
-  const [t, setT] = useState<Translation>(translations.en);
-
-  useEffect(() => {
-    const savedLang = localStorage.getItem('kisan-ai-lang') as Language | null;
-    if (savedLang && translations[savedLang]) {
-      setLanguage(savedLang);
-      setT(translations[savedLang]);
-    }
-  }, []);
-
-  const handleLanguageChange = (newLang: Language) => {
-    if (translations[newLang]) {
-      setLanguage(newLang);
-      setT(translations[newLang]);
-      localStorage.setItem('kisan-ai-lang', newLang);
-      // Force a reload to apply translations throughout the app
-      window.location.reload();
-    }
-  };
-
-  return { language, t, handleLanguageChange };
-}
+import type { Language } from '@/lib/types';
+import { useLanguage } from '@/hooks/use-language';
 
 export default function SettingsClient() {
   const { language, t, handleLanguageChange } = useLanguage();
@@ -60,7 +33,7 @@ export default function SettingsClient() {
           <Card>
             <CardHeader>
               <CardTitle>{t.language}</CardTitle>
-              <CardDescription>Choose your preferred language for the app.</CardDescription>
+              <CardDescription>Choose your preferred language for the app. This can also be changed from the header.</CardDescription>
             </CardHeader>
             <CardContent>
               <RadioGroup value={language} onValueChange={(val) => handleLanguageChange(val as Language)}>
