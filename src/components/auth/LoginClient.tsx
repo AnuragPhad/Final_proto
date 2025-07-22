@@ -1,27 +1,28 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/hooks/use-language';
+import { useAuth } from '@/hooks/use-auth';
 import { Flower2 } from 'lucide-react';
 
 export default function LoginClient() {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const { toast } = useToast();
   const { t } = useLanguage();
+  const { login } = useAuth();
+  const router = useRouter();
 
   const handleLogin = () => {
-    // In a real app, you'd handle authentication here.
-    toast({
-      title: 'Login Successful',
-      description: 'Welcome back!',
-    });
+    if (username.trim() && password.trim()) {
+      login({ name: username });
+      router.push('/');
+    }
   };
 
   return (
@@ -40,14 +41,14 @@ export default function LoginClient() {
         <CardContent>
           <div className="grid gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="email">{t.email_label}</Label>
+              <Label htmlFor="username">Username</Label>
               <Input
-                id="email"
-                type="email"
-                placeholder="farmer@example.com"
+                id="username"
+                type="text"
+                placeholder="farmer"
                 required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
               />
             </div>
             <div className="grid gap-2">

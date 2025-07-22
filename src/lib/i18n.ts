@@ -99,7 +99,7 @@ export const translations: Translations = {
 
     // Login
     login_title: 'Login to Your Account',
-    login_desc: 'Enter your email below to login to your account',
+    login_desc: 'Enter your credentials below to login to your account',
     email_label: 'Email',
     password_label: 'Password',
     forgot_password: 'Forgot your password?',
@@ -206,7 +206,7 @@ export const translations: Translations = {
 
     // Login
     login_title: 'अपने खाते में પ્રવેશ करें',
-    login_desc: 'अपने खाते में પ્રવેશ करने के लिए नीचे अपना ईमेल दर्ज करें',
+    login_desc: 'अपने खाते में પ્રવેશ करने के लिए नीचे अपना क्रेडेंशियल दर्ज करें',
     email_label: 'ईमेल',
     password_label: 'पासवर्ड',
     forgot_password: 'अपना पासवर्ड भूल गए?',
@@ -313,7 +313,7 @@ export const translations: Translations = {
 
     // Login
     login_title: 'तुमच्या खात्यात लॉगिन करा',
-    login_desc: 'तुमच्या खात्यात लॉगिन करण्यासाठी खाली तुमचा ईमेल प्रविष्ट करा',
+    login_desc: 'तुमच्या खात्यात लॉगिन करण्यासाठी खाली तुमचे क्रेडेन्शियल प्रविष्ट करा',
     email_label: 'ईमेल',
     password_label: 'पासवर्ड',
     forgot_password: 'तुमचा पासवर्ड विसरलात?',
