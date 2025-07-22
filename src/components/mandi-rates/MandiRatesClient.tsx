@@ -382,7 +382,7 @@ export default function MandiRatesClient() {
             <AlertDescription className="text-blue-700 dark:text-blue-400">
               {aiSummary}
             </AlertDescription>
-            <audio ref={audioRef} src={audioSummaryUrl || ''} className="hidden" />
+            {audioSummaryUrl && <audio ref={audioRef} src={audioSummaryUrl} className="hidden" />}
         </Alert>
       )}
 
