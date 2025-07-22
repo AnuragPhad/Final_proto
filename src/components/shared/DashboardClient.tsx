@@ -34,9 +34,9 @@ export default function DashboardClient() {
         icon: <Users className="h-8 w-8 text-primary" />,
     },
     {
-      title: t.commodity_intel_title,
-      description: t.commodity_intel_desc,
-      href: '/commodity-intelligence',
+      title: t.market_intel_title,
+      description: t.market_intel_desc,
+      href: '/market-intelligence',
       icon: <BrainCircuit className="h-8 w-8 text-primary" />,
     },
     {

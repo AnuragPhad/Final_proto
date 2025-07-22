@@ -25,8 +25,8 @@ export const translations: Translations = {
     mandi_rates_desc: 'Check latest commodity prices',
     crop_doctor_title: 'Crop Doctor',
     crop_doctor_desc: 'Diagnose crop diseases with AI',
-    commodity_intel_title: 'Commodity Intel',
-    commodity_intel_desc: 'Analyze market trends for crops',
+    market_intel_title: 'Market Intelligence',
+    market_intel_desc: 'Analyze market trends for crops',
     govt_schemes_title: 'Govt. Schemes',
     govt_schemes_desc: 'Find relevant farmer schemes',
     settings_title: 'Settings',
@@ -62,9 +62,9 @@ export const translations: Translations = {
     tile_view: 'Tile View',
     no_data_for_criteria: 'No data available for the selected criteria. The market may be closed on this day.',
 
-    // Commodity Intelligence
-    commodity_intel_page_title: 'Commodity Intelligence',
-    commodity_intel_page_subtitle: 'Select a commodity and location to analyze price trends and compare markets.',
+    // Market Intelligence
+    market_intel_page_title: 'Market Intelligence',
+    market_intel_page_subtitle: 'Select a commodity and location to analyze price trends and compare markets.',
     select_commodity_loc: 'Select Commodity & Location',
     analysis_for: 'Analysis for',
     in: 'in',
@@ -167,8 +167,8 @@ export const translations: Translations = {
     mandi_rates_desc: 'नवीनतम कमोडिटी की कीमतें जांचें',
     crop_doctor_title: 'फसल डॉक्टर',
     crop_doctor_desc: 'AI से फसल रोगों का निदान करें',
-    commodity_intel_title: 'कमोडिटी इंटेल',
-    commodity_intel_desc: 'फसलों के लिए बाजार के रुझानों का विश्लेषण करें',
+    market_intel_title: 'बाजार इंटेलिजेंस',
+    market_intel_desc: 'फसलों के लिए बाजार के रुझानों का विश्लेषण करें',
     govt_schemes_title: 'सरकारी योजनाएं',
     govt_schemes_desc: 'संबंधित किसान योजनाएं खोजें',
     settings_title: 'सेटिंग्स',
@@ -204,9 +204,9 @@ export const translations: Translations = {
     tile_view: 'टाइल दृश्य',
     no_data_for_criteria: 'चयनित मानदंडों के लिए कोई डेटा उपलब्ध नहीं है। इस दिन बाजार बंद हो सकता है।',
 
-    // Commodity Intelligence
-    commodity_intel_page_title: 'कमोडिटी इंटेलिजेंस',
-    commodity_intel_page_subtitle: 'मूल्य रुझानों का विश्लेषण करने और बाजारों की तुलना करने के लिए एक कमोडिटी और स्थान चुनें।',
+    // Market Intelligence
+    market_intel_page_title: 'बाजार इंटेलिजेंस',
+    market_intel_page_subtitle: 'मूल्य रुझानों का विश्लेषण करने और बाजारों की तुलना करने के लिए एक कमोडिटी और स्थान चुनें।',
     select_commodity_loc: 'कमोडिटी और स्थान चुनें',
     analysis_for: 'के लिए विश्लेषण',
     in: 'में',
@@ -309,8 +309,8 @@ export const translations: Translations = {
     mandi_rates_desc: 'नवीनतम वस्तूंच्या किमती तपासा',
     crop_doctor_title: 'पीक डॉक्टर',
     crop_doctor_desc: 'AI च्या मदतीने पीक रोगांचे निदान करा',
-    commodity_intel_title: 'कमोडिटी इंटेल',
-    commodity_intel_desc: 'पिकांसाठी बाजाराच्या ट्रेंडचे विश्लेषण करा',
+    market_intel_title: 'बाजार इंटेलिजन्स',
+    market_intel_desc: 'पिकांसाठी बाजाराच्या ट्रेंडचे विश्लेषण करा',
     govt_schemes_title: 'सरकारी योजना',
     govt_schemes_desc: 'संबंधित शेतकरी योजना शोधा',
     settings_title: 'सेटिंग्ज',
@@ -346,9 +346,9 @@ export const translations: Translations = {
     tile_view: 'टाइल व्ह्यू',
     no_data_for_criteria: 'निवडलेल्या निकषांसाठी कोणताही डेटा उपलब्ध नाही. या दिवशी बाजार बंद असू शकतो.',
 
-    // Commodity Intelligence
-    commodity_intel_page_title: 'कमोडिटी इंटेलिजन्स',
-    commodity_intel_page_subtitle: 'किंमत ट्रेंडचे विश्लेषण करण्यासाठी आणि बाजारांची तुलना करण्यासाठी एक कमोडिटी आणि स्थान निवडा.',
+    // Market Intelligence
+    market_intel_page_title: 'बाजार इंटेलिजन्स',
+    market_intel_page_subtitle: 'किंमत ट्रेंडचे विश्लेषण करण्यासाठी आणि बाजारांची तुलना करण्यासाठी एक कमोडिटी आणि स्थान निवडा.',
     select_commodity_loc: 'कमोडिटी आणि स्थान निवडा',
     analysis_for: 'साठी विश्लेषण',
     in: 'मध्ये',

@@ -55,8 +55,8 @@ export function Sidebar({ open, onOpenChange }: { open: boolean, onOpenChange: (
         icon: <Users className="h-5 w-5" />,
     },
     {
-      title: t.commodity_intel_title,
-      href: '/commodity-intelligence',
+      title: t.market_intel_title,
+      href: '/market-intelligence',
       icon: <BrainCircuit className="h-5 w-5" />,
     },
     {

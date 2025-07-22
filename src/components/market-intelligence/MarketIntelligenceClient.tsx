@@ -44,7 +44,7 @@ const allSimulatedRates: { [key: string]: MandiRate[] } = {
     'Solapur': solapurMandiRates,
 };
 
-export default function CommodityIntelligenceClient() {
+export default function MarketIntelligenceClient() {
     const [selectedCommodity, setSelectedCommodity] = useState<string | null>(null);
     const [selectedState, setSelectedState] = useState<string>('Maharashtra');
     const [selectedDistrict, setSelectedDistrict] = useState<string>('Pune');
@@ -139,9 +139,9 @@ export default function CommodityIntelligenceClient() {
     return (
         <div className="container mx-auto p-4 md:p-8">
             <div className="text-center mb-8">
-                <h1 className="font-headline text-3xl md:text-4xl font-bold tracking-tighter">{t.commodity_intel_page_title}</h1>
+                <h1 className="font-headline text-3xl md:text-4xl font-bold tracking-tighter">{t.market_intel_page_title}</h1>
                 <p className="text-lg text-muted-foreground max-w-2xl mx-auto mt-2">
-                    {t.commodity_intel_page_subtitle}
+                    {t.market_intel_page_subtitle}
                 </p>
             </div>
 

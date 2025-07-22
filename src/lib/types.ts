@@ -24,8 +24,8 @@ export interface Translation {
   mandi_rates_desc: string;
   crop_doctor_title: string;
   crop_doctor_desc: string;
-  commodity_intel_title: string;
-  commodity_intel_desc: string;
+  market_intel_title: string;
+  market_intel_desc: string;
   govt_schemes_title: string;
   govt_schemes_desc: string;
   settings_title: string;
@@ -61,9 +61,9 @@ export interface Translation {
   tile_view: string;
   no_data_for_criteria: string;
 
-  // Commodity Intelligence
-  commodity_intel_page_title: string;
-  commodity_intel_page_subtitle: string;
+  // Market Intelligence
+  market_intel_page_title: string;
+  market_intel_page_subtitle: string;
   select_commodity_loc: string;
   analysis_for: string;
   in: string;
