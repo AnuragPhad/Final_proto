@@ -64,10 +64,16 @@ export default function MandiRatesClient() {
   const filteredRates = useMemo(() => {
     return allRates.filter(rate => {
       if (!rate.arrival_date) return false;
+      // The API returns dates in DD/MM/YYYY format.
       const [day, month, year] = rate.arrival_date.split('/');
       if (!day || !month || !year) return false;
-      const apiDate = new Date(Number(year), Number(month) - 1, Number(day));
-      return format(apiDate, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd');
+      try {
+        const apiDate = new Date(Number(year), Number(month) - 1, Number(day));
+        return format(apiDate, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd');
+      } catch (e) {
+        console.error('Invalid date format from API:', rate.arrival_date);
+        return false;
+      }
     });
   }, [allRates, selectedDate]);
 
@@ -96,7 +102,11 @@ export default function MandiRatesClient() {
       if (matchedState) {
           const matchedDistrict = districts[matchedState]?.find(d => result.market.toLowerCase().includes(d.toLowerCase()));
           setSelectedState(matchedState);
-          setSelectedDistrict(matchedDistrict || districts[matchedState][0]);
+          if (matchedDistrict) {
+            setSelectedDistrict(matchedDistrict);
+          } else if (districts[matchedState] && districts[matchedState].length > 0) {
+            setSelectedDistrict(districts[matchedState][0]);
+          }
       }
       
       setSelectedDate(new Date(result.date));
@@ -114,10 +124,14 @@ export default function MandiRatesClient() {
 
   const handleUseLocation = () => {
     toast({ title: 'Locating...', description: 'Fetching your current location.' });
+    
+    // In a real app, you would use navigator.geolocation.getCurrentPosition
+    // and a reverse geocoding service to get the state and district.
+    // For this demo, we'll simulate it.
     setTimeout(() => {
       setSelectedState('Maharashtra');
       setSelectedDistrict('Nashik');
-      toast({ title: 'Location Set!', description: 'Showing rates for Nashik, Maharashtra.' });
+      toast({ title: 'Location Set!', description: 'Showing rates for Nashik, Maharashtra. (Simulated)' });
     }, 1000);
   };
   
@@ -139,7 +153,9 @@ export default function MandiRatesClient() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Select value={selectedState} onValueChange={(value) => {
               setSelectedState(value);
-              setSelectedDistrict(districts[value][0]);
+              if (districts[value] && districts[value].length > 0) {
+                setSelectedDistrict(districts[value][0]);
+              }
             }}>
               <SelectTrigger><SelectValue placeholder="Select State" /></SelectTrigger>
               <SelectContent>
