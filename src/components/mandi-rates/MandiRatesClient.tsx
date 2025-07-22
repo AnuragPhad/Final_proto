@@ -186,7 +186,13 @@ export default function MandiRatesClient() {
             const data = await response.json();
             
             if (response.ok) {
-              const { state, district } = data;
+              const { state } = data;
+              let district = data.district;
+
+              // Clean the district name before matching
+              if (district && district.includes(' (District)')) {
+                district = district.replace(' (District)', '').trim();
+              }
               
               const stateExists = states.find(s => s.toLowerCase() === state?.toLowerCase());
               if (stateExists) {
