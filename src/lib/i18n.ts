@@ -127,8 +127,9 @@ export const translations: Translations = {
     days: 'days',
     estimated_harvest: 'Est. Harvest',
     next_watering_due_in: 'Next watering due in',
-    weekly_photo_check_due: 'Weekly photo health check is due',
+    weekly_photo_check_due: 'Weekly photo health check is due.',
     upload_health_photo: 'Upload Health Photo',
+    weather_advisory_text: 'High humidity may increase fungal risk. Ensure good air circulation around plants.',
   },
   hi: {
     // Settings
@@ -256,8 +257,9 @@ export const translations: Translations = {
     days: 'दिन',
     estimated_harvest: 'अनुमानित कटाई',
     next_watering_due_in: 'अगली सिंचाई के लिए बचे हैं',
-    weekly_photo_check_due: 'साप्ताहिक फोटो स्वास्थ्य जांच बाकी है',
+    weekly_photo_check_due: 'साप्ताहिक फोटो स्वास्थ्य जांच बाकी है।',
     upload_health_photo: 'स्वास्थ्य फोटो अपलोड करें',
+    weather_advisory_text: 'अधिक नमी से फंगल रोग का खतरा बढ़ सकता है। पौधों के आसपास अच्छी हवा का संचार सुनिश्चित करें।',
   },
   mr: {
     // Settings
@@ -385,7 +387,8 @@ export const translations: Translations = {
     days: 'दिवस',
     estimated_harvest: 'अंदाजे कापणी',
     next_watering_due_in: 'पुढील पाणी देण्यासाठी शिल्लक दिवस',
-    weekly_photo_check_due: 'साप्ताहिक फोटो आरोग्य तपासणी देय आहे',
+    weekly_photo_check_due: 'साप्ताहिक फोटो आरोग्य तपासणी देय आहे.',
     upload_health_photo: 'आरोग्य फोटो अपलोड करा',
+    weather_advisory_text: 'उच्च आर्द्रतेमुळे बुरशीजन्य रोगाचा धोका वाढू शकतो. रोपांभोवती चांगली हवा खेळती राहील याची खात्री करा.',
   },
 };

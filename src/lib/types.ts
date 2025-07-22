@@ -128,6 +128,7 @@ export interface Translation {
   next_watering_due_in: string;
   weekly_photo_check_due: string;
   upload_health_photo: string;
+  weather_advisory_text: string;
 }
 
 export interface Translations {

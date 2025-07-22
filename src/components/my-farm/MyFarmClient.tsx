@@ -11,7 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { CalendarIcon, PlusCircle, Wheat, Apple, Carrot, LeafyGreen, Citrus, HandPlatter, Tractor, Droplets, Camera } from 'lucide-react';
+import { CalendarIcon, PlusCircle, Wheat, Apple, Carrot, LeafyGreen, Citrus, HandPlatter, Tractor, Droplets, Camera, CloudSun } from 'lucide-react';
 import { format, differenceInDays, addDays } from 'date-fns';
 import { useLanguage } from '@/hooks/use-language';
 import Link from 'next/link';
@@ -161,18 +161,19 @@ export default function MyFarmClient() {
                                         </div>
                                         <Progress value={progress} />
                                     </div>
+                                    <Alert variant="default" className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+                                      <CloudSun className="h-4 w-4 text-blue-600" />
+                                      <AlertTitle className="text-blue-800 dark:text-blue-300">{t.water_weather_advisory}</AlertTitle>
+                                      <AlertDescription className="text-blue-700 dark:text-blue-400 text-xs">
+                                        {t.next_watering_due_in} 3 {t.days}.<br />{t.weather_advisory_text}
+                                      </AlertDescription>
+                                    </Alert>
                                     <div className="relative pl-6 before:absolute before:left-2 before:top-2 before:h-[calc(100%-1rem)] before:w-0.5 before:bg-border">
-                                        <div className="flex items-center gap-4 mb-4">
-                                            <div className="z-10 flex h-5 w-5 items-center justify-center rounded-full bg-secondary">
-                                                <Droplets className="h-3 w-3 text-secondary-foreground" />
-                                            </div>
-                                            <p className="text-sm">{t.next_watering_due_in} 3 {t.days}.</p>
-                                        </div>
                                         <div className="flex items-center gap-4">
                                             <div className="z-10 flex h-5 w-5 items-center justify-center rounded-full bg-secondary">
                                                 <Camera className="h-3 w-3 text-secondary-foreground" />
                                             </div>
-                                            <p className="text-sm">{t.weekly_photo_check_due}.</p>
+                                            <p className="text-sm">{t.weekly_photo_check_due}</p>
                                         </div>
                                     </div>
                                 </CardContent>
