@@ -342,10 +342,48 @@ export default function MandiRatesClient() {
         </p>
       </div>
 
+      <div className="flex flex-col items-center justify-center mb-8 space-y-4">
+        {hasRecognitionSupport ? (
+          <>
+            <Button 
+              onClick={isListening ? stopListening : handleStartListening} 
+              className={`rounded-full h-24 w-24 p-0 shadow-lg transition-transform transform hover:scale-110 ${isListening ? 'bg-destructive animate-pulse' : 'bg-primary'}`}
+              aria-label={isListening ? 'Stop listening' : 'Start voice search'}
+            >
+              <Mic className="h-10 w-10" />
+            </Button>
+            <p className="text-sm text-muted-foreground">
+              {isListening ? `Listening... "${transcript}"` : 'Tap the microphone to search with your voice'}
+            </p>
+          </>
+        ) : (
+          <p className="text-destructive">Voice search is not supported on your browser.</p>
+        )}
+      </div>
+
+      {aiSummary && (
+        <Alert className="mb-8 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+            <Bot className="h-4 w-4 text-blue-600" />
+            <div className='flex items-center justify-between'>
+              <AlertTitle className="font-headline text-blue-800 dark:text-blue-300">AI Summary</AlertTitle>
+              {audioSummaryUrl && (
+                  <Button variant="ghost" size="icon" onClick={handlePlayAudio} className="h-7 w-7 text-blue-600 hover:bg-blue-200/50">
+                      <Volume2 className="h-4 w-4" />
+                      <span className="sr-only">Play Summary</span>
+                  </Button>
+              )}
+            </div>
+            <AlertDescription className="text-blue-700 dark:text-blue-400">
+              {aiSummary}
+            </AlertDescription>
+            <audio ref={audioRef} src={audioSummaryUrl || ''} className="hidden" />
+        </Alert>
+      )}
+
       <Card>
         <CardHeader>
-          <CardTitle>Filters</CardTitle>
-          <CardDescription>Select location and date to find rates. Or use your voice!</CardDescription>
+          <CardTitle>Or, Filter Manually</CardTitle>
+          <CardDescription>Select location and date to find rates.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -385,40 +423,7 @@ export default function MandiRatesClient() {
             <Button onClick={handleUseLocation} variant="secondary" className="w-full">
               <LocateFixed className="mr-2 h-4 w-4" /> Use My Location
             </Button>
-            {hasRecognitionSupport && (
-                <Button onClick={isListening ? stopListening : handleStartListening} className="w-full" variant={isListening ? "destructive" : "default"}>
-                  <Mic className={`mr-2 h-4 w-4 ${isListening ? 'animate-pulse' : ''}`} />
-                  {isListening ? 'Listening...' : 'Search with Voice'}
-                </Button>
-            )}
           </div>
-          {isListening && (
-            <Alert className="bg-accent/20 border-accent/50">
-              <Bot className="h-4 w-4" />
-              <AlertTitle className="font-headline">Listening...</AlertTitle>
-              <AlertDescription>
-                {transcript ? `"${transcript}"` : 'Say something like "What is the price of onions in Pune today?"'}
-              </AlertDescription>
-            </Alert>
-          )}
-          {aiSummary && (
-            <Alert className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
-                <Bot className="h-4 w-4 text-blue-600" />
-                <div className='flex items-center justify-between'>
-                  <AlertTitle className="font-headline text-blue-800 dark:text-blue-300">AI Summary</AlertTitle>
-                  {audioSummaryUrl && (
-                      <Button variant="ghost" size="icon" onClick={handlePlayAudio} className="h-7 w-7 text-blue-600 hover:bg-blue-200/50">
-                          <Volume2 className="h-4 w-4" />
-                          <span className="sr-only">Play Summary</span>
-                      </Button>
-                  )}
-                </div>
-                <AlertDescription className="text-blue-700 dark:text-blue-400">
-                  {aiSummary}
-                </AlertDescription>
-                <audio ref={audioRef} src={audioSummaryUrl || ''} className="hidden" />
-            </Alert>
-          )}
         </CardContent>
       </Card>
 
@@ -515,3 +520,5 @@ export default function MandiRatesClient() {
     </div>
   );
 }
+
+    
