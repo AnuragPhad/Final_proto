@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Carrot, HeartPulse, ScrollText, Settings } from 'lucide-react';
+import { Carrot, HeartPulse, ScrollText, Settings, BrainCircuit } from 'lucide-react';
 
 const features = [
   {
@@ -16,6 +16,12 @@ const features = [
     description: 'Diagnose crop diseases with AI',
     href: '/crop-doctor',
     icon: <HeartPulse className="h-8 w-8 text-primary" />,
+  },
+  {
+    title: 'Commodity Intel',
+    description: 'Analyze market trends for crops',
+    href: '/commodity-intelligence',
+    icon: <BrainCircuit className="h-8 w-8 text-primary" />,
   },
   {
     title: 'Govt. Schemes',
@@ -43,7 +49,7 @@ export default function DashboardClient() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {features.map((feature) => (
           <Link href={feature.href} key={feature.href} className="group">
             <Card className="h-full transform transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-xl hover:border-primary/50">
