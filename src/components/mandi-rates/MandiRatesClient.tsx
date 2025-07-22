@@ -651,22 +651,30 @@ export default function MandiRatesClient() {
                         <AccordionContent className="p-0">
                            <div className="space-y-2 p-4">
                             {rates.map((rate, index) => (
-                                <div key={`${rate.commodity}-${rate.variety}-${index}`} className="flex items-center justify-between p-3 rounded-md bg-muted/50">
-                                    <div className="flex items-center gap-4">
-                                        <div className="text-primary text-2xl">{getCommodityIcon(rate.commodity)}</div>
-                                        <div>
-                                            <div className="font-bold text-base">{rate.commodity}</div>
-                                            <div className="text-sm text-muted-foreground">{rate.variety}</div>
+                                <button key={`${rate.commodity}-${rate.variety}-${index}`} 
+                                    className="w-full text-left"
+                                    onClick={() => {
+                                        setCommodityFilter(rate.commodity);
+                                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                                    }}
+                                >
+                                    <div className="flex items-center justify-between p-3 rounded-md bg-muted/50 hover:bg-muted transition-colors">
+                                        <div className="flex items-center gap-4">
+                                            <div className="text-primary text-2xl">{getCommodityIcon(rate.commodity)}</div>
+                                            <div>
+                                                <div className="font-bold text-base">{rate.commodity}</div>
+                                                <div className="text-sm text-muted-foreground">{rate.variety}</div>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="font-bold text-lg text-primary">Rs {rate.modalPrice}</div>
+                                            <div className="text-xs text-muted-foreground">
+                                                Min: Rs {rate.minPrice} | Max: Rs {rate.maxPrice}
+                                            </div>
+                                             <div className="text-xs text-muted-foreground">per Quintal</div>
                                         </div>
                                     </div>
-                                    <div className="text-right">
-                                        <div className="font-bold text-lg text-primary">Rs {rate.modalPrice}</div>
-                                        <div className="text-xs text-muted-foreground">
-                                            Min: Rs {rate.minPrice} | Max: Rs {rate.maxPrice}
-                                        </div>
-                                         <div className="text-xs text-muted-foreground">per Quintal</div>
-                                    </div>
-                                </div>
+                                </button>
                             ))}
                            </div>
                         </AccordionContent>
@@ -682,5 +690,3 @@ export default function MandiRatesClient() {
     </div>
   );
 }
-
-    
