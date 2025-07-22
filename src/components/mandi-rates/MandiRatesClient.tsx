@@ -133,14 +133,36 @@ export default function MandiRatesClient() {
   const handleUseLocation = () => {
     toast({ title: 'Locating...', description: 'Fetching your current location.' });
     
-    // In a real app, you would use navigator.geolocation.getCurrentPosition
-    // and a reverse geocoding service to get the state and district.
-    // For this demo, we'll simulate it.
-    setTimeout(() => {
-      setSelectedState('Maharashtra');
-      setSelectedDistrict('Nashik');
-      toast({ title: 'Location Set!', description: 'Showing rates for Nashik, Maharashtra. (Simulated)' });
-    }, 1000);
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          // In a real app, you would use these coordinates with a reverse geocoding API
+          // to get the state and district.
+          // const { latitude, longitude } = position.coords;
+          
+          // For this demo, we'll simulate the reverse geocoding result.
+          toast({ title: 'Location Found!', description: 'Reverse geocoding is simulated. Setting location to Nashik, Maharashtra.' });
+          setTimeout(() => {
+            setSelectedState('Maharashtra');
+            setSelectedDistrict('Nashik');
+          }, 500);
+        },
+        (error) => {
+          console.error("Geolocation error:", error);
+          toast({
+            variant: 'destructive',
+            title: 'Location Error',
+            description: 'Could not get your location. Please ensure you have granted permission.',
+          });
+        }
+      );
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'Unsupported',
+        description: 'Geolocation is not supported by your browser.',
+      });
+    }
   };
   
   return (
