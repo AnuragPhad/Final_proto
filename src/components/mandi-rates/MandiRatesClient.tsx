@@ -21,7 +21,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 export default function MandiRatesClient() {
   const [selectedState, setSelectedState] = useState<string>('Kerala');
   const [selectedDistrict, setSelectedDistrict] = useState<string>('Ernakulam');
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [allRates, setAllRates] = useState<MandiRate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -35,6 +35,10 @@ export default function MandiRatesClient() {
     error: speechError,
     hasRecognitionSupport,
   } = useSpeechRecognition();
+
+  useEffect(() => {
+    setSelectedDate(new Date());
+  }, []);
 
   const fetchRates = useCallback(async (state: string, district: string) => {
     setIsLoading(true);
@@ -62,6 +66,7 @@ export default function MandiRatesClient() {
 
 
   const filteredRates = useMemo(() => {
+    if (!selectedDate) return [];
     return allRates.filter(rate => {
       if (!rate.arrival_date) return false;
       // The API returns dates in DD/MM/YYYY format.
@@ -170,13 +175,13 @@ export default function MandiRatesClient() {
             </Select>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="w-full justify-start text-left font-normal">
+                <Button variant="outline" className="w-full justify-start text-left font-normal" disabled={!selectedDate}>
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {format(selectedDate, 'PPP')}
+                  {selectedDate ? format(selectedDate, 'PPP') : <span>Pick a date</span>}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
-                <Calendar mode="single" selected={selectedDate} onSelect={(d) => d && setSelectedDate(d)} initialFocus />
+                <Calendar mode="single" selected={selectedDate} onSelect={setSelectedDate} initialFocus />
               </PopoverContent>
             </Popover>
           </div>
@@ -205,7 +210,7 @@ export default function MandiRatesClient() {
 
       <div className="mt-8">
         <h2 className="font-headline text-2xl font-bold mb-4">
-          Rates for {selectedDistrict} on {format(selectedDate, 'do MMMM yyyy')}
+          Rates for {selectedDistrict} on {selectedDate ? format(selectedDate, 'do MMMM yyyy') : '...'}
         </h2>
          {error && (
             <Alert variant="destructive" className="mb-4">
