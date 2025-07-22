@@ -10,14 +10,20 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import { getMandiRates, MandiRate } from '@/data/mandi-rates';
 import { format } from 'date-fns';
+
+const MandiRateDataSchema = z.object({
+  market: z.string(),
+  minPrice: z.number(),
+  maxPrice: z.number(),
+  modalPrice: z.number(),
+});
 
 const MandiRateSummaryInputSchema = z.object({
   commodity: z.string().describe('The commodity to get rates for.'),
-  state: z.string().describe('The state where the market is located.'),
   district: z.string().describe('The district where the market is located.'),
-  date: z.string().describe("The date for the rates in 'yyyy-MM-dd' format."),
+  date: z.string().describe("The date for the rates in 'do MMMM yyyy' format."),
+  rates: z.array(MandiRateDataSchema).optional().describe('The list of market rates for the given commodity and location.'),
 });
 
 export type MandiRateSummaryInput = z.infer<typeof MandiRateSummaryInputSchema>;
@@ -37,17 +43,7 @@ export async function mandiRateSummary(
 const prompt = ai.definePrompt({
   name: 'mandiRateSummaryPrompt',
   input: {
-    schema: z.object({
-      commodity: z.string(),
-      district: z.string(),
-      date: z.string(),
-      rates: z.array(z.object({
-        market: z.string(),
-        minPrice: z.number(),
-        maxPrice: z.number(),
-        modalPrice: z.number(),
-      })).optional(),
-    })
+    schema: MandiRateSummaryInputSchema,
   },
   output: {schema: MandiRateSummaryOutputSchema},
   prompt: `You are a helpful assistant for farmers. Your task is to provide a clear and concise summary of commodity prices.
@@ -71,34 +67,7 @@ const mandiRateSummaryFlow = ai.defineFlow(
     outputSchema: MandiRateSummaryOutputSchema,
   },
   async (input) => {
-    const allRates = await getMandiRates(input.state, input.district);
-    
-    const selectedDate = new Date(input.date);
-
-    const filteredRates = allRates.filter(rate => {
-        if (!rate.arrival_date) return false;
-        const [day, month, year] = rate.arrival_date.split('/');
-        if (!day || !month || !year) return false;
-        try {
-            const apiDate = new Date(Number(year), Number(month) - 1, Number(day));
-            return format(apiDate, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd');
-        } catch (e) {
-            return false;
-        }
-    }).filter(rate => rate.commodity.toLowerCase().includes(input.commodity.toLowerCase()));
-
-    const { output } = await prompt({
-      commodity: input.commodity,
-      district: input.district,
-      date: format(selectedDate, 'do MMMM yyyy'),
-      rates: filteredRates.length > 0 ? filteredRates.map(r => ({
-        market: r.market,
-        minPrice: r.minPrice,
-        maxPrice: r.maxPrice,
-        modalPrice: r.modalPrice,
-      })) : undefined,
-    });
-
+    const { output } = await prompt(input);
     return output!;
   }
 );

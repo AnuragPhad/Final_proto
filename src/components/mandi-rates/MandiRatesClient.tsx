@@ -86,8 +86,6 @@ export default function MandiRatesClient() {
             }
         }
       }
-
-      setCommodityFilter(nluResult.commodity);
       
       let dateToQuery = selectedDate;
       if (nluResult.date) {
@@ -104,20 +102,43 @@ export default function MandiRatesClient() {
       }
 
       setAiSummary('Fetching latest prices...');
+      
+      // We must await new rates if the location changed
+      const ratesForSummary = locationChanged ? await getMandiRates(currentState, currentDistrict) : allRates;
+      
+      const filteredForSummary = ratesForSummary.filter(rate => {
+        if (!rate.arrival_date) return false;
+        const [day, month, year] = rate.arrival_date.split('/');
+        if (!day || !month || !year) return false;
+        try {
+          const apiDate = new Date(Number(year), Number(month) - 1, Number(day));
+          return format(apiDate, 'yyyy-MM-dd') === format(dateToQuery!, 'yyyy-MM-dd');
+        } catch (e) { return false; }
+      }).filter(rate => rate.commodity.toLowerCase().includes(nluResult.commodity.toLowerCase()));
+
+
       const summaryResult = await mandiRateSummary({
         commodity: nluResult.commodity,
-        state: currentState,
         district: currentDistrict,
-        date: format(dateToQuery!, 'yyyy-MM-dd'),
+        date: format(dateToQuery!, 'do MMMM yyyy'),
+        rates: filteredForSummary.length > 0 ? filteredForSummary.map(r => ({
+            market: r.market,
+            minPrice: r.minPrice,
+            maxPrice: r.maxPrice,
+            modalPrice: r.modalPrice,
+        })) : undefined,
       });
+
       setAiSummary(summaryResult.summary);
+      setCommodityFilter(nluResult.commodity);
 
 
-      if (!locationChanged) {
-        // If location didn't change, we still need to re-render with filters
+      if (locationChanged) {
+        setAllRates(ratesForSummary);
+        setIsLoading(false);
+      } else {
         setIsLoading(false);
       }
-      // If location DID change, the useEffect for state/district will handle fetching and loading state.
       
     } catch (e) {
       toast({ variant: 'destructive', title: 'AI Error', description: 'Could not process your voice command.' });
@@ -142,10 +163,9 @@ export default function MandiRatesClient() {
   const fetchRates = useCallback(async (state: string, district: string) => {
     setIsLoading(true);
     setError(null);
-    if (!commodityFilter) { // Don't clear summary if it's from a voice search
+    if (!commodityFilter) { 
       setAiSummary(null);
     }
-    // setCommodityFilter(null); // Keep commodity filter from voice search
     try {
       const fetchedRates = await getMandiRates(state, district);
       setAllRates(fetchedRates);
