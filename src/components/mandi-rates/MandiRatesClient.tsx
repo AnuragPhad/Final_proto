@@ -10,7 +10,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { CalendarIcon, Mic, LocateFixed, Bot, LayoutGrid, List, Wheat, Apple, Carrot, Grape, LeafyGreen, Lemon, Onion, HandPlatter } from 'lucide-react';
+import { CalendarIcon, Mic, LocateFixed, Bot, LayoutGrid, List, Wheat, Apple, Carrot, Grape, LeafyGreen, Citrus, HandPlatter } from 'lucide-react';
 import { format } from 'date-fns';
 import { states, districts } from '@/data/locations';
 import { getMandiRates, type MandiRate } from '@/data/mandi-rates';
@@ -22,12 +22,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 type ViewMode = 'table' | 'tile';
 
 const commodityIcons: { [key: string]: React.ReactNode } = {
-  'Onion': <Onion className="inline-block mr-2 text-red-500" />,
+  'Onion': <HandPlatter className="inline-block mr-2 text-red-500" />,
   'Potato': <Carrot className="inline-block mr-2 text-yellow-600" />, // No potato icon, using carrot as a substitute for root vegetable
   'Tomato': <Apple className="inline-block mr-2 text-red-600" />, // No tomato icon, using apple as a substitute
   'Wheat': <Wheat className="inline-block mr-2 text-yellow-500" />,
   'Grapes': <Grape className="inline-block mr-2 text-purple-600" />,
-  'Lemon': <Lemon className="inline-block mr-2 text-yellow-400" />,
+  'Lemon': <Citrus className="inline-block mr-2 text-yellow-400" />,
   'Cabbage': <LeafyGreen className="inline-block mr-2 text-green-600" />,
   'default': <HandPlatter className="inline-block mr-2 text-gray-500" />,
 };
