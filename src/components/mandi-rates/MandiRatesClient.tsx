@@ -287,6 +287,7 @@ export default function MandiRatesClient() {
               <TableRow>
                 <TableHead>Commodity</TableHead>
                 <TableHead>Variety</TableHead>
+                <TableHead>Market</TableHead>
                 <TableHead className="text-right">Min Price (₹/Quintal)</TableHead>
                 <TableHead className="text-right">Max Price (₹/Quintal)</TableHead>
                 <TableHead className="text-right">Modal Price (₹/Quintal)</TableHead>
@@ -298,6 +299,7 @@ export default function MandiRatesClient() {
                   <TableRow key={i}>
                     <TableCell><Skeleton className="h-5 w-24" /></TableCell>
                     <TableCell><Skeleton className="h-5 w-20" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-24" /></TableCell>
                     <TableCell className="text-right"><Skeleton className="h-5 w-16 ml-auto" /></TableCell>
                     <TableCell className="text-right"><Skeleton className="h-5 w-16 ml-auto" /></TableCell>
                     <TableCell className="text-right"><Skeleton className="h-5 w-16 ml-auto" /></TableCell>
@@ -308,6 +310,7 @@ export default function MandiRatesClient() {
                   <TableRow key={`${rate.commodity}-${rate.variety}-${index}`}>
                     <TableCell className="font-medium">{rate.commodity}</TableCell>
                     <TableCell>{rate.variety}</TableCell>
+                    <TableCell>{rate.market}</TableCell>
                     <TableCell className="text-right">{rate.minPrice}</TableCell>
                     <TableCell className="text-right">{rate.maxPrice}</TableCell>
                     <TableCell className="text-right font-bold text-primary">{rate.modalPrice}</TableCell>
@@ -315,7 +318,7 @@ export default function MandiRatesClient() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center h-24">No data available for the selected criteria. The market may be closed on this day.</TableCell>
+                  <TableCell colSpan={6} className="text-center h-24">No data available for the selected criteria. The market may be closed on this day.</TableCell>
                 </TableRow>
               )}
             </TableBody>
