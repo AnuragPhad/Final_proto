@@ -9,17 +9,19 @@ import { puneMandiRates } from '@/data/pune-mandi-rates';
 import { nashikMandiRates } from '@/data/nashik-mandi-rates';
 import { solapurMandiRates } from '@/data/solapur-mandi-rates';
 import type { MandiRate } from '@/data/mandi-rates';
-import { subDays, format } from 'date-fns';
+import { subDays, format, parse } from 'date-fns';
 import { commodityAnalysisFlow, CommodityAnalysisOutput } from '@/ai/flows/commodity-analysis-flow';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AreaChart, Area, CartesianGrid, Tooltip, XAxis, ResponsiveContainer } from 'recharts';
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { states, districts } from '@/data/locations';
 import { useLanguage } from '@/hooks/use-language';
 import { translateCommodity } from '@/lib/commodity-translations';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { cn } from '@/lib/utils';
+
 
 const commodities = [
     { name: 'Onion', icon: <HandPlatter className="h-10 w-10" /> },
@@ -31,51 +33,49 @@ const commodities = [
     { name: 'Grapes', icon: <Grape className="h-10 w-10" /> },
 ];
 
-const mockMarketData = [
-    { market: 'Pune', price: 2250 },
-    { market: 'Nashik', price: 2400 },
-    { market: 'Solapur', price: 2100 },
-    { market: 'Mumbai', price: 2550 },
-    { market: 'Nagpur', price: 2300 },
-];
-
 const allSimulatedRates: { [key: string]: MandiRate[] } = {
     'Pune': puneMandiRates,
     'Nashik': nashikMandiRates,
     'Solapur': solapurMandiRates,
 };
 
+interface MarketComparisonData {
+    market: string;
+    price: number;
+    date: string;
+}
+
 export default function MarketIntelligenceClient() {
-    const [selectedCommodity, setSelectedCommodity] = useState<string | null>(null);
+    const [selectedCommodity, setSelectedCommodity] = useState<string | null>('Onion');
     const [selectedState, setSelectedState] = useState<string>('Maharashtra');
     const [selectedDistrict, setSelectedDistrict] = useState<string>('Pune');
     const [trendData, setTrendData] = useState<any[]>([]);
     const [marketAnalysis, setMarketAnalysis] = useState<CommodityAnalysisOutput | null>(null);
+    const [marketComparisonData, setMarketComparisonData] = useState<MarketComparisonData[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const { language, t } = useLanguage();
 
     useEffect(() => {
-        if (selectedCommodity && selectedDistrict) {
+        if (selectedCommodity) {
             setIsLoading(true);
             setTrendData([]);
             setMarketAnalysis(null);
+            setMarketComparisonData([]);
 
             const today = new Date();
             const thirtyDaysAgo = subDays(today, 30);
             
+            // For Trend Chart (using selectedDistrict)
             const districtRates = allSimulatedRates[selectedDistrict] || [];
-
-            // Fetch historical data for trend
             const historicalData = districtRates
                 .filter(rate => rate.commodity.toLowerCase() === selectedCommodity.toLowerCase())
                 .map(rate => {
-                    const [day, month, year] = rate.arrival_date.split('/');
-                    return { ...rate, date: new Date(Number(year), Number(month) - 1, Number(day)) };
+                    const date = parse(rate.arrival_date, 'dd/MM/yyyy', new Date());
+                    return { ...rate, date };
                 })
                 .filter(rate => rate.date >= thirtyDaysAgo && rate.date <= today)
                 .sort((a, b) => a.date.getTime() - b.date.getTime());
 
-            // Generate trend chart data
             if (historicalData.length > 1) {
                 const formattedTrendData = historicalData.map(d => ({
                     date: format(d.date, 'dd MMM'),
@@ -86,24 +86,37 @@ export default function MarketIntelligenceClient() {
                 setTrendData([]);
             }
 
+            // For Cross-Market Comparison Table (using all available markets)
+            const comparisonData: MarketComparisonData[] = [];
+            for (const market in allSimulatedRates) {
+                const latestRate = allSimulatedRates[market]
+                    .filter(rate => rate.commodity.toLowerCase() === selectedCommodity.toLowerCase())
+                    .sort((a, b) => parse(b.arrival_date, 'dd/MM/yyyy', new Date()).getTime() - parse(a.arrival_date, 'dd/MM/yyyy', new Date()).getTime())
+                    [0];
+                
+                if (latestRate) {
+                    comparisonData.push({
+                        market: latestRate.district,
+                        price: latestRate.modalPrice,
+                        date: latestRate.arrival_date,
+                    });
+                }
+            }
+            setMarketComparisonData(comparisonData);
+
             // Generate AI market analysis
             const generateMarketAnalysis = async () => {
-                try {
-                    // Adjust mock data to have prices relative to the selected commodity's latest price
-                    const latestPrice = historicalData.length > 0 ? historicalData[historicalData.length - 1].modalPrice : 2300;
-                    const dynamicMarketData = mockMarketData.map((market, index) => ({
-                        ...market,
-                        price: Math.round((latestPrice * (1 + (index - 2) * 0.05)) / 10) * 10 // Adjust prices around the latest price
-                    }));
-
-                    const analysis = await commodityAnalysisFlow({
-                        commodity: selectedCommodity,
-                        prices: dynamicMarketData
-                    });
-                    setMarketAnalysis(analysis);
-                } catch (e) {
-                    console.error("Market analysis error", e);
-                    setMarketAnalysis(null);
+                if(comparisonData.length > 0) {
+                    try {
+                        const analysis = await commodityAnalysisFlow({
+                            commodity: selectedCommodity,
+                            prices: comparisonData.map(d => ({ market: d.market, price: d.price }))
+                        });
+                        setMarketAnalysis(analysis);
+                    } catch (e) {
+                        console.error("Market analysis error", e);
+                        setMarketAnalysis(null);
+                    }
                 }
             };
 
@@ -122,6 +135,18 @@ export default function MarketIntelligenceClient() {
     const translatedSelectedCommodity = useMemo(() => {
         return selectedCommodity ? translateCommodity(selectedCommodity, language) : null;
     }, [selectedCommodity, language]);
+
+    const { highestPriceMarket, lowestPriceMarket } = useMemo(() => {
+        if (marketComparisonData.length === 0) return { highestPriceMarket: null, lowestPriceMarket: null };
+        let highest = marketComparisonData[0];
+        let lowest = marketComparisonData[0];
+        marketComparisonData.forEach(item => {
+            if (item.price > highest.price) highest = item;
+            if (item.price < lowest.price) lowest = item;
+        });
+        return { highestPriceMarket: highest.market, lowestPriceMarket: lowest.market };
+    }, [marketComparisonData]);
+
 
     return (
         <div className="container mx-auto p-4 md:p-8">
@@ -174,14 +199,14 @@ export default function MarketIntelligenceClient() {
             {selectedCommodity && (
                 <div className="space-y-8">
                     <h2 className="font-headline text-2xl font-bold text-center">
-                        {t.analysis_for} {translatedSelectedCommodity} {t.in} {selectedDistrict}
+                        {t.analysis_for} {translatedSelectedCommodity}
                     </h2>
 
                     {/* Price Trend Analysis */}
                     <Card>
                         <CardHeader>
-                            <CardTitle className="font-headline flex items-center gap-2"><LineChart /> {t.price_trend}</CardTitle>
-                            <CardDescription>{t.last_30_days_modal_prices} {selectedDistrict}.</CardDescription>
+                            <CardTitle className="font-headline flex items-center gap-2"><LineChart /> {t.price_trend} {t.in} {selectedDistrict}</CardTitle>
+                            <CardDescription>{t.last_30_days_modal_prices}</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <div className="h-80">
@@ -214,31 +239,47 @@ export default function MarketIntelligenceClient() {
                             <CardTitle className="font-headline flex items-center gap-2"><BrainCircuit /> {t.cross_market_analysis}</CardTitle>
                             <CardDescription>{t.cross_market_desc}</CardDescription>
                         </CardHeader>
-                        <CardContent className="space-y-2">
-                           {isLoading ? (
-                                Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)
-                            ) : marketAnalysis ? (
-                                <>
-                                    <div className="mb-4">
-                                        <Alert>
-                                            <BrainCircuit className="h-4 w-4" />
-                                            <AlertTitle>{t.ai_market_insight}</AlertTitle>
-                                            <AlertDescription>
-                                                {marketAnalysis.summary}
-                                            </AlertDescription>
-                                        </Alert>
-                                    </div>
-                                    {mockMarketData.map(market => (
-                                        <div key={market.market} className="flex justify-between items-center p-3 rounded-md bg-muted/50">
-                                            <p className="font-semibold">{market.market}</p>
-                                            <Badge variant={market.market === marketAnalysis?.highestPriceMarket ? "default" : market.market === marketAnalysis?.lowestPriceMarket ? "destructive" : "secondary"}>
-                                                Rs {market.price} / Quintal
-                                            </Badge>
-                                        </div>
-                                    ))}
-                                </>
-                            ) : (
-                                 <div className="flex items-center justify-center h-20 text-muted-foreground">{t.no_market_analysis_available}</div>
+                        <CardContent className="space-y-4">
+                           {isLoading ? <Skeleton className="h-40 w-full" /> : 
+                           marketAnalysis ? (
+                               <Alert>
+                                   <BrainCircuit className="h-4 w-4" />
+                                   <AlertTitle>{t.ai_market_insight}</AlertTitle>
+                                   <AlertDescription>
+                                       {marketAnalysis.summary}
+                                   </AlertDescription>
+                               </Alert>
+                           ) : (
+                               <div className="flex items-center justify-center h-10 text-muted-foreground">{t.no_market_analysis_available}</div>
+                           )}
+
+                            {marketComparisonData.length > 0 ? (
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Market (District)</TableHead>
+                                            <TableHead>Latest Date</TableHead>
+                                            <TableHead className="text-right">Latest Price (per Quintal)</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {marketComparisonData.map(market => (
+                                            <TableRow 
+                                                key={market.market}
+                                                className={cn(
+                                                    market.market === highestPriceMarket && 'bg-green-100/50 dark:bg-green-900/20 hover:bg-green-100/60',
+                                                    market.market === lowestPriceMarket && 'bg-red-100/50 dark:bg-red-900/20 hover:bg-red-100/60'
+                                                )}
+                                            >
+                                                <TableCell className="font-medium">{market.market}</TableCell>
+                                                <TableCell>{market.date}</TableCell>
+                                                <TableCell className="text-right font-bold">Rs {market.price}</TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            ) : !isLoading && (
+                                <div className="flex items-center justify-center h-20 text-muted-foreground">{t.no_data_for_trend_analysis}</div>
                             )}
                         </CardContent>
                     </Card>
