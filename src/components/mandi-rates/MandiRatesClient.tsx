@@ -146,17 +146,31 @@ export default function MandiRatesClient() {
               const state = data.address.state;
               const district = data.address.state_district || data.address.county || data.address.city;
 
-              if (state && district && states.includes(state) && districts[state]?.includes(district)) {
-                toast({ title: 'Location Found!', description: `Setting location to ${district}, ${state}.` });
-                setSelectedState(state);
-                setSelectedDistrict(district);
+              if (state && states.includes(state)) {
+                 if (district && districts[state]?.includes(district)) {
+                    toast({ title: 'Location Found!', description: `Setting location to ${district}, ${state}.` });
+                    setSelectedState(state);
+                    setSelectedDistrict(district);
+                 } else {
+                    toast({
+                      variant: 'destructive',
+                      title: 'District Not Supported',
+                      description: `Your district (${district}) is not currently in our supported list for ${state}.`,
+                    });
+                 }
               } else {
                 toast({
                   variant: 'destructive',
-                  title: 'Location Not Supported',
-                  description: 'We could not find your location in our supported areas.',
+                  title: 'State Not Supported',
+                  description: `Your state (${state}) is not currently in our supported list.`,
                 });
               }
+            } else {
+                 toast({
+                  variant: 'destructive',
+                  title: 'Location Not Found',
+                  description: 'Could not determine your location from the coordinates.',
+                });
             }
           } catch (error) {
               console.error("Reverse geocoding error:", error);
