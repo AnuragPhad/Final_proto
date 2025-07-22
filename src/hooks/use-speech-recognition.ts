@@ -2,6 +2,10 @@
 
 import { useState, useEffect, useRef } from 'react';
 
+interface SpeechRecognitionOptions {
+  onTranscript?: (transcript: string) => void;
+}
+
 interface SpeechRecognitionHook {
   isListening: boolean;
   transcript: string;
@@ -11,11 +15,14 @@ interface SpeechRecognitionHook {
   hasRecognitionSupport: boolean;
 }
 
-export const useSpeechRecognition = (): SpeechRecognitionHook => {
+export const useSpeechRecognition = (
+  options: SpeechRecognitionOptions = {}
+): SpeechRecognitionHook => {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [error, setError] = useState<string | null>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const { onTranscript } = options;
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -27,17 +34,17 @@ export const useSpeechRecognition = (): SpeechRecognitionHook => {
     }
 
     const recognition = new SpeechRecognition();
-    recognition.continuous = true;
+    recognition.continuous = false; // Important: set to false for single commands
     recognition.interimResults = true;
     recognition.lang = 'en-IN';
 
     recognition.onstart = () => {
       setIsListening(true);
+      setTranscript('');
     };
 
     recognition.onend = () => {
       setIsListening(false);
-      setTranscript('');
     };
 
     recognition.onerror = (event) => {
@@ -49,7 +56,12 @@ export const useSpeechRecognition = (): SpeechRecognitionHook => {
         .map((result) => result[0])
         .map((result) => result.transcript)
         .join('');
+        
       setTranscript(currentTranscript);
+
+      if (event.results[0]?.isFinal && onTranscript) {
+        onTranscript(currentTranscript.trim());
+      }
     };
 
     recognitionRef.current = recognition;
@@ -57,6 +69,7 @@ export const useSpeechRecognition = (): SpeechRecognitionHook => {
     return () => {
       recognitionRef.current?.stop();
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const startListening = () => {
@@ -82,3 +95,5 @@ export const useSpeechRecognition = (): SpeechRecognitionHook => {
     hasRecognitionSupport: !!recognitionRef.current,
   };
 };
+
+    

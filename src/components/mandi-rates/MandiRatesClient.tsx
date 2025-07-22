@@ -57,6 +57,55 @@ export default function MandiRatesClient() {
   const [commodityFilter, setCommodityFilter] = useState<string | null>(null);
   const { toast } = useToast();
 
+  
+  const handleVoiceSearch = async (query: string) => {
+    if (!query) return;
+    setAiSummary('Understanding your query...');
+    setIsLoading(true);
+    setCommodityFilter(null);
+    try {
+      const result = await understandMandiRateQuery({ query });
+      setAiSummary(result.summary);
+      
+      let locationChanged = false;
+      if (result.market) {
+        for (const state of states) {
+            const district = districts[state]?.find(d => result.market!.toLowerCase().includes(d.toLowerCase()));
+            if (district) {
+                if (selectedState !== state || selectedDistrict !== district) {
+                    setSelectedState(state);
+                    setSelectedDistrict(district);
+                    locationChanged = true;
+                }
+                break;
+            }
+        }
+      }
+
+      setCommodityFilter(result.commodity);
+
+      if (result.date) {
+        try {
+            setSelectedDate(new Date(result.date));
+        } catch (e) {
+            console.error("Invalid date from NLU:", result.date);
+            setSelectedDate(new Date());
+        }
+      }
+
+      if (!locationChanged) {
+        // If location didn't change, we still need to re-render with filters
+        setIsLoading(false);
+      }
+      // If location DID change, the useEffect for state/district will handle fetching and loading state.
+      
+    } catch (e) {
+      toast({ variant: 'destructive', title: 'AI Error', description: 'Could not understand your query.' });
+      setAiSummary('Sorry, I had trouble understanding. Please try again.');
+      setIsLoading(false);
+    }
+  };
+
   const {
     isListening,
     transcript,
@@ -64,7 +113,7 @@ export default function MandiRatesClient() {
     stopListening,
     error: speechError,
     hasRecognitionSupport,
-  } = useSpeechRecognition();
+  } = useSpeechRecognition({onTranscript: handleVoiceSearch});
 
   useEffect(() => {
     setSelectedDate(new Date());
@@ -139,61 +188,6 @@ export default function MandiRatesClient() {
     }
   }, [speechError, toast]);
 
-  useEffect(() => {
-    if (!isListening && transcript) {
-      handleVoiceSearch(transcript);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isListening, transcript]);
-
-  const handleVoiceSearch = async (query: string) => {
-    if (!query) return;
-    setAiSummary('Understanding your query...');
-    setIsLoading(true);
-    setCommodityFilter(null);
-    try {
-      const result = await understandMandiRateQuery({ query });
-      setAiSummary(result.summary);
-      
-      let locationChanged = false;
-      if (result.market) {
-        for (const state of states) {
-            const district = districts[state]?.find(d => result.market!.toLowerCase().includes(d.toLowerCase()));
-            if (district) {
-                if (selectedState !== state || selectedDistrict !== district) {
-                    setSelectedState(state);
-                    setSelectedDistrict(district);
-                    locationChanged = true;
-                }
-                break;
-            }
-        }
-      }
-
-      setCommodityFilter(result.commodity);
-
-      if (result.date) {
-        try {
-            setSelectedDate(new Date(result.date));
-        } catch (e) {
-            console.error("Invalid date from NLU:", result.date);
-            setSelectedDate(new Date());
-        }
-      }
-
-      if (!locationChanged) {
-        // If location didn't change, we still need to re-render with filters
-        setIsLoading(false);
-      }
-      // If location DID change, the useEffect for state/district will handle fetching and loading state.
-      
-    } catch (e) {
-      toast({ variant: 'destructive', title: 'AI Error', description: 'Could not understand your query.' });
-      setAiSummary('Sorry, I had trouble understanding. Please try again.');
-      setIsLoading(false);
-    }
-  };
-
   const handleUseLocation = () => {
     toast({ title: 'Locating...', description: 'Please wait while we fetch your location.' });
     
@@ -208,10 +202,21 @@ export default function MandiRatesClient() {
             
             if (response.ok) {
               let { state, district } = data;
+
+              if (!district) {
+                toast({
+                  variant: 'destructive',
+                  title: 'Location Not Found',
+                  description: 'Could not determine your district.',
+                });
+                return;
+              }
               
+              const cleanedDistrict = district.toLowerCase().replace(' (district)', '').trim();
               const stateExists = states.find(s => s.toLowerCase() === state?.toLowerCase());
+              
               if (stateExists) {
-                 const districtExists = districts[stateExists]?.find(d => district?.toLowerCase().includes(d.toLowerCase()));
+                 const districtExists = districts[stateExists]?.find(d => d.toLowerCase() === cleanedDistrict);
                  if (districtExists) {
                     toast({ title: 'Location Found!', description: `Setting location to ${districtExists}, ${stateExists}.` });
                     setSelectedState(stateExists);
@@ -463,3 +468,5 @@ export default function MandiRatesClient() {
     </div>
   );
 }
+
+    
