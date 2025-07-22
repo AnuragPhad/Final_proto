@@ -11,7 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { CalendarIcon, PlusCircle, Wheat, Apple, Carrot, LeafyGreen, Citrus, HandPlatter, Tractor, Droplets, Camera, CloudSun } from 'lucide-react';
+import { CalendarIcon, PlusCircle, Wheat, Apple, Carrot, LeafyGreen, Citrus, HandPlatter, Tractor, Droplets, Camera, CloudSun, Pencil } from 'lucide-react';
 import { format, differenceInDays, addDays } from 'date-fns';
 import { useLanguage } from '@/hooks/use-language';
 import Link from 'next/link';
@@ -41,13 +41,41 @@ export default function MyFarmClient() {
     const { t } = useLanguage();
     const [cropCycles, setCropCycles] = useState<CropCycle[]>([]);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [editingCycle, setEditingCycle] = useState<CropCycle | null>(null);
     
     // Form state
     const [selectedCrop, setSelectedCrop] = useState<string>('');
     const [sowingDate, setSowingDate] = useState<Date | undefined>(new Date());
 
-    const handleAddCropCycle = () => {
-        if (selectedCrop && sowingDate) {
+    const handleOpenDialog = (cycle: CropCycle | null = null) => {
+        setEditingCycle(cycle);
+        if (cycle) {
+            setSelectedCrop(cycle.cropName);
+            setSowingDate(cycle.sowingDate);
+        } else {
+            setSelectedCrop('');
+            setSowingDate(new Date());
+        }
+        setIsDialogOpen(true);
+    };
+
+    const handleSaveChanges = () => {
+        if (!selectedCrop || !sowingDate) return;
+
+        if (editingCycle) {
+            // Update existing cycle
+            const cropDetails = supportedCrops.find(c => c.name === selectedCrop);
+            if (!cropDetails) return;
+
+            setCropCycles(prev => 
+                prev.map(c => 
+                    c.id === editingCycle.id 
+                    ? { ...c, cropName: selectedCrop, sowingDate: sowingDate, duration: cropDetails.duration } 
+                    : c
+                )
+            );
+        } else {
+            // Add new cycle
             const cropDetails = supportedCrops.find(c => c.name === selectedCrop);
             if (!cropDetails) return;
 
@@ -58,12 +86,11 @@ export default function MyFarmClient() {
                 duration: cropDetails.duration,
             };
             setCropCycles(prev => [...prev, newCycle]);
-            
-            // Reset form and close dialog
-            setSelectedCrop('');
-            setSowingDate(new Date());
-            setIsDialogOpen(false);
         }
+        
+        // Reset form and close dialog
+        setIsDialogOpen(false);
+        setEditingCycle(null);
     };
 
     return (
@@ -77,15 +104,15 @@ export default function MyFarmClient() {
                 </div>
                  <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger asChild>
-                        <Button>
+                        <Button onClick={() => handleOpenDialog()}>
                             <PlusCircle className="mr-2 h-4 w-4" /> {t.start_new_cycle}
                         </Button>
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-[425px]">
                         <DialogHeader>
-                            <DialogTitle>{t.add_new_crop_cycle}</DialogTitle>
+                            <DialogTitle>{editingCycle ? 'Edit Crop Cycle' : t.add_new_crop_cycle}</DialogTitle>
                             <DialogDescription>
-                                {t.add_new_crop_cycle_desc}
+                                {editingCycle ? 'Update the details for your crop cycle.' : t.add_new_crop_cycle_desc}
                             </DialogDescription>
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
@@ -122,7 +149,9 @@ export default function MyFarmClient() {
                             </div>
                         </div>
                         <DialogFooter>
-                            <Button onClick={handleAddCropCycle} disabled={!selectedCrop || !sowingDate}>{t.add_cycle_button}</Button>
+                            <Button onClick={handleSaveChanges} disabled={!selectedCrop || !sowingDate}>
+                                {editingCycle ? 'Save Changes' : t.add_cycle_button}
+                            </Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
@@ -133,7 +162,7 @@ export default function MyFarmClient() {
                     <Tractor className="h-16 w-16 text-muted-foreground/50 mb-4" />
                     <h2 className="text-xl font-headline font-semibold">{t.no_active_cycles_title}</h2>
                     <p className="text-muted-foreground mb-4">{t.no_active_cycles_desc}</p>
-                    <Button onClick={() => setIsDialogOpen(true)}>
+                    <Button onClick={() => handleOpenDialog()}>
                         <PlusCircle className="mr-2 h-4 w-4" /> {t.start_your_first_cycle}
                     </Button>
                  </Card>
@@ -146,12 +175,17 @@ export default function MyFarmClient() {
 
                         return (
                             <Card key={cycle.id} className="flex flex-col">
-                                <CardHeader className="flex flex-row items-start gap-4">
-                                    <div className="text-primary">{getCropIcon(cycle.cropName)}</div>
-                                    <div>
-                                        <CardTitle className="font-headline text-2xl">{cycle.cropName}</CardTitle>
-                                        <CardDescription>{t.sown_on} {format(cycle.sowingDate, 'do MMMM yyyy')}</CardDescription>
+                                <CardHeader className="flex flex-row items-start justify-between">
+                                    <div className="flex gap-4">
+                                        <div className="text-primary">{getCropIcon(cycle.cropName)}</div>
+                                        <div>
+                                            <CardTitle className="font-headline text-2xl">{cycle.cropName}</CardTitle>
+                                            <CardDescription>{t.sown_on} {format(cycle.sowingDate, 'do MMMM yyyy')}</CardDescription>
+                                        </div>
                                     </div>
+                                    <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(cycle)}>
+                                        <Pencil className="h-4 w-4" />
+                                    </Button>
                                 </CardHeader>
                                 <CardContent className="flex-grow space-y-4">
                                     <div>
