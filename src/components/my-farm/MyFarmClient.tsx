@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -15,6 +16,8 @@ import { CalendarIcon, PlusCircle, Wheat, Apple, Carrot, LeafyGreen, Citrus, Han
 import { format, differenceInDays, addDays } from 'date-fns';
 import { useLanguage } from '@/hooks/use-language';
 import Link from 'next/link';
+import GrowingPlant from './GrowingPlant';
+
 
 const supportedCrops = [
     { name: 'Onion', icon: <HandPlatter className="h-10 w-10" />, duration: 120 },
@@ -195,21 +198,25 @@ export default function MyFarmClient() {
                                         </div>
                                         <Progress value={progress} />
                                     </div>
-                                    <Alert variant="default" className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
-                                      <CloudSun className="h-4 w-4 text-blue-600" />
-                                      <AlertTitle className="text-blue-800 dark:text-blue-300">{t.water_weather_advisory}</AlertTitle>
-                                      <AlertDescription className="text-blue-700 dark:text-blue-400 text-xs">
-                                        {t.next_watering_due_in} 3 {t.days}.<br />{t.weather_advisory_text}
-                                      </AlertDescription>
-                                    </Alert>
-                                    <div className="relative pl-6 before:absolute before:left-2 before:top-2 before:h-[calc(100%-1rem)] before:w-0.5 before:bg-border">
-                                        <div className="flex items-center gap-4">
-                                            <div className="z-10 flex h-5 w-5 items-center justify-center rounded-full bg-secondary">
-                                                <Camera className="h-3 w-3 text-secondary-foreground" />
-                                            </div>
-                                            <p className="text-sm">{t.weekly_photo_check_due}</p>
+
+                                    <div className="grid grid-cols-2 gap-4 items-end">
+                                        <div className="space-y-2">
+                                            <Alert variant="default" className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+                                              <CloudSun className="h-4 w-4 text-blue-600" />
+                                              <AlertTitle className="text-blue-800 dark:text-blue-300">{t.water_weather_advisory}</AlertTitle>
+                                              <AlertDescription className="text-blue-700 dark:text-blue-400 text-xs">
+                                                {t.next_watering_due_in} 3 {t.days}.<br />{t.weather_advisory_text}
+                                              </AlertDescription>
+                                            </Alert>
+                                            <Alert>
+                                               <Camera className="h-4 w-4" />
+                                               <AlertTitle>Health Check</AlertTitle>
+                                                <AlertDescription className="text-xs">{t.weekly_photo_check_due}</AlertDescription>
+                                            </Alert>
                                         </div>
+                                        <GrowingPlant progress={progress} />
                                     </div>
+
                                 </CardContent>
                                 <CardFooter>
                                     <Button asChild variant="outline" className="w-full">
