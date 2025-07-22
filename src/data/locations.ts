@@ -455,6 +455,7 @@ export const districts: {[key: string]: string[]} = {
     'Palghar',
     'Parbhani',
     'Pune',
+    'Pune District',
     'Raigad',
     'Ratnagiri',
     'Sangli',
