@@ -12,7 +12,7 @@ import { subDays, format } from 'date-fns';
 import { priceTrendFlow, PriceTrendOutput } from '@/ai/flows/price-trend-flow';
 import { commodityAnalysisFlow, CommodityAnalysisOutput } from '@/ai/flows/commodity-analysis-flow';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AreaChart, CartesianGrid, Tooltip, XAxis, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, CartesianGrid, Tooltip, XAxis, ResponsiveContainer } from 'recharts';
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
