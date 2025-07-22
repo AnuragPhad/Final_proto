@@ -4,13 +4,12 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { HandPlatter, Wheat, Apple, Carrot, LeafyGreen, Citrus, LineChart, TrendingUp, BrainCircuit, Grape } from 'lucide-react';
+import { HandPlatter, Wheat, Apple, Carrot, LeafyGreen, Citrus, LineChart, BrainCircuit, Grape } from 'lucide-react';
 import { puneMandiRates } from '@/data/pune-mandi-rates';
 import { nashikMandiRates } from '@/data/nashik-mandi-rates';
 import { solapurMandiRates } from '@/data/solapur-mandi-rates';
 import type { MandiRate } from '@/data/mandi-rates';
 import { subDays, format } from 'date-fns';
-import { priceTrendFlow, PriceTrendOutput } from '@/ai/flows/price-trend-flow';
 import { commodityAnalysisFlow, CommodityAnalysisOutput } from '@/ai/flows/commodity-analysis-flow';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AreaChart, Area, CartesianGrid, Tooltip, XAxis, ResponsiveContainer } from 'recharts';
@@ -51,7 +50,6 @@ export default function MarketIntelligenceClient() {
     const [selectedState, setSelectedState] = useState<string>('Maharashtra');
     const [selectedDistrict, setSelectedDistrict] = useState<string>('Pune');
     const [trendData, setTrendData] = useState<any[]>([]);
-    const [trendAdvice, setTrendAdvice] = useState<PriceTrendOutput | null>(null);
     const [marketAnalysis, setMarketAnalysis] = useState<CommodityAnalysisOutput | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const { language, t } = useLanguage();
@@ -60,7 +58,6 @@ export default function MarketIntelligenceClient() {
         if (selectedCommodity && selectedDistrict) {
             setIsLoading(true);
             setTrendData([]);
-            setTrendAdvice(null);
             setMarketAnalysis(null);
 
             const today = new Date();
@@ -85,24 +82,8 @@ export default function MarketIntelligenceClient() {
                     price: d.modalPrice,
                 }));
                 setTrendData(formattedTrendData);
-
-                // Generate AI trend advice
-                const generateTrendAdvice = async () => {
-                    try {
-                        const advice = await priceTrendFlow({
-                            commodity: selectedCommodity,
-                            prices: formattedTrendData.map(d => d.price)
-                        });
-                        setTrendAdvice(advice);
-                    } catch (e) {
-                        console.error("Trend advice error", e);
-                        setTrendAdvice(null);
-                    }
-                };
-                generateTrendAdvice();
             } else {
                 setTrendData([]);
-                setTrendAdvice(null);
             }
 
             // Generate AI market analysis
@@ -202,8 +183,8 @@ export default function MarketIntelligenceClient() {
                             <CardTitle className="font-headline flex items-center gap-2"><LineChart /> {t.price_trend}</CardTitle>
                             <CardDescription>{t.last_30_days_modal_prices} {selectedDistrict}.</CardDescription>
                         </CardHeader>
-                        <CardContent className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                            <div className="lg:col-span-2 h-80">
+                        <CardContent>
+                            <div className="h-80">
                                 {isLoading ? <Skeleton className="h-full w-full" /> : 
                                 trendData.length > 0 ? (
                                     <ChartContainer config={chartConfig} className="h-full w-full">
@@ -222,21 +203,6 @@ export default function MarketIntelligenceClient() {
                                     </ChartContainer>
                                 ) : (
                                     <div className="flex items-center justify-center h-full text-muted-foreground">{t.no_data_for_trend_analysis}</div>
-                                )}
-                            </div>
-                            <div className="lg:col-span-1 flex items-center">
-                                {isLoading ? <Skeleton className="h-24 w-full" /> : 
-                                trendAdvice ? (
-                                    <Alert className="h-full bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
-                                        <TrendingUp className="h-4 w-4 text-green-600" />
-                                        <AlertTitle className="font-headline text-green-800 dark:text-green-300">{t.ai_selling_advice}</AlertTitle>
-                                        <AlertDescription className="text-green-700 dark:text-green-400">
-                                            <p className="font-bold">{trendAdvice.trend}</p>
-                                            <p>{trendAdvice.suggestion}</p>
-                                        </AlertDescription>
-                                    </Alert>
-                                ) : (
-                                    <div className="flex items-center justify-center h-full text-muted-foreground">{t.no_trend_advice_available}</div>
                                 )}
                             </div>
                         </CardContent>
