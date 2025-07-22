@@ -13,6 +13,7 @@ import { cropDoctorInitialAnalysis, CropDoctorInitialAnalysisOutput } from '@/ai
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useLanguage } from '@/hooks/use-language';
 
 interface AnalysisResult extends CropDoctorInitialAnalysisOutput {
   healthStatus: string;
@@ -52,6 +53,7 @@ export default function CropDoctorClient() {
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -114,17 +116,17 @@ export default function CropDoctorClient() {
   return (
     <div className="container mx-auto p-4 md:p-8">
       <div className="text-center mb-8">
-        <h1 className="font-headline text-3xl md:text-4xl font-bold tracking-tighter">Crop Doctor</h1>
+        <h1 className="font-headline text-3xl md:text-4xl font-bold tracking-tighter">{t.crop_doctor_page_title}</h1>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto mt-2">
-          Upload a photo of your crop to get an AI-powered health analysis and recommendations.
+          {t.crop_doctor_page_subtitle}
         </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
         <Card className="sticky top-24">
           <CardHeader>
-            <CardTitle>Upload Crop Image</CardTitle>
-            <CardDescription>Choose a file from your device or use your camera.</CardDescription>
+            <CardTitle>{t.upload_crop_image}</CardTitle>
+            <CardDescription>{t.upload_crop_image_desc}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -134,21 +136,21 @@ export default function CropDoctorClient() {
                 ) : (
                   <div className="text-center text-muted-foreground">
                     <Upload className="mx-auto h-12 w-12" />
-                    <p>Image preview will appear here</p>
+                    <p>{t.image_preview_placeholder}</p>
                   </div>
                 )}
               </div>
               <Input type="file" accept="image/*" ref={fileInputRef} onChange={handleImageChange} className="hidden" />
               <div className="flex gap-2">
                 <Button onClick={() => fileInputRef.current?.click()} className="w-full">
-                  <Upload className="mr-2 h-4 w-4" /> Choose File
+                  <Upload className="mr-2 h-4 w-4" /> {t.choose_file}
                 </Button>
                 <Button onClick={() => fileInputRef.current?.click()} className="w-full" variant="secondary">
-                  <Camera className="mr-2 h-4 w-4" /> Use Camera
+                  <Camera className="mr-2 h-4 w-4" /> {t.use_camera}
                 </Button>
               </div>
               <Button onClick={handleAnalyze} disabled={!imagePreview || isLoading} className="w-full">
-                {isLoading ? 'Analyzing...' : 'Analyze Crop Health'}
+                {isLoading ? t.analyzing : t.analyze_crop_health}
               </Button>
             </div>
           </CardContent>
@@ -166,7 +168,7 @@ export default function CropDoctorClient() {
             <Card className="shadow-lg border-primary/20">
               <CardHeader>
                 <CardTitle className="font-headline text-2xl flex items-center gap-2">
-                  <Bot /> AI Analysis Report
+                  <Bot /> {t.ai_analysis_report}
                 </CardTitle>
                 <CardDescription>
                   <Badge variant={analysisResult.healthStatus === 'Healthy' ? 'default' : 'destructive'}>{analysisResult.healthStatus}</Badge>
@@ -174,21 +176,21 @@ export default function CropDoctorClient() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <Alert>
-                  <AlertTitle>AI Summary</AlertTitle>
+                  <AlertTitle>{t.ai_summary_title}</AlertTitle>
                   <AlertDescription>{analysisResult.summary}</AlertDescription>
                 </Alert>
                 
                 <Separator />
                 
                 <div>
-                  <h3 className="font-headline font-semibold flex items-center gap-2 mb-2"><Sprout /> Organic Solutions</h3>
+                  <h3 className="font-headline font-semibold flex items-center gap-2 mb-2"><Sprout /> {t.organic_solutions}</h3>
                   <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
                     {analysisResult.organicSolutions.map((s, i) => <li key={i}>{s}</li>)}
                   </ul>
                 </div>
                 
                 <div>
-                  <h3 className="font-headline font-semibold flex items-center gap-2 mb-2"><TestTube2 /> Inorganic Solutions</h3>
+                  <h3 className="font-headline font-semibold flex items-center gap-2 mb-2"><TestTube2 /> {t.inorganic_solutions}</h3>
                   <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
                     {analysisResult.inorganicSolutions.map((s, i) => <li key={i}>{s}</li>)}
                   </ul>
@@ -199,7 +201,7 @@ export default function CropDoctorClient() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Alert variant="default" className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
                       <CloudSun className="h-4 w-4 text-blue-600" />
-                      <AlertTitle className="text-blue-800 dark:text-blue-300">Water & Weather Advisory</AlertTitle>
+                      <AlertTitle className="text-blue-800 dark:text-blue-300">{t.water_weather_advisory}</AlertTitle>
                       <AlertDescription className="text-blue-700 dark:text-blue-400 text-xs">
                         {analysisResult.waterAdvisory}<br />{analysisResult.weatherAdvisory}
                       </AlertDescription>
@@ -208,9 +210,9 @@ export default function CropDoctorClient() {
                     <a href="https://www.google.com/maps/search/?api=1&query=fertilizer+pesticide+shops+near+me" target="_blank" rel="noopener noreferrer" className="block">
                         <Alert variant="default" className="h-full bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors">
                             <Map className="h-4 w-4 text-green-600" />
-                            <AlertTitle className="text-green-800 dark:text-green-300">Find Nearby Shops</AlertTitle>
+                            <AlertTitle className="text-green-800 dark:text-green-300">{t.find_nearby_shops}</AlertTitle>
                             <AlertDescription className="text-green-700 dark:text-green-400 text-xs">
-                                Click to find fertilizer and pesticide shops near you on Google Maps.
+                                {t.find_nearby_shops_desc}
                             </AlertDescription>
                         </Alert>
                     </a>
