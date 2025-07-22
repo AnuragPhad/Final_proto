@@ -36,9 +36,15 @@ const generateDummyData = (commodity: string, basePrice: number, fluctuation: nu
 const onionData = generateDummyData('Onion', 2200, 150);
 const potatoData = generateDummyData('Potato', 1800, 100);
 const tomatoData = generateDummyData('Tomato', 1500, 200);
+const wheatData = generateDummyData('Wheat', 2000, 120);
+const cabbageData = generateDummyData('Cabbage', 800, 90);
+const lemonData = generateDummyData('Lemon', 3000, 300);
 
 export const puneMandiRates: MandiRate[] = [
   ...onionData,
   ...potatoData,
   ...tomatoData,
+  ...wheatData,
+  ...cabbageData,
+  ...lemonData,
 ];
