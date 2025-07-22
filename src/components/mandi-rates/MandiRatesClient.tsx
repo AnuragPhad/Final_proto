@@ -9,10 +9,11 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { CalendarIcon, Mic, LocateFixed, Bot, LayoutGrid, List, Wheat, Apple, Carrot, Grape, LeafyGreen, Citrus, HandPlatter, Volume2 } from 'lucide-react';
-import { format } from 'date-fns';
+import { CalendarIcon, Mic, LocateFixed, Bot, LayoutGrid, List, Wheat, Apple, Carrot, Grape, LeafyGreen, Citrus, HandPlatter, Volume2, LineChart, TrendingUp } from 'lucide-react';
+import { format, subDays } from 'date-fns';
 import { states, districts } from '@/data/locations';
-import { getMandiRates, type MandiRate } from '@/data/mandi-rates';
+import { getMandiRates as getMandiRatesFromApi, type MandiRate } from '@/data/mandi-rates';
+import { puneMandiRates } from '@/data/pune-mandi-rates';
 import { useSpeechRecognition } from '@/hooks/use-speech-recognition';
 import { understandMandiRateQuery, MandiRateQueryOutput } from '@/ai/flows/mandi-rate-nlu';
 import { mandiRateSummary } from '@/ai/flows/mandi-rate-summary';
@@ -20,6 +21,10 @@ import { textToSpeech } from '@/ai/flows/tts';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { priceTrendFlow, PriceTrendInput, PriceTrendOutput } from '@/ai/flows/price-trend-flow';
+import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { ChartTooltipContent } from '@/components/ui/chart';
+
 
 type ViewMode = 'table' | 'tile';
 
@@ -60,8 +65,18 @@ export default function MandiRatesClient() {
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [lastNluResult, setLastNluResult] = useState<MandiRateQueryOutput | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [trendData, setTrendData] = useState<any[]>([]);
+  const [trendAdvice, setTrendAdvice] = useState<PriceTrendOutput | null>(null);
+  const [isTrendLoading, setIsTrendLoading] = useState(false);
 
   const { toast } = useToast();
+  
+  const getMandiRates = useCallback(async (state: string, district: string): Promise<MandiRate[]> => {
+    if (district.toLowerCase() === 'pune') {
+      return puneMandiRates;
+    }
+    return getMandiRatesFromApi(state, district);
+  }, []);
 
   const handleVoiceSearch = async (query: string) => {
     if (!query) return;
@@ -127,6 +142,8 @@ export default function MandiRatesClient() {
     setAiSummary(null);
     setAudioSummaryUrl(null);
     setLastNluResult(null);
+    setTrendData([]);
+    setTrendAdvice(null);
     fetchRates(selectedState, selectedDistrict);
   };
 
@@ -143,17 +160,17 @@ export default function MandiRatesClient() {
       setAllRates(fetchedRates);
     } catch (e) {
       console.error(e);
-      setError('Failed to fetch mandi rates. The data.gov.in API might be temporarily unavailable.');
+      setError('Failed to fetch mandi rates. The data might be temporarily unavailable.');
       toast({
         variant: 'destructive',
         title: 'API Error',
-        description: 'Could not fetch data from data.gov.in.',
+        description: 'Could not fetch data.',
       });
       setAllRates([]);
     } finally {
       setIsLoading(false);
     }
-  }, [toast]);
+  }, [toast, getMandiRates]);
 
   useEffect(() => {
     if (selectedState && selectedDistrict) {
@@ -191,11 +208,8 @@ export default function MandiRatesClient() {
         setIsSummarizing(true);
         setAudioSummaryUrl(null);
         
-        // Do not show interim "generating" message if we already have the NLU summary
-        if (aiSummary === lastNluResult.summary) {
-            // Keep the NLU summary while we generate the detailed one
-        } else {
-            setAiSummary('Generating detailed summary...');
+        if (aiSummary !== lastNluResult.summary) {
+           setAiSummary('Generating detailed summary...');
         }
         
         try {
@@ -227,10 +241,65 @@ export default function MandiRatesClient() {
           setLastNluResult(null); // Reset after summarizing
         }
       };
-      generateSummary();
+      if (filteredRates.length > 0) {
+        generateSummary();
+      }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filteredRates, isLoading]); // Depend on filteredRates and isLoading
+  }, [filteredRates, isLoading, isSummarizing, lastNluResult, aiSummary, selectedDistrict, selectedDate, toast]);
+
+
+  // This effect generates the trend data and advice when a commodity filter is applied.
+  useEffect(() => {
+    if (commodityFilter && allRates.length > 0) {
+      setIsTrendLoading(true);
+      const today = new Date();
+      const thirtyDaysAgo = subDays(today, 30);
+      
+      const historicalData = allRates
+        .filter(rate => rate.commodity.toLowerCase().includes(commodityFilter.toLowerCase()))
+        .map(rate => {
+          const [day, month, year] = rate.arrival_date.split('/');
+          return {
+            ...rate,
+            date: new Date(Number(year), Number(month) - 1, Number(day)),
+          };
+        })
+        .filter(rate => rate.date >= thirtyDaysAgo && rate.date <= today)
+        .sort((a, b) => a.date.getTime() - b.date.getTime());
+
+      if (historicalData.length > 1) {
+        const formattedTrendData = historicalData.map(d => ({
+          date: format(d.date, 'dd MMM'),
+          price: d.modalPrice,
+        }));
+        setTrendData(formattedTrendData);
+        
+        const generateTrendAdvice = async () => {
+            try {
+              const advice = await priceTrendFlow({
+                commodity: commodityFilter,
+                prices: formattedTrendData.map(d => d.price)
+              });
+              setTrendAdvice(advice);
+            } catch (e) {
+              console.error("Trend advice error", e);
+              setTrendAdvice(null);
+            } finally {
+              setIsTrendLoading(false);
+            }
+        };
+        generateTrendAdvice();
+      } else {
+        setTrendData([]);
+        setTrendAdvice(null);
+        setIsTrendLoading(false);
+      }
+    } else {
+      setTrendData([]);
+      setTrendAdvice(null);
+    }
+  }, [commodityFilter, allRates]);
+
 
   useEffect(() => {
       if (audioSummaryUrl && audioRef.current) {
@@ -437,6 +506,63 @@ export default function MandiRatesClient() {
         </CardContent>
       </Card>
 
+      {commodityFilter && (isTrendLoading || trendData.length > 0) && (
+        <Card className="mt-8">
+            <CardHeader>
+                <CardTitle className="font-headline text-2xl flex items-center gap-2">
+                    <LineChart /> Price Trends for {commodityFilter}
+                </CardTitle>
+                <CardDescription>Last 30 days of modal prices in {selectedDistrict}.</CardDescription>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 h-80">
+                    {isTrendLoading ? (
+                        <Skeleton className="h-full w-full" />
+                    ) : (
+                        <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={trendData}>
+                                <defs>
+                                    <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8}/>
+                                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} domain={['dataMin - 100', 'dataMax + 100']} />
+                                <Tooltip content={<ChartTooltipContent formatter={(value) => `Rs ${value}`} />} />
+                                <Area type="monotone" dataKey="price" stroke="hsl(var(--primary))" fill="url(#colorPrice)" />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    )}
+                </div>
+                <div className="lg:col-span-1">
+                  {isTrendLoading ? (
+                     <div className="space-y-4">
+                        <Skeleton className="h-8 w-1/3" />
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-5/6" />
+                        <Skeleton className="h-4 w-3/4" />
+                     </div>
+                  ) : trendAdvice ? (
+                     <Alert className="h-full bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
+                        <TrendingUp className="h-4 w-4 text-green-600" />
+                        <AlertTitle className="font-headline text-green-800 dark:text-green-300">AI Selling Advice</AlertTitle>
+                        <AlertDescription className="text-green-700 dark:text-green-400">
+                           <p className="font-bold">{trendAdvice.trend}</p>
+                           <p>{trendAdvice.suggestion}</p>
+                        </AlertDescription>
+                    </Alert>
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-muted-foreground">
+                        Not enough data for a trend analysis.
+                    </div>
+                  )}
+                </div>
+            </CardContent>
+        </Card>
+      )}
+
       <div className="mt-8">
         <div className="flex justify-between items-center mb-4">
             <div className="flex-1">
@@ -446,7 +572,11 @@ export default function MandiRatesClient() {
               {commodityFilter && (
                 <div className="flex items-center gap-2 mt-1">
                   <Badge variant="secondary">Filtered by: {commodityFilter}</Badge>
-                  <Button variant="ghost" size="sm" onClick={() => setCommodityFilter(null)}>Clear Filter</Button>
+                  <Button variant="ghost" size="sm" onClick={() => {
+                    setCommodityFilter(null);
+                    setTrendData([]);
+                    setTrendAdvice(null);
+                  }}>Clear Filter</Button>
                 </div>
               )}
             </div>
