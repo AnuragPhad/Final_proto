@@ -14,6 +14,7 @@ interface FarmContextType {
   cropCycles: CropCycle[];
   addCropCycle: (cycle: CropCycle) => void;
   updateCropCycle: (cycle: CropCycle) => void;
+  deleteCropCycle: (id: string) => void;
   getCropCycle: (id: string) => CropCycle | undefined;
 }
 
@@ -29,13 +30,17 @@ export const FarmProvider = ({ children }: { children: ReactNode }) => {
   const updateCropCycle = useCallback((cycleToUpdate: CropCycle) => {
     setCropCycles(prev => prev.map(c => c.id === cycleToUpdate.id ? cycleToUpdate : c));
   }, []);
+
+  const deleteCropCycle = useCallback((id: string) => {
+    setCropCycles(prev => prev.filter(c => c.id !== id));
+  }, []);
   
   const getCropCycle = useCallback((id: string) => {
     return cropCycles.find(c => c.id === id);
   }, [cropCycles]);
 
   return (
-    <FarmContext.Provider value={{ cropCycles, addCropCycle, updateCropCycle, getCropCycle }}>
+    <FarmContext.Provider value={{ cropCycles, addCropCycle, updateCropCycle, deleteCropCycle, getCropCycle }}>
       {children}
     </FarmContext.Provider>
   );
