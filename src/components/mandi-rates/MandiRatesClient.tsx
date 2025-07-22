@@ -17,7 +17,6 @@ import { puneMandiRates } from '@/data/pune-mandi-rates';
 import { useSpeechRecognition } from '@/hooks/use-speech-recognition';
 import { understandMandiRateQuery, MandiRateQueryOutput } from '@/ai/flows/mandi-rate-nlu';
 import { mandiRateSummary } from '@/ai/flows/mandi-rate-summary';
-import { textToSpeech } from '@/ai/flows/tts';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
@@ -60,10 +59,8 @@ export default function MandiRatesClient() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [aiSummary, setAiSummary] = useState<string | null>(null);
-  const [audioSummaryUrl, setAudioSummaryUrl] = useState<string | null>(null);
   const [commodityFilter, setCommodityFilter] = useState<string | null>(null);
   const [isSummarizing, setIsSummarizing] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const [trendData, setTrendData] = useState<any[]>([]);
   const [trendAdvice, setTrendAdvice] = useState<PriceTrendOutput | null>(null);
   const [isTrendLoading, setIsTrendLoading] = useState(false);
@@ -86,7 +83,6 @@ export default function MandiRatesClient() {
     if (!query) return;
     setIsVoiceSearchActive(true);
     setIsSummarizing(true);
-    setAudioSummaryUrl(null);
     setAiSummary(t.listening);
     
     try {
@@ -97,7 +93,6 @@ export default function MandiRatesClient() {
       // 2. Determine target location from NLU result
       let targetDistrict = selectedDistrict;
       let targetState = selectedState;
-      let locationFoundInNlu = false;
   
       if (nluResult.market) {
         for (const state of states) {
@@ -105,7 +100,6 @@ export default function MandiRatesClient() {
           if (district) {
             targetState = state;
             targetDistrict = district;
-            locationFoundInNlu = true;
             break;
           }
         }
@@ -126,7 +120,7 @@ export default function MandiRatesClient() {
         return isDateMatch && isCommodityMatch;
       });
 
-      // 6. Generate detailed AI summary and TTS
+      // 6. Generate detailed AI summary
       setAiSummary('Generating detailed summary...');
       const summaryResult = await mandiRateSummary({
         commodity: nluResult.commodity,
@@ -141,13 +135,6 @@ export default function MandiRatesClient() {
       });
 
       setAiSummary(summaryResult.summary);
-
-      if (summaryResult.summary) {
-        const ttsResult = await textToSpeech({ text: summaryResult.summary });
-        if (ttsResult.audioDataUri) {
-          setAudioSummaryUrl(ttsResult.audioDataUri);
-        }
-      }
 
       // 7. Now, update all state variables at once to reflect the search
       setAllRates(ratesToProcess);
@@ -179,7 +166,6 @@ export default function MandiRatesClient() {
   const clearFiltersAndRefresh = () => {
     setCommodityFilter(null);
     setAiSummary(null);
-    setAudioSummaryUrl(null);
     setTrendData([]);
     setTrendAdvice(null);
     fetchRates(selectedState, selectedDistrict);
@@ -292,19 +278,6 @@ export default function MandiRatesClient() {
       setTrendAdvice(null);
     }
   }, [commodityFilter, allRates]);
-
-
-  useEffect(() => {
-      if (audioSummaryUrl && audioRef.current) {
-          audioRef.current.play().catch(e => console.error("Audio playback failed:", e));
-      }
-  }, [audioSummaryUrl]);
-
-  const handlePlayAudio = () => {
-    if (audioRef.current) {
-        audioRef.current.play();
-    }
-  };
 
   const ratesByMarket = useMemo(() => {
     return filteredRates.reduce((acc, rate) => {
@@ -445,17 +418,10 @@ export default function MandiRatesClient() {
             <Bot className="h-4 w-4 text-blue-600" />
             <div className='flex items-center justify-between'>
               <AlertTitle className="font-headline text-blue-800 dark:text-blue-300">{t.ai_summary}</AlertTitle>
-              {audioSummaryUrl && !isSummarizing && (
-                  <Button variant="ghost" size="icon" onClick={handlePlayAudio} className="h-7 w-7 text-blue-600 hover:bg-blue-200/50">
-                      <Volume2 className="h-4 w-4" />
-                      <span className="sr-only">Play Summary</span>
-                  </Button>
-              )}
             </div>
             <AlertDescription className="text-blue-700 dark:text-blue-400">
               {isSummarizing && !aiSummary ? 'Listening...' : aiSummary}
             </AlertDescription>
-            {audioSummaryUrl && <audio ref={audioRef} src={audioSummaryUrl} className="hidden" />}
         </Alert>
       )}
 
