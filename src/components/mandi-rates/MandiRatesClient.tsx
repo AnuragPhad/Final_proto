@@ -25,6 +25,7 @@ import { priceTrendFlow, PriceTrendInput, PriceTrendOutput } from '@/ai/flows/pr
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 import { useLanguage } from '@/hooks/use-language';
+import { translateCommodity } from '@/lib/commodity-translations';
 
 
 type ViewMode = 'table' | 'tile';
@@ -66,7 +67,7 @@ export default function MandiRatesClient() {
   const [trendAdvice, setTrendAdvice] = useState<PriceTrendOutput | null>(null);
   const [isTrendLoading, setIsTrendLoading] = useState(false);
   const [isVoiceSearchActive, setIsVoiceSearchActive] = useState(false);
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
 
   const { toast } = useToast();
   
@@ -386,6 +387,10 @@ export default function MandiRatesClient() {
     },
   };
 
+  const translatedCommodityFilter = useMemo(() => {
+    return commodityFilter ? translateCommodity(commodityFilter, language) : null;
+  }, [commodityFilter, language]);
+
   return (
     <div className="container mx-auto p-4 md:p-8">
       <div className="text-center mb-8">
@@ -477,7 +482,7 @@ export default function MandiRatesClient() {
         <Card className="mt-8">
             <CardHeader>
                 <CardTitle className="font-headline text-2xl flex items-center gap-2">
-                    <LineChart /> {t.price_trends_for} {commodityFilter}
+                    <LineChart /> {t.price_trends_for} {translatedCommodityFilter}
                 </CardTitle>
                 <CardDescription>{t.last_30_days_prices} {selectedDistrict}.</CardDescription>
             </CardHeader>
@@ -553,7 +558,7 @@ export default function MandiRatesClient() {
               </h2>
               {commodityFilter && (
                 <div className="flex items-center gap-2 mt-1">
-                  <Badge variant="secondary">{t.filtered_by} {commodityFilter}</Badge>
+                  <Badge variant="secondary">{t.filtered_by} {translatedCommodityFilter}</Badge>
                   <Button variant="ghost" size="sm" onClick={() => {
                     setCommodityFilter(null);
                     setTrendData([]);
@@ -612,7 +617,7 @@ export default function MandiRatesClient() {
                                         <div className="flex items-center gap-4">
                                             <div className="text-primary text-2xl">{getCommodityIcon(rate.commodity)}</div>
                                             <div>
-                                                <div className="font-bold text-base">{rate.commodity}</div>
+                                                <div className="font-bold text-base">{translateCommodity(rate.commodity, language)}</div>
                                                 <div className="text-sm text-muted-foreground">{rate.variety}</div>
                                             </div>
                                         </div>

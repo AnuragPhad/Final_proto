@@ -20,6 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { states, districts } from '@/data/locations';
 import { useLanguage } from '@/hooks/use-language';
+import { translateCommodity } from '@/lib/commodity-translations';
 
 const commodities = [
     { name: 'Onion', icon: <HandPlatter className="h-10 w-10" /> },
@@ -53,7 +54,7 @@ export default function MarketIntelligenceClient() {
     const [trendAdvice, setTrendAdvice] = useState<PriceTrendOutput | null>(null);
     const [marketAnalysis, setMarketAnalysis] = useState<CommodityAnalysisOutput | null>(null);
     const [isLoading, setIsLoading] = useState(false);
-    const { t } = useLanguage();
+    const { language, t } = useLanguage();
 
     useEffect(() => {
         if (selectedCommodity && selectedDistrict) {
@@ -137,6 +138,10 @@ export default function MarketIntelligenceClient() {
       },
     };
 
+    const translatedSelectedCommodity = useMemo(() => {
+        return selectedCommodity ? translateCommodity(selectedCommodity, language) : null;
+    }, [selectedCommodity, language]);
+
     return (
         <div className="container mx-auto p-4 md:p-8">
             <div className="text-center mb-8">
@@ -178,7 +183,7 @@ export default function MarketIntelligenceClient() {
                                 onClick={() => setSelectedCommodity(commodity.name)}
                             >
                                 {commodity.icon}
-                                <span className="font-semibold">{commodity.name}</span>
+                                <span className="font-semibold">{translateCommodity(commodity.name, language)}</span>
                             </Button>
                         ))}
                     </div>
@@ -188,7 +193,7 @@ export default function MarketIntelligenceClient() {
             {selectedCommodity && (
                 <div className="space-y-8">
                     <h2 className="font-headline text-2xl font-bold text-center">
-                        {t.analysis_for} {selectedCommodity} {t.in} {selectedDistrict}
+                        {t.analysis_for} {translatedSelectedCommodity} {t.in} {selectedDistrict}
                     </h2>
 
                     {/* Price Trend Analysis */}
