@@ -47,7 +47,8 @@ export default function CropDoctorClient() {
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
-  const { language, t } = useLanguage();
+  const { language, t, handleLanguageChange } = useLanguage();
+  const [currentLanguage, setCurrentLanguage] = useState(language);
 
   const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -69,16 +70,15 @@ export default function CropDoctorClient() {
       reader.readAsDataURL(file);
     }
   };
-
-  const handleAnalyze = async () => {
+  
+  const handleAnalyze = async (lang: string) => {
     if (!imagePreview) return;
     setIsLoading(true);
     setError(null);
-    setAnalysisResult(null);
     try {
       const result = await cropDoctorInitialAnalysis({ 
         photoDataUri: imagePreview,
-        language: language,
+        language: lang,
       });
       setAnalysisResult(result);
     } catch (e) {
@@ -93,6 +93,16 @@ export default function CropDoctorClient() {
       setIsLoading(false);
     }
   };
+  
+  useEffect(() => {
+    if (language !== currentLanguage) {
+      setCurrentLanguage(language);
+      if (analysisResult) {
+        handleAnalyze(language);
+      }
+    }
+  }, [language, currentLanguage, analysisResult]);
+
 
   return (
     <div className="container mx-auto p-4 md:p-8">
@@ -130,7 +140,7 @@ export default function CropDoctorClient() {
                   <Camera className="mr-2 h-4 w-4" /> {t.use_camera}
                 </Button>
               </div>
-              <Button onClick={handleAnalyze} disabled={!imagePreview || isLoading} className="w-full">
+              <Button onClick={() => handleAnalyze(language)} disabled={!imagePreview || isLoading} className="w-full">
                 {isLoading ? t.analyzing : t.analyze_crop_health}
               </Button>
             </div>
