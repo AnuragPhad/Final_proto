@@ -101,7 +101,7 @@ export default function CropDoctorClient() {
     }
     previousLanguageRef.current = language;
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [language, analysisResult]);
+  }, [language]);
 
 
   return (
