@@ -181,22 +181,23 @@ export default function CropDoctorClient() {
                 
                 <div>
                     <h3 className="font-headline font-semibold flex items-center gap-2 mb-2"><TestTube2 /> {t.inorganic_solutions}</h3>
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                         {analysisResult.inorganicSolutions.map((s, i) => (
-                            <div key={i} className="flex items-start gap-4 p-2 rounded-md bg-muted/50">
-                                <Image
-                                    src={`https://placehold.co/80x80.png`}
-                                    alt={s.productSuggestion}
-                                    width={80}
-                                    height={80}
-                                    className="rounded-md border"
-                                    data-ai-hint="pesticide bottle"
-                                />
+                           <a 
+                             key={i}
+                             href={`https://www.google.com/search?q=${encodeURIComponent(s.productSuggestion)}`} 
+                             target="_blank" 
+                             rel="noopener noreferrer"
+                             className="block"
+                           >
+                            <div className="flex items-center justify-between gap-4 p-3 rounded-md bg-muted/50 hover:bg-muted transition-colors">
                                 <div className="flex-1">
                                     <p className="font-semibold text-sm">{s.name}</p>
-                                    <p className="text-xs text-muted-foreground">Suggested product type: {s.productSuggestion}</p>
+                                    <p className="text-xs text-muted-foreground">Search for: {s.productSuggestion}</p>
                                 </div>
+                                <ExternalLink className="h-4 w-4 text-muted-foreground" />
                             </div>
+                           </a>
                         ))}
                     </div>
                 </div>
