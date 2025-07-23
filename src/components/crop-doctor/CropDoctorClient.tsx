@@ -158,18 +158,17 @@ export default function CropDoctorClient() {
           {analysisResult && (
             <Card className="shadow-lg border-primary/20">
               <CardHeader>
-                <CardTitle className="font-headline text-2xl flex items-center gap-2">
-                  <Bot /> {t.ai_analysis_report}
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                    <CardTitle className="font-headline text-2xl flex items-center gap-2">
+                      <Bot /> {t.ai_analysis_report}
+                    </CardTitle>
+                    <Badge variant={analysisResult.healthStatus === 'Healthy' || analysisResult.healthStatus === 'निरोगी' || analysisResult.healthStatus === 'निरोगी' ? 'default' : 'destructive'}>{analysisResult.healthStatus}</Badge>
+                </div>
                 <CardDescription>
-                  <Badge variant={analysisResult.healthStatus === 'Healthy' || analysisResult.healthStatus === 'निरोगी' || analysisResult.healthStatus === 'निरोगी' ? 'default' : 'destructive'}>{analysisResult.healthStatus}</Badge>
+                  {analysisResult.summary}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Alert>
-                  <AlertTitle>{t.ai_summary_title}</AlertTitle>
-                  <AlertDescription>{analysisResult.summary}</AlertDescription>
-                </Alert>
                 
                 <Separator />
                 
