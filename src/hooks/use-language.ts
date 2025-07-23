@@ -23,6 +23,7 @@ export const useLanguage = () => {
       setLanguage(newLang);
       setT(translations[newLang]);
       localStorage.setItem('kisan-ai-lang', newLang);
+      window.location.reload();
     }
   };
 
