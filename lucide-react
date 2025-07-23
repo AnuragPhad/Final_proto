@@ -10,7 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { CalendarIcon, Mic, LocateFixed, Bot, LayoutGrid, List, Wheat, Apple, Carrot, Grape, LeafyGreen, Citrus, HandPlatter, Volume2, LineChart, TrendingUp, Check } from 'lucide-react';
+import { CalendarIcon, Mic, LocateFixed, Bot, LayoutGrid, List, Wheat, Apple, Carrot, Grape, LeafyGreen, Citrus, HandPlatter, Volume2, LineChart, TrendingUp } from 'lucide-react';
 import { format, subDays } from 'date-fns';
 import { states, districts } from '@/data/locations';
 import { getMandiRates as getMandiRatesFromApi, type MandiRate } from '@/data/mandi-rates';
@@ -533,7 +533,7 @@ export default function MandiRatesClient() {
                      </div>
                   ) : trendAdvice ? (
                      <Alert className="h-full bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
-                        <Check className="h-4 w-4 text-green-600" />
+                        <TrendingUp className="h-4 w-4 text-green-600" />
                         <AlertTitle className="font-headline text-green-800 dark:text-green-300">{t.ai_selling_advice}</AlertTitle>
                         <AlertDescription className="text-green-700 dark:text-green-400">
                            <p className="font-bold">{trendAdvice.trend}</p>
@@ -649,4 +649,3 @@ export default function MandiRatesClient() {
     
 
     
-
