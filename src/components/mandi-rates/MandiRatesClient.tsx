@@ -259,7 +259,8 @@ export default function MandiRatesClient() {
             try {
               const advice = await priceTrendFlow({
                 commodity: commodityFilter,
-                prices: formattedTrendData.map(d => d.price)
+                prices: formattedTrendData.map(d => d.price),
+                language: language,
               });
               setTrendAdvice(advice);
             } catch (e) {
@@ -279,7 +280,7 @@ export default function MandiRatesClient() {
       setTrendData([]);
       setTrendAdvice(null);
     }
-  }, [commodityFilter, allRates]);
+  }, [commodityFilter, allRates, language]);
 
   const ratesByMarket = useMemo(() => {
     return filteredRates.reduce((acc, rate) => {
@@ -533,7 +534,6 @@ export default function MandiRatesClient() {
                      </div>
                   ) : trendAdvice ? (
                      <Alert className="h-full bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
-                        <Check className="h-4 w-4 text-green-600" />
                         <AlertTitle className="font-headline text-green-800 dark:text-green-300">{t.ai_selling_advice}</AlertTitle>
                         <AlertDescription className="text-green-700 dark:text-green-400">
                            <p className="font-bold">{trendAdvice.trend}</p>

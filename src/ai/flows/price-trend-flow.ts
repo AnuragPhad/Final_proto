@@ -14,6 +14,7 @@ import { z } from 'zod';
 const PriceTrendInputSchema = z.object({
   commodity: z.string().describe('The commodity being analyzed.'),
   prices: z.array(z.number()).describe('An array of historical modal prices for the last 30 days.'),
+  language: z.string().optional().describe("The language for the response, e.g., 'en', 'hi', 'mr'."),
 });
 export type PriceTrendInput = z.infer<typeof PriceTrendInputSchema>;
 
@@ -31,6 +32,8 @@ export async function priceTrendFlow(input: PriceTrendInput): Promise<PriceTrend
     output: { schema: PriceTrendOutputSchema },
     prompt: `You are an agricultural market analyst. You are given a list of the last 30 days of prices for a commodity. 
     Analyze the trend and provide a short, actionable suggestion to a farmer.
+
+    VERY IMPORTANT: Generate the entire response (all fields in the output schema) in the following language: {{language}}.
 
     Commodity: {{commodity}}
     Prices (past 30 days, oldest to newest): {{#each prices}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}
