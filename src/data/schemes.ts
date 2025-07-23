@@ -98,6 +98,6 @@ export const schemesData: Scheme[] = [
     ministry: 'Government of Uttar Pradesh',
     state: 'Uttar Pradesh',
     age: [18, 100],
-    link: '#', // Placeholder link
+    link: 'https://www.myscheme.gov.in/schemes/sps/uptass',
   },
 ];
