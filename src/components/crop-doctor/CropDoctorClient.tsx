@@ -15,13 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLanguage } from '@/hooks/use-language';
 
-interface AnalysisResult extends CropDoctorInitialAnalysisOutput {
-  healthStatus: string;
-  organicSolutions: string[];
-  inorganicSolutions: string[];
-  waterAdvisory: string;
-  weatherAdvisory: string;
-}
+type AnalysisResult = CropDoctorInitialAnalysisOutput;
 
 const LoadingSkeleton = () => (
   <Card>
@@ -53,7 +47,7 @@ export default function CropDoctorClient() {
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
 
   const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -75,21 +69,6 @@ export default function CropDoctorClient() {
       reader.readAsDataURL(file);
     }
   };
-  
-  const mockAnalysis = (summary: string): AnalysisResult => {
-    // This is a placeholder logic to generate a structured report
-    // from a simple summary string. In a real app, the AI model
-    // would return a structured JSON object.
-    const isHealthy = /healthy/i.test(summary);
-    return {
-      summary: summary,
-      healthStatus: isHealthy ? "Healthy" : "Early signs of Powdery Mildew",
-      organicSolutions: isHealthy ? ["Maintain regular watering schedule."] : ["Neem oil spray.", "Milk and water solution."],
-      inorganicSolutions: isHealthy ? ["No action needed."] : ["Apply sulfur-based fungicide.", "Use potassium bicarbonate spray."],
-      waterAdvisory: "Ensure proper drainage to avoid root rot. Water early in the morning.",
-      weatherAdvisory: "High humidity may increase fungal risk. Ensure good air circulation around plants."
-    };
-  };
 
   const handleAnalyze = async () => {
     if (!imagePreview) return;
@@ -97,9 +76,11 @@ export default function CropDoctorClient() {
     setError(null);
     setAnalysisResult(null);
     try {
-      const result = await cropDoctorInitialAnalysis({ photoDataUri: imagePreview });
-      const detailedResult = mockAnalysis(result.summary);
-      setAnalysisResult(detailedResult);
+      const result = await cropDoctorInitialAnalysis({ 
+        photoDataUri: imagePreview,
+        language: language,
+      });
+      setAnalysisResult(result);
     } catch (e) {
       setError('Failed to analyze the image. Please try again.');
       toast({
@@ -171,7 +152,7 @@ export default function CropDoctorClient() {
                   <Bot /> {t.ai_analysis_report}
                 </CardTitle>
                 <CardDescription>
-                  <Badge variant={analysisResult.healthStatus === 'Healthy' ? 'default' : 'destructive'}>{analysisResult.healthStatus}</Badge>
+                  <Badge variant={analysisResult.healthStatus === 'Healthy' || analysisResult.healthStatus === 'निरोगी' ? 'default' : 'destructive'}>{analysisResult.healthStatus}</Badge>
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
