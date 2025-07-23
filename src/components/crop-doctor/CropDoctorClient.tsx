@@ -123,7 +123,7 @@ export default function CropDoctorClient() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-        <Card className="sticky top-24">
+        <Card>
           <CardHeader>
             <CardTitle>{t.upload_crop_image}</CardTitle>
             <CardDescription>{t.upload_crop_image_desc}</CardDescription>
