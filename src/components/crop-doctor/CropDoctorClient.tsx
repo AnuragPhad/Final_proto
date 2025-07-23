@@ -1,14 +1,14 @@
 
 'use client';
 
-import { useState, useRef, ChangeEvent } from 'react';
+import { useState, useRef, ChangeEvent, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Upload, Camera, Bot, Sprout, TestTube2, CloudSun, Map } from 'lucide-react';
+import { Upload, Camera, Bot, Sprout, TestTube2, CloudSun, Map, ExternalLink } from 'lucide-react';
 import { cropDoctorInitialAnalysis, CropDoctorInitialAnalysisOutput } from '@/ai/flows/crop-doctor-initial-analysis';
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
@@ -48,6 +48,7 @@ export default function CropDoctorClient() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { language, t } = useLanguage();
+  const previousLanguageRef = useRef(language);
 
   const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -70,7 +71,7 @@ export default function CropDoctorClient() {
     }
   };
 
-  const handleAnalyze = async () => {
+  const handleAnalyze = async (lang = language) => {
     if (!imagePreview) return;
     setIsLoading(true);
     setError(null);
@@ -78,7 +79,7 @@ export default function CropDoctorClient() {
     try {
       const result = await cropDoctorInitialAnalysis({ 
         photoDataUri: imagePreview,
-        language: language,
+        language: lang,
       });
       setAnalysisResult(result);
     } catch (e) {
@@ -93,6 +94,15 @@ export default function CropDoctorClient() {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (previousLanguageRef.current !== language && analysisResult) {
+        handleAnalyze(language);
+    }
+    previousLanguageRef.current = language;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [language, analysisResult]);
+
 
   return (
     <div className="container mx-auto p-4 md:p-8">
@@ -130,7 +140,7 @@ export default function CropDoctorClient() {
                   <Camera className="mr-2 h-4 w-4" /> {t.use_camera}
                 </Button>
               </div>
-              <Button onClick={handleAnalyze} disabled={!imagePreview || isLoading} className="w-full">
+              <Button onClick={() => handleAnalyze()} disabled={!imagePreview || isLoading} className="w-full">
                 {isLoading ? t.analyzing : t.analyze_crop_health}
               </Button>
             </div>
@@ -152,7 +162,7 @@ export default function CropDoctorClient() {
                   <Bot /> {t.ai_analysis_report}
                 </CardTitle>
                 <CardDescription>
-                  <Badge variant={analysisResult.healthStatus === 'Healthy' || analysisResult.healthStatus === 'निरोगी' ? 'default' : 'destructive'}>{analysisResult.healthStatus}</Badge>
+                  <Badge variant={analysisResult.healthStatus === 'Healthy' || analysisResult.healthStatus === 'निरोगी' || analysisResult.healthStatus === 'निरोगी' ? 'default' : 'destructive'}>{analysisResult.healthStatus}</Badge>
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -171,10 +181,25 @@ export default function CropDoctorClient() {
                 </div>
                 
                 <div>
-                  <h3 className="font-headline font-semibold flex items-center gap-2 mb-2"><TestTube2 /> {t.inorganic_solutions}</h3>
-                  <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-                    {analysisResult.inorganicSolutions.map((s, i) => <li key={i}>{s}</li>)}
-                  </ul>
+                    <h3 className="font-headline font-semibold flex items-center gap-2 mb-2"><TestTube2 /> {t.inorganic_solutions}</h3>
+                    <div className="space-y-2">
+                        {analysisResult.inorganicSolutions.map((s, i) => (
+                            s.productSuggestion.toLowerCase() !== 'none' ? (
+                                <a 
+                                    href={`https://agribegri.com/search?q=${encodeURIComponent(s.productSuggestion)}`} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer" 
+                                    key={i} 
+                                    className="flex items-center justify-between p-2 rounded-md bg-muted/50 hover:bg-muted transition-colors text-sm text-muted-foreground"
+                                >
+                                    <span>{s.name}</span>
+                                    <ExternalLink className="h-4 w-4 text-primary shrink-0" />
+                                </a>
+                            ) : (
+                                <p key={i} className="text-sm text-muted-foreground">{s.name}</p>
+                            )
+                        ))}
+                    </div>
                 </div>
 
                 <Separator />
