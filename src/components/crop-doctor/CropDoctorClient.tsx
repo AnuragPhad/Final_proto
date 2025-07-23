@@ -103,8 +103,8 @@ export default function CropDoctorClient() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-        <Card>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        <Card className="lg:col-span-1">
           <CardHeader>
             <CardTitle>{t.upload_crop_image}</CardTitle>
             <CardDescription>{t.upload_crop_image_desc}</CardDescription>
@@ -137,7 +137,7 @@ export default function CropDoctorClient() {
           </CardContent>
         </Card>
 
-        <div className="space-y-6">
+        <div className="space-y-6 lg:col-span-2">
           {isLoading && <LoadingSkeleton />}
           {error && (
             <Alert variant="destructive">
