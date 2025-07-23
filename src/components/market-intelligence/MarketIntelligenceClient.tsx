@@ -10,7 +10,6 @@ import { nashikMandiRates } from '@/data/nashik-mandi-rates';
 import { solapurMandiRates } from '@/data/solapur-mandi-rates';
 import type { MandiRate } from '@/data/mandi-rates';
 import { subDays, format, parse } from 'date-fns';
-import { commodityAnalysisFlow, CommodityAnalysisOutput } from '@/ai/flows/commodity-analysis-flow';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AreaChart, Area, CartesianGrid, Tooltip, XAxis, ResponsiveContainer } from 'recharts';
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
@@ -49,7 +48,6 @@ export default function MarketIntelligenceClient() {
     const [selectedState, setSelectedState] = useState<string>('Maharashtra');
     const [selectedDistrict, setSelectedDistrict] = useState<string>('Pune');
     const [trendData, setTrendData] = useState<any[]>([]);
-    const [marketAnalysis, setMarketAnalysis] = useState<CommodityAnalysisOutput | null>(null);
     const [marketComparisonData, setMarketComparisonData] = useState<MarketComparisonData[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const { language, t } = useLanguage();
@@ -58,7 +56,6 @@ export default function MarketIntelligenceClient() {
         if (selectedCommodity) {
             setIsLoading(true);
             setTrendData([]);
-            setMarketAnalysis(null);
             setMarketComparisonData([]);
 
             const today = new Date();
@@ -103,23 +100,6 @@ export default function MarketIntelligenceClient() {
             }
             setMarketComparisonData(comparisonData.sort((a, b) => b.price - a.price));
 
-            // Generate AI market analysis
-            const generateMarketAnalysis = async () => {
-                if(comparisonData.length > 0) {
-                    try {
-                        const analysis = await commodityAnalysisFlow({
-                            commodity: selectedCommodity,
-                            prices: comparisonData.map(d => ({ market: d.market, price: d.price }))
-                        });
-                        setMarketAnalysis(analysis);
-                    } catch (e) {
-                        console.error("Market analysis error", e);
-                        setMarketAnalysis(null);
-                    }
-                }
-            };
-
-            generateMarketAnalysis();
             setIsLoading(false);
         }
     }, [selectedCommodity, selectedDistrict, selectedState]);
@@ -136,7 +116,7 @@ export default function MarketIntelligenceClient() {
     }, [selectedCommodity, language]);
 
     const { highestPriceMarket, lowestPriceMarket } = useMemo(() => {
-        if (marketComparisonData.length === 0) return { highestPriceMarket: null, lowestPriceMarket: null };
+        if (marketComparisonData.length < 2) return { highestPriceMarket: null, lowestPriceMarket: null };
         let highest = marketComparisonData[0];
         let lowest = marketComparisonData[0];
         marketComparisonData.forEach(item => {
@@ -239,33 +219,25 @@ export default function MarketIntelligenceClient() {
                             <CardDescription>{t.cross_market_desc}</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                           {isLoading ? <Skeleton className="h-40 w-full" /> : 
-                           marketAnalysis ? (
-                               <Alert>
-                                   <BrainCircuit className="h-4 w-4" />
-                                   <AlertTitle>{t.ai_market_insight}</AlertTitle>
-                                   <AlertDescription>
-                                       {marketAnalysis.summary}
-                                   </AlertDescription>
-                               </Alert>
-                           ) : (
-                               <div className="flex items-center justify-center h-10 text-muted-foreground">{t.no_market_analysis_available}</div>
-                           )}
-
-                            {marketComparisonData.length > 0 ? (
+                           {isLoading ? <Skeleton className="h-40 w-full" /> :
+                            marketComparisonData.length > 0 ? (
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                     {marketComparisonData.map(market => (
                                         <Card key={market.market} className={cn(
                                             "flex flex-col justify-between transition-shadow hover:shadow-lg",
-                                            market.market === highestPriceMarket && 'border-green-500 border-2',
-                                            market.market === lowestPriceMarket && 'border-red-500 border-2'
+                                            "border-t-4",
+                                            market.market === highestPriceMarket ? 'border-green-500' : 'border-transparent',
+                                            market.market === lowestPriceMarket && 'border-red-500'
                                         )}>
                                             <CardHeader className="pb-2">
                                                 <CardTitle className="font-headline text-xl">{market.market}</CardTitle>
                                                 <CardDescription>Latest price on {market.date}</CardDescription>
                                             </CardHeader>
                                             <CardContent>
-                                                <p className="text-3xl font-bold">
+                                                <p className={cn("text-3xl font-bold",
+                                                   market.market === highestPriceMarket && 'text-green-600',
+                                                   market.market === lowestPriceMarket && 'text-red-600'
+                                                )}>
                                                     Rs {market.price}
                                                 </p>
                                                 <p className="text-sm text-muted-foreground">per Quintal</p>
