@@ -47,8 +47,7 @@ export default function CropDoctorClient() {
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
-  const { language, t, handleLanguageChange } = useLanguage();
-  const [currentLanguage, setCurrentLanguage] = useState(language);
+  const { language, t } = useLanguage();
 
   const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -70,15 +69,15 @@ export default function CropDoctorClient() {
       reader.readAsDataURL(file);
     }
   };
-  
-  const handleAnalyze = async (lang: string) => {
+
+  const handleAnalyze = async () => {
     if (!imagePreview) return;
     setIsLoading(true);
     setError(null);
     try {
-      const result = await cropDoctorInitialAnalysis({ 
+      const result = await cropDoctorInitialAnalysis({
         photoDataUri: imagePreview,
-        language: lang,
+        language: language,
       });
       setAnalysisResult(result);
     } catch (e) {
@@ -93,16 +92,6 @@ export default function CropDoctorClient() {
       setIsLoading(false);
     }
   };
-  
-  useEffect(() => {
-    if (language !== currentLanguage) {
-      setCurrentLanguage(language);
-      if (analysisResult) {
-        handleAnalyze(language);
-      }
-    }
-  }, [language, currentLanguage, analysisResult]);
-
 
   return (
     <div className="container mx-auto p-4 md:p-8">
@@ -113,8 +102,8 @@ export default function CropDoctorClient() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-        <Card className="lg:col-span-1">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+        <Card className="lg:col-span-1 sticky top-24">
           <CardHeader>
             <CardTitle>{t.upload_crop_image}</CardTitle>
             <CardDescription>{t.upload_crop_image_desc}</CardDescription>
@@ -140,14 +129,14 @@ export default function CropDoctorClient() {
                   <Camera className="mr-2 h-4 w-4" /> {t.use_camera}
                 </Button>
               </div>
-              <Button onClick={() => handleAnalyze(language)} disabled={!imagePreview || isLoading} className="w-full">
+              <Button onClick={handleAnalyze} disabled={!imagePreview || isLoading} className="w-full">
                 {isLoading ? t.analyzing : t.analyze_crop_health}
               </Button>
             </div>
           </CardContent>
         </Card>
 
-        <div className="space-y-6 lg:col-span-2">
+        <div className="space-y-6 lg:col-span-1">
           {isLoading && <LoadingSkeleton />}
           {error && (
             <Alert variant="destructive">
@@ -162,7 +151,7 @@ export default function CropDoctorClient() {
                     <CardTitle className="font-headline text-2xl flex items-center gap-2">
                       <Bot /> {t.ai_analysis_report}
                     </CardTitle>
-                    <Badge variant={analysisResult.healthStatus === 'Healthy' || analysisResult.healthStatus === 'निरोगी' || analysisResult.healthStatus === 'निरोगी' ? 'default' : 'destructive'}>{analysisResult.healthStatus}</Badge>
+                    <Badge variant={analysisResult.healthStatus === 'Healthy' || analysisResult.healthStatus === 'निरोगी' ? 'default' : 'destructive'}>{analysisResult.healthStatus}</Badge>
                 </div>
                 <CardDescription>
                   {analysisResult.summary}
