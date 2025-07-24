@@ -26,6 +26,8 @@ import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YA
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 import { useLanguage } from '@/hooks/use-language';
 import { translateCommodity } from '@/lib/commodity-translations';
+import { textToSpeech } from '@/ai/flows/tts';
+import { cn } from '@/lib/utils';
 
 
 type ViewMode = 'table' | 'tile';
@@ -68,6 +70,10 @@ export default function MandiRatesClient() {
   const [isTrendLoading, setIsTrendLoading] = useState(false);
   const [isVoiceSearchActive, setIsVoiceSearchActive] = useState(false);
   const { language, t } = useLanguage();
+
+  const [audioDataUri, setAudioDataUri] = useState<string | null>(null);
+  const [isTtsLoading, setIsTtsLoading] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const { toast } = useToast();
   
@@ -381,6 +387,29 @@ export default function MandiRatesClient() {
     }
   };
   
+  const handlePlaySummary = useCallback(async () => {
+    if (!aiSummary || isTtsLoading) return;
+
+    setIsTtsLoading(true);
+    setAudioDataUri(null);
+    try {
+      const { audioDataUri } = await textToSpeech({ text: aiSummary });
+      setAudioDataUri(audioDataUri);
+    } catch (e: any) {
+      console.error("TTS error", e);
+      toast({ variant: 'destructive', title: 'Audio Error', description: e.message || 'Could not generate audio.' });
+    } finally {
+      setIsTtsLoading(false);
+    }
+  }, [aiSummary, isTtsLoading, toast]);
+
+  useEffect(() => {
+    if (audioDataUri && audioRef.current) {
+        audioRef.current.play();
+    }
+  }, [audioDataUri]);
+
+
   const chartConfig = {
     price: {
       label: "Price",
@@ -425,12 +454,19 @@ export default function MandiRatesClient() {
             <Bot className="h-4 w-4 text-blue-600" />
             <div className='flex items-center justify-between'>
               <AlertTitle className="font-headline text-blue-800 dark:text-blue-300">{t.ai_summary}</AlertTitle>
+              {aiSummary && !isSummarizing && (
+                <Button variant="ghost" size="icon" onClick={handlePlaySummary} disabled={isTtsLoading}>
+                    <Volume2 className={cn("h-5 w-5 text-blue-600", isTtsLoading && "animate-pulse")} />
+                </Button>
+              )}
             </div>
             <AlertDescription className="text-blue-700 dark:text-blue-400">
               {isSummarizing && !aiSummary ? 'Listening...' : aiSummary}
             </AlertDescription>
         </Alert>
       )}
+
+      {audioDataUri && <audio ref={audioRef} src={audioDataUri} className="hidden" />}
 
       <Card>
         <CardHeader>
@@ -649,4 +685,5 @@ export default function MandiRatesClient() {
     
 
     
+
 
