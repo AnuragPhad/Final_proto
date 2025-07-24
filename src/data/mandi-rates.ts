@@ -36,13 +36,13 @@ const mockData: { [key: string]: MandiRate[] } = {
 export const getMandiRates = async (state: string, district: string): Promise<MandiRate[]> => {
   console.log(`Fetching mock mandi rates for: ${district}, ${state}`);
   
-  // Use mock data based on district, default to Pune if not found
-  const rates = mockData[district] || mockData['Pune'];
+  // Use mock data based on district. If not found, it will be undefined.
+  const rates = mockData[district];
   
   if (rates) {
     return Promise.resolve(rates);
   }
 
-  // Fallback to an empty array if no data is found
+  // Fallback to an empty array if no mock data is found for the district
   return Promise.resolve([]);
 };
