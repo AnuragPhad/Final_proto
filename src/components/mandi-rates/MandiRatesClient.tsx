@@ -10,14 +10,14 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { CalendarIcon, Mic, LocateFixed, Bot, LayoutGrid, List, Wheat, Apple, Carrot, Grape, LeafyGreen, Citrus, HandPlatter, Volume2, LineChart, TrendingUp, Check } from 'lucide-react';
+import { CalendarIcon, Mic, LocateFixed, Bot, LayoutGrid, List, Wheat, Apple, Carrot, Grape, LeafyGreen, Citrus, HandPlatter, Volume2, LineChart, TrendingUp, Check, Loader2 } from 'lucide-react';
 import { format, subDays } from 'date-fns';
 import { states, districts } from '@/data/locations';
 import { getMandiRates as getMandiRatesFromApi, type MandiRate } from '@/data/mandi-rates';
-import { puneMandiRates } from '@/data/pune-mandi-rates';
 import { useSpeechRecognition } from '@/hooks/use-speech-recognition';
 import { understandMandiRateQuery, MandiRateQueryOutput } from '@/ai/flows/mandi-rate-nlu';
 import { mandiRateSummary } from '@/ai/flows/mandi-rate-summary';
+import { textToSpeech } from '@/ai/flows/tts';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
@@ -67,17 +67,14 @@ export default function MandiRatesClient() {
   const [trendAdvice, setTrendAdvice] = useState<PriceTrendOutput | null>(null);
   const [isTrendLoading, setIsTrendLoading] = useState(false);
   const [isVoiceSearchActive, setIsVoiceSearchActive] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [audioSrc, setAudioSrc] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
   const { language, t } = useLanguage();
 
   const { toast } = useToast();
   
   const getMandiRates = useCallback(async (state: string, district: string): Promise<MandiRate[]> => {
-    // For this example, we use mock data for Pune to avoid API calls during development.
-    // In a real application, you would remove this and rely on the API.
-    if (district.toLowerCase() === 'pune') {
-      return puneMandiRates;
-    }
-    // This is the real API call, which you can enable for production.
     return getMandiRatesFromApi(state, district);
   }, []);
 
@@ -381,6 +378,30 @@ export default function MandiRatesClient() {
     }
   };
   
+  const handlePlaySummary = async () => {
+    if (!aiSummary || isSpeaking) return;
+
+    setIsSpeaking(true);
+    try {
+      const { audioDataUri } = await textToSpeech({ text: aiSummary });
+      setAudioSrc(audioDataUri);
+    } catch (e: any) {
+      console.error("TTS Error:", e);
+      toast({
+        variant: 'destructive',
+        title: 'Audio Error',
+        description: 'Could not generate audio for the summary.',
+      });
+      setIsSpeaking(false);
+    }
+  };
+
+  useEffect(() => {
+    if (audioSrc && audioRef.current) {
+        audioRef.current.play();
+    }
+  }, [audioSrc]);
+
   const chartConfig = {
     price: {
       label: "Price",
@@ -394,6 +415,12 @@ export default function MandiRatesClient() {
 
   return (
     <div className="container mx-auto p-4 md:p-8">
+      <audio 
+        ref={audioRef} 
+        src={audioSrc || undefined} 
+        onEnded={() => setIsSpeaking(false)} 
+        className="hidden"
+      />
       <div className="text-center mb-8">
         <h1 className="font-headline text-3xl md:text-4xl font-bold tracking-tighter">{t.mandi_rates_page_title}</h1>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto mt-2">
@@ -422,11 +449,22 @@ export default function MandiRatesClient() {
 
       {(aiSummary || isSummarizing) && (
         <Alert className="mb-8 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
-            <Bot className="h-4 w-4 text-blue-600" />
             <div className='flex items-center justify-between'>
-              <AlertTitle className="font-headline text-blue-800 dark:text-blue-300">{t.ai_summary}</AlertTitle>
+                <div className="flex items-center gap-2">
+                    <Bot className="h-4 w-4 text-blue-600" />
+                    <AlertTitle className="font-headline text-blue-800 dark:text-blue-300">{t.ai_summary}</AlertTitle>
+                </div>
+                <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={handlePlaySummary} 
+                    disabled={isSpeaking || !aiSummary}
+                    className="text-blue-600 hover:bg-blue-100"
+                >
+                    {isSpeaking ? <Loader2 className="h-4 w-4 animate-spin" /> : <Volume2 className="h-4 w-4" />}
+                </Button>
             </div>
-            <AlertDescription className="text-blue-700 dark:text-blue-400">
+            <AlertDescription className="text-blue-700 dark:text-blue-400 pl-7">
               {isSummarizing && !aiSummary ? 'Listening...' : aiSummary}
             </AlertDescription>
         </Alert>
@@ -649,4 +687,5 @@ export default function MandiRatesClient() {
     
 
     
+
 
