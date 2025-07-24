@@ -11,12 +11,16 @@ import { communityPostsData } from '@/data/community-posts';
 import Image from 'next/image';
 import { useLanguage } from '@/hooks/use-language';
 import { useAuth } from '@/hooks/use-auth';
+import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 export default function CommunityClient() {
   const { t } = useLanguage();
   const { user } = useAuth();
+  const { toast } = useToast();
   const [posts, setPosts] = useState(communityPostsData);
   const [newPostContent, setNewPostContent] = useState('');
+  const [likedPosts, setLikedPosts] = useState<Set<number>>(new Set());
 
   const handlePost = () => {
     if (newPostContent.trim() && user) {
@@ -34,6 +38,33 @@ export default function CommunityClient() {
         setPosts([newPost, ...posts]);
         setNewPostContent('');
     }
+  };
+
+  const handleLike = (postId: number) => {
+    if (!user) {
+        toast({
+            variant: 'destructive',
+            title: 'Login Required',
+            description: 'You must be logged in to like a post.',
+        });
+        return;
+    }
+
+    const newLikedPosts = new Set(likedPosts);
+    let likeAdjustment = 0;
+
+    if (newLikedPosts.has(postId)) {
+        newLikedPosts.delete(postId);
+        likeAdjustment = -1;
+    } else {
+        newLikedPosts.add(postId);
+        likeAdjustment = 1;
+    }
+
+    setLikedPosts(newLikedPosts);
+    setPosts(posts.map(post => 
+        post.id === postId ? { ...post, likes: post.likes + likeAdjustment } : post
+    ));
   };
 
 
@@ -71,48 +102,56 @@ export default function CommunityClient() {
         )}
 
         <div className="space-y-6">
-          {posts.map((post) => (
-            <Card key={post.id} className="overflow-hidden">
-              <CardHeader className="flex flex-row items-center gap-4">
-                <Avatar>
-                  <AvatarImage src={post.user.avatar} alt={post.user.name} />
-                  <AvatarFallback>{post.user.name.charAt(0)}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1">
-                  <p className="font-semibold">{post.user.name}</p>
-                  <p className="text-xs text-muted-foreground">{post.timestamp}</p>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="whitespace-pre-wrap">{post.content}</p>
-                {post.image && (
-                  <div className="mt-4 rounded-lg overflow-hidden border">
-                    <Image
-                      src={post.image}
-                      alt="Post image"
-                      width={600}
-                      height={400}
-                      className="object-cover w-full h-auto"
-                      data-ai-hint="farm harvest"
-                    />
-                  </div>
-                )}
-              </CardContent>
-              <CardFooter className="bg-muted/50 p-2 border-t">
-                  <div className="flex w-full justify-around">
-                    <Button variant="ghost" size="sm" className="flex-1 gap-2">
-                        <ThumbsUp className="h-4 w-4" /> {t.like_button} {post.likes > 0 && `(${post.likes})`}
-                    </Button>
-                    <Button variant="ghost" size="sm" className="flex-1 gap-2">
-                        <MessageSquare className="h-4 w-4" /> {t.comment_button} {post.comments > 0 && `(${post.comments})`}
-                    </Button>
-                    <Button variant="ghost" size="sm" className="flex-1 gap-2">
-                        <Share2 className="h-4 w-4" /> {t.share_button}
-                    </Button>
-                  </div>
-              </CardFooter>
-            </Card>
-          ))}
+          {posts.map((post) => {
+            const isLiked = likedPosts.has(post.id);
+            return (
+                <Card key={post.id} className="overflow-hidden">
+                <CardHeader className="flex flex-row items-center gap-4">
+                    <Avatar>
+                    <AvatarImage src={post.user.avatar} alt={post.user.name} />
+                    <AvatarFallback>{post.user.name.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                    <p className="font-semibold">{post.user.name}</p>
+                    <p className="text-xs text-muted-foreground">{post.timestamp}</p>
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    <p className="whitespace-pre-wrap">{post.content}</p>
+                    {post.image && (
+                    <div className="mt-4 rounded-lg overflow-hidden border">
+                        <Image
+                        src={post.image}
+                        alt="Post image"
+                        width={600}
+                        height={400}
+                        className="object-cover w-full h-auto"
+                        data-ai-hint="farm harvest"
+                        />
+                    </div>
+                    )}
+                </CardContent>
+                <CardFooter className="bg-muted/50 p-2 border-t">
+                    <div className="flex w-full justify-around">
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className={cn("flex-1 gap-2", isLiked && "text-primary")}
+                            onClick={() => handleLike(post.id)}
+                        >
+                            <ThumbsUp className={cn("h-4 w-4", isLiked && "fill-current")} /> {t.like_button} {post.likes > 0 && `(${post.likes})`}
+                        </Button>
+                        <Button variant="ghost" size="sm" className="flex-1 gap-2">
+                            <MessageSquare className="h-4 w-4" /> {t.comment_button} {post.comments > 0 && `(${post.comments})`}
+                        </Button>
+                        <Button variant="ghost" size="sm" className="flex-1 gap-2">
+                            <Share2 className="h-4 w-4" /> {t.share_button}
+                        </Button>
+                    </div>
+                </CardFooter>
+                </Card>
+            )
+          })}
         </div>
       </div>
     </div>
