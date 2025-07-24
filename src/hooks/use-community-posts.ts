@@ -3,88 +3,87 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import type { CommunityPost, Comment } from '@/data/community-posts';
-import communityPostsData from '@/data/community-posts.json';
+import { useAuth } from './use-auth';
+import { useToast } from './use-toast';
 
-const STORAGE_KEY = 'kisan-ai-community-posts';
 
 export const useCommunityPosts = () => {
     const [posts, setPosts] = useState<CommunityPost[]>([]);
-    const [isMounted, setIsMounted] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const { user } = useAuth();
+    const { toast } = useToast();
 
-    useEffect(() => {
-        setIsMounted(true);
+    const fetchPosts = useCallback(async () => {
+        setIsLoading(true);
         try {
-            const storedPosts = localStorage.getItem(STORAGE_KEY);
-            if (storedPosts) {
-                setPosts(JSON.parse(storedPosts));
-            } else {
-                setPosts(communityPostsData as CommunityPost[]);
+            const response = await fetch('/api/community/posts');
+            if (!response.ok) {
+                throw new Error('Failed to fetch posts');
             }
-        } catch (error) {
-            console.error("Failed to load posts from local storage", error);
-            setPosts(communityPostsData as CommunityPost[]);
+            const data: CommunityPost[] = await response.json();
+            
+            // Add isLikedByCurrentUser field based on current user
+            const processedData = data.map(post => ({
+                ...post,
+                isLikedByCurrentUser: user ? post.likedBy?.includes(user.name) : false
+            }));
+
+            setPosts(processedData.sort((a, b) => b.id - a.id)); // Sort by newest first
+            setError(null);
+        } catch (err: any) {
+            setError(err.message);
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not load community posts.' });
+        } finally {
+            setIsLoading(false);
         }
-    }, []);
+    }, [toast, user]);
 
     useEffect(() => {
-        if (isMounted) {
-            try {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(posts));
-            } catch (error) {
-                console.error("Failed to save posts to local storage", error);
+        fetchPosts();
+    }, [fetchPosts]);
+
+    const performAction = async (url: string, method: string, body?: any) => {
+        try {
+            const response = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: body ? JSON.stringify(body) : undefined,
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'An error occurred.');
             }
+
+            const updatedPost: CommunityPost = await response.json();
+             // After any action, re-fetch all posts to ensure UI consistency
+            await fetchPosts();
+
+        } catch (err: any) {
+            toast({ variant: 'destructive', title: 'Error', description: err.message });
         }
-    }, [posts, isMounted]);
+    };
 
-    const addPost = useCallback((content: string, user: { name: string; avatar: string; }, image: string | null = null) => {
-        const newPost: CommunityPost = {
-            id: Date.now(),
-            user,
-            timestamp: 'Just now',
-            content,
-            image: image || undefined,
-            likes: 0,
-            comments: [],
-            isLikedByCurrentUser: false,
-        };
-        setPosts(prevPosts => [newPost, ...prevPosts]);
+    const addPost = useCallback(async (content: string, author: { name: string; avatar: string; }, image: string | null = null) => {
+        await performAction('/api/community/posts', 'POST', { content, user: author, image });
     }, []);
 
-    const likePost = useCallback((postId: number) => {
-        setPosts(prevPosts =>
-            prevPosts.map(post => {
-                if (post.id === postId) {
-                    const isLiked = !post.isLikedByCurrentUser;
-                    const likeAdjustment = isLiked ? 1 : -1;
-                    return {
-                        ...post,
-                        likes: Math.max(0, post.likes + likeAdjustment), // Ensure likes don't go below 0
-                        isLikedByCurrentUser: isLiked,
-                    };
-                }
-                return post;
-            })
-        );
+    const likePost = useCallback(async (postId: number) => {
+        if (!user) {
+            toast({ variant: 'destructive', title: 'Login Required', description: 'You must be logged in.' });
+            return;
+        }
+        await performAction(`/api/community/posts/${postId}/like`, 'POST', { userName: user.name });
+    }, [user, toast]);
+
+    const addComment = useCallback(async (postId: number, text: string, author: { name: string; avatar: string; }) => {
+        await performAction(`/api/community/posts/${postId}/comment`, 'POST', { text, user: author });
     }, []);
 
-    const addComment = useCallback((postId: number, text: string, user: { name: string; avatar: string; }) => {
-        const newComment: Comment = {
-            id: Date.now(),
-            user,
-            text,
-        };
-        setPosts(prevPosts =>
-            prevPosts.map(post =>
-                post.id === postId
-                    ? { ...post, comments: [...post.comments, newComment] }
-                    : post
-            )
-        );
+    const deletePost = useCallback(async (postId: number) => {
+        await performAction(`/api/community/posts/${postId}/delete`, 'POST');
     }, []);
 
-    const deletePost = useCallback((postId: number) => {
-        setPosts(prevPosts => prevPosts.filter(post => post.id !== postId));
-    }, []);
-
-    return { posts, addPost, likePost, addComment, deletePost };
+    return { posts, isLoading, error, fetchPosts, addPost, likePost, addComment, deletePost };
 };

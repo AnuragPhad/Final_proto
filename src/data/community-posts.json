@@ -13,7 +13,8 @@
         "comments": [
             { "id": 1, "user": { "name": "Priya Sharma", "avatar": "https://ui-avatars.com/api/?name=Priya+Sharma&background=random" }, "text": "Looks great, Rajesh! Best of luck for the harvest." },
             { "id": 2, "user": { "name": "Amit Singh", "avatar": "https://ui-avatars.com/api/?name=Amit+Singh&background=random" }, "text": "Very nice. Which variety have you planted?" }
-        ]
+        ],
+        "likedBy": ["Priya Sharma", "Amit Singh"]
     },
     {
         "id": 2,
@@ -25,7 +26,8 @@
         "content": "I'm planning to use a new organic pesticide for my tomato plants in Maharashtra. Has anyone tried neem oil mixtures? What were your results? Any advice would be appreciated.",
         "image": null,
         "likes": 22,
-        "comments": []
+        "comments": [],
+        "likedBy": []
     },
     {
         "id": 3,
@@ -39,7 +41,8 @@
         "likes": 78,
         "comments": [
             { "id": 3, "user": { "name": "Rajesh Kumar", "avatar": "https://ui-avatars.com/api/?name=Rajesh+Kumar&background=random" }, "text": "Yes, the soil health card is very helpful. Saved me a lot on fertilizer costs." }
-        ]
+        ],
+        "likedBy": ["Rajesh Kumar"]
     },
     {
         "id": 4,
@@ -51,6 +54,7 @@
         "content": "The price for onions in Nashik mandi seems to be going up. Is now a good time to sell, or should I wait a bit longer? Any thoughts from fellow farmers in the region?",
         "image": null,
         "likes": 31,
-        "comments": []
+        "comments": [],
+        "likedBy": []
     }
 ]

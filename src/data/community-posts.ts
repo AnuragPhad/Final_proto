@@ -19,5 +19,6 @@ export interface CommunityPost {
     image?: string | null;
     likes: number;
     comments: Comment[];
+    likedBy?: string[]; // Array of user names who liked the post
     isLikedByCurrentUser?: boolean;
 }
