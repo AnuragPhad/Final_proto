@@ -2,43 +2,36 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ThumbsUp, MessageSquare, Share2, Send } from 'lucide-react';
-import { communityPostsData, Comment } from '@/data/community-posts';
+import { Comment } from '@/data/community-posts';
 import Image from 'next/image';
 import { useLanguage } from '@/hooks/use-language';
 import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
+import { useCommunityPosts } from '@/hooks/use-community-posts';
 
 export default function CommunityClient() {
   const { t } = useLanguage();
   const { user } = useAuth();
   const { toast } = useToast();
-  const [posts, setPosts] = useState(communityPostsData);
+  const { posts, addPost, likePost, addComment } = useCommunityPosts();
+  
   const [newPostContent, setNewPostContent] = useState('');
-  const [likedPosts, setLikedPosts] = useState<Set<number>>(new Set());
   const [activeCommentId, setActiveCommentId] = useState<number | null>(null);
   const [commentContent, setCommentContent] = useState('');
 
   const handlePost = () => {
     if (newPostContent.trim() && user) {
-        const newPost = {
-            id: posts.length + 1,
-            user: {
-                name: user.name,
-                avatar: `https://ui-avatars.com/api/?name=${user.name.replace(' ', '+')}&background=random`,
-            },
-            timestamp: 'Just now',
-            content: newPostContent,
-            likes: 0,
-            comments: [],
-        };
-        setPosts([newPost, ...posts]);
+        addPost(newPostContent, {
+            name: user.name,
+            avatar: `https://ui-avatars.com/api/?name=${user.name.replace(' ', '+')}&background=random`,
+        });
         setNewPostContent('');
     }
   };
@@ -52,22 +45,7 @@ export default function CommunityClient() {
         });
         return;
     }
-
-    const newLikedPosts = new Set(likedPosts);
-    let likeAdjustment = 0;
-
-    if (newLikedPosts.has(postId)) {
-        newLikedPosts.delete(postId);
-        likeAdjustment = -1;
-    } else {
-        newLikedPosts.add(postId);
-        likeAdjustment = 1;
-    }
-
-    setLikedPosts(newLikedPosts);
-    setPosts(posts.map(post => 
-        post.id === postId ? { ...post, likes: post.likes + likeAdjustment } : post
-    ));
+    likePost(postId);
   };
 
   const toggleCommentInput = (postId: number) => {
@@ -89,18 +67,11 @@ export default function CommunityClient() {
 
   const handlePostComment = (postId: number) => {
     if (commentContent.trim() && user) {
-        const newComment: Comment = {
-            id: Date.now(),
-            user: {
-                name: user.name,
-                avatar: `https://ui-avatars.com/api/?name=${user.name.replace(' ', '+')}&background=random`,
-            },
-            text: commentContent,
+        const newCommentUser = {
+            name: user.name,
+            avatar: `https://ui-avatars.com/api/?name=${user.name.replace(' ', '+')}&background=random`,
         };
-
-        setPosts(posts.map(post => 
-            post.id === postId ? { ...post, comments: [...post.comments, newComment] } : post
-        ));
+        addComment(postId, commentContent, newCommentUser);
         setCommentContent('');
     }
   }
@@ -120,7 +91,7 @@ export default function CommunityClient() {
         {user && (
             <Card className="mb-8">
             <CardHeader>
-                <CardTitle>{t.create_post_title}</CardTitle>
+                <h2 className="text-lg font-semibold">{t.create_post_title}</h2>
             </CardHeader>
             <CardContent>
                 <div className="grid w-full gap-2">
@@ -140,7 +111,7 @@ export default function CommunityClient() {
 
         <div className="space-y-6">
           {posts.map((post) => {
-            const isLiked = likedPosts.has(post.id);
+            const isLiked = post.isLikedByCurrentUser;
             return (
                 <Card key={post.id} className="overflow-hidden">
                 <CardHeader className="flex flex-row items-center gap-4">

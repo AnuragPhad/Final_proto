@@ -18,6 +18,7 @@ export interface CommunityPost {
     image?: string;
     likes: number;
     comments: Comment[];
+    isLikedByCurrentUser?: boolean; // Added to track liked status
 }
 
 export const communityPostsData: CommunityPost[] = [
