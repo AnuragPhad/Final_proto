@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ThumbsUp, MessageSquare, Share2, Send } from 'lucide-react';
-import { communityPostsData } from '@/data/community-posts';
+import { communityPostsData, Comment } from '@/data/community-posts';
 import Image from 'next/image';
 import { useLanguage } from '@/hooks/use-language';
 import { useAuth } from '@/hooks/use-auth';
@@ -36,7 +36,7 @@ export default function CommunityClient() {
             timestamp: 'Just now',
             content: newPostContent,
             likes: 0,
-            comments: 0,
+            comments: [],
         };
         setPosts([newPost, ...posts]);
         setNewPostContent('');
@@ -88,15 +88,22 @@ export default function CommunityClient() {
   };
 
   const handlePostComment = (postId: number) => {
-    if (commentContent.trim()) {
+    if (commentContent.trim() && user) {
+        const newComment: Comment = {
+            id: Date.now(),
+            user: {
+                name: user.name,
+                avatar: `https://ui-avatars.com/api/?name=${user.name.replace(' ', '+')}&background=random`,
+            },
+            text: commentContent,
+        };
+
         setPosts(posts.map(post => 
-            post.id === postId ? { ...post, comments: post.comments + 1 } : post
+            post.id === postId ? { ...post, comments: [...post.comments, newComment] } : post
         ));
         setCommentContent('');
-        setActiveCommentId(null);
     }
   }
-
 
   return (
     <div className="container mx-auto p-4 md:p-8">
@@ -172,25 +179,42 @@ export default function CommunityClient() {
                             <ThumbsUp className={cn("h-4 w-4", isLiked && "fill-current")} /> {t.like_button} {post.likes > 0 && `(${post.likes})`}
                         </Button>
                         <Button variant="ghost" size="sm" className="flex-1 gap-2" onClick={() => toggleCommentInput(post.id)}>
-                            <MessageSquare className="h-4 w-4" /> {t.comment_button} {post.comments > 0 && `(${post.comments})`}
+                            <MessageSquare className="h-4 w-4" /> {t.comment_button} {post.comments.length > 0 && `(${post.comments.length})`}
                         </Button>
                         <Button variant="ghost" size="sm" className="flex-1 gap-2">
                             <Share2 className="h-4 w-4" /> {t.share_button}
                         </Button>
                     </div>
-                    {activeCommentId === post.id && (
-                        <div className="p-4 border-t w-full">
-                            <div className="flex items-center gap-2">
-                                <Input 
-                                    placeholder="Add a comment..." 
-                                    value={commentContent}
-                                    onChange={(e) => setCommentContent(e.target.value)}
-                                    className="flex-1"
-                                />
-                                <Button size="sm" onClick={() => handlePostComment(post.id)} disabled={!commentContent.trim()}>
-                                    Post
-                                </Button>
+                    {(activeCommentId === post.id || post.comments.length > 0) && (
+                        <div className="p-4 pt-2 border-t w-full mt-2">
+                            <div className="space-y-4">
+                                {post.comments.map(comment => (
+                                    <div key={comment.id} className="flex items-start gap-3">
+                                        <Avatar className="h-8 w-8">
+                                            <AvatarImage src={comment.user.avatar} alt={comment.user.name} />
+                                            <AvatarFallback>{comment.user.name.charAt(0)}</AvatarFallback>
+                                        </Avatar>
+                                        <div className="bg-background rounded-lg p-2 flex-1">
+                                            <p className="font-semibold text-sm">{comment.user.name}</p>
+                                            <p className="text-sm text-muted-foreground">{comment.text}</p>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
+                            
+                            {activeCommentId === post.id && (
+                                <div className="flex items-center gap-2 mt-4">
+                                    <Input 
+                                        placeholder="Add a comment..." 
+                                        value={commentContent}
+                                        onChange={(e) => setCommentContent(e.target.value)}
+                                        className="flex-1"
+                                    />
+                                    <Button size="sm" onClick={() => handlePostComment(post.id)} disabled={!commentContent.trim()}>
+                                        Post
+                                    </Button>
+                                </div>
+                            )}
                         </div>
                     )}
                 </CardFooter>
