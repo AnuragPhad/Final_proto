@@ -2,7 +2,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { communityPostsData, type CommunityPost, type Comment } from '@/data/community-posts';
+import type { CommunityPost, Comment } from '@/data/community-posts';
+import communityPostsData from '@/data/community-posts.json';
 
 const STORAGE_KEY = 'kisan-ai-community-posts';
 
@@ -17,11 +18,11 @@ export const useCommunityPosts = () => {
             if (storedPosts) {
                 setPosts(JSON.parse(storedPosts));
             } else {
-                setPosts(communityPostsData);
+                setPosts(communityPostsData as CommunityPost[]);
             }
         } catch (error) {
             console.error("Failed to load posts from local storage", error);
-            setPosts(communityPostsData);
+            setPosts(communityPostsData as CommunityPost[]);
         }
     }, []);
 
@@ -57,7 +58,7 @@ export const useCommunityPosts = () => {
                     const likeAdjustment = isLiked ? 1 : -1;
                     return {
                         ...post,
-                        likes: post.likes + likeAdjustment,
+                        likes: Math.max(0, post.likes + likeAdjustment), // Ensure likes don't go below 0
                         isLikedByCurrentUser: isLiked,
                     };
                 }
