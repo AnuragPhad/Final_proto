@@ -32,17 +32,49 @@ const mockData: { [key: string]: MandiRate[] } = {
   'Solapur': solapurMandiRates,
 };
 
-
 export const getMandiRates = async (state: string, district: string): Promise<MandiRate[]> => {
-  console.log(`Fetching mock mandi rates for: ${district}, ${state}`);
+  const apiKey = process.env.NEXT_PUBLIC_DATA_GOV_API_KEY;
   
-  // Use mock data based on district. If not found, it will be undefined.
-  const rates = mockData[district];
-  
-  if (rates) {
-    return Promise.resolve(rates);
+  if (!apiKey) {
+    console.warn("API key is missing. Falling back to mock data.");
+    // Fallback to mock data if API key is not available
+    const rates = mockData[district];
+    if (rates) {
+      return Promise.resolve(rates);
+    }
+    return Promise.resolve([]);
   }
 
-  // Fallback to an empty array if no mock data is found for the district
-  return Promise.resolve([]);
+  const url = `https://api.data.gov.in/resource/9ef84268-d588-465a-a308-a864a43d0070?api-key=${apiKey}&format=json&offset=0&limit=1000&filters[state]=${encodeURIComponent(state)}&filters[district]=${encodeURIComponent(district)}`;
+  
+  try {
+    const response = await fetch(url, { next: { revalidate: 3600 } }); // Cache for 1 hour
+    if (!response.ok) {
+      console.error('Failed to fetch from data.gov.in API:', response.status, response.statusText);
+      throw new Error('Failed to fetch mandi rates from API.');
+    }
+    const data = await response.json();
+    
+    if (!data.records) {
+      console.warn("No records found for the given state and district.");
+      return [];
+    }
+
+    // Transform API data into our MandiRate format
+    return data.records.map((record: ApiRecord) => ({
+      state: record.state,
+      district: record.district,
+      market: record.market,
+      commodity: record.commodity,
+      variety: record.variety,
+      arrival_date: record.arrival_date,
+      minPrice: parseFloat(record.min_price),
+      maxPrice: parseFloat(record.max_price),
+      modalPrice: parseFloat(record.modal_price),
+    }));
+  } catch (error) {
+    console.error('Error fetching or processing mandi rates:', error);
+    // On error, you might want to return empty or handle it differently
+    return [];
+  }
 };
