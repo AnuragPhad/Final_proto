@@ -6,7 +6,7 @@ import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ThumbsUp, MessageSquare, Share2, Send } from 'lucide-react';
+import { ThumbsUp, MessageSquare, Share2, Send, Trash2 } from 'lucide-react';
 import { Comment } from '@/data/community-posts';
 import Image from 'next/image';
 import { useLanguage } from '@/hooks/use-language';
@@ -15,12 +15,14 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { useCommunityPosts } from '@/hooks/use-community-posts';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+
 
 export default function CommunityClient() {
   const { t } = useLanguage();
   const { user } = useAuth();
   const { toast } = useToast();
-  const { posts, addPost, likePost, addComment } = useCommunityPosts();
+  const { posts, addPost, likePost, addComment, deletePost } = useCommunityPosts();
   
   const [newPostContent, setNewPostContent] = useState('');
   const [activeCommentId, setActiveCommentId] = useState<number | null>(null);
@@ -112,6 +114,7 @@ export default function CommunityClient() {
         <div className="space-y-6">
           {posts.map((post) => {
             const isLiked = post.isLikedByCurrentUser;
+            const isOwnPost = user && user.name === post.user.name;
             return (
                 <Card key={post.id} className="overflow-hidden">
                 <CardHeader className="flex flex-row items-center gap-4">
@@ -123,6 +126,29 @@ export default function CommunityClient() {
                     <p className="font-semibold">{post.user.name}</p>
                     <p className="text-xs text-muted-foreground">{post.timestamp}</p>
                     </div>
+                    {isOwnPost && (
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive">
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        This action cannot be undone. This will permanently delete your post.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => deletePost(post.id)} className="bg-destructive hover:bg-destructive/90">
+                                        Delete
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    )}
                 </CardHeader>
                 <CardContent>
                     <p className="whitespace-pre-wrap">{post.content}</p>

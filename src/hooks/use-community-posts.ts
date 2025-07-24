@@ -80,5 +80,9 @@ export const useCommunityPosts = () => {
         );
     }, []);
 
-    return { posts, addPost, likePost, addComment };
+    const deletePost = useCallback((postId: number) => {
+        setPosts(prevPosts => prevPosts.filter(post => post.id !== postId));
+    }, []);
+
+    return { posts, addPost, likePost, addComment, deletePost };
 };
