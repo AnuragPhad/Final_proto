@@ -6,7 +6,7 @@ import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ThumbsUp, MessageSquare, Share2, Send, Trash2 } from 'lucide-react';
+import { ThumbsUp, MessageSquare, Send, Trash2 } from 'lucide-react';
 import { Comment } from '@/data/community-posts';
 import Image from 'next/image';
 import { useLanguage } from '@/hooks/use-language';
@@ -177,9 +177,6 @@ export default function CommunityClient() {
                         </Button>
                         <Button variant="ghost" size="sm" className="flex-1 gap-2" onClick={() => toggleCommentInput(post.id)}>
                             <MessageSquare className="h-4 w-4" /> {t.comment_button} {post.comments.length > 0 && `(${post.comments.length})`}
-                        </Button>
-                        <Button variant="ghost" size="sm" className="flex-1 gap-2">
-                            <Share2 className="h-4 w-4" /> {t.share_button}
                         </Button>
                     </div>
                     {(activeCommentId === post.id || post.comments.length > 0) && (
