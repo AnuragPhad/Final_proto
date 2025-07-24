@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Carrot, HeartPulse, ScrollText, Settings, BrainCircuit, Tractor, Users } from 'lucide-react';
 import { useLanguage } from '@/hooks/use-language';
 
