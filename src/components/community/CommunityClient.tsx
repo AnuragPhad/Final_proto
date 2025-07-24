@@ -13,6 +13,7 @@ import { useLanguage } from '@/hooks/use-language';
 import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { Input } from '@/components/ui/input';
 
 export default function CommunityClient() {
   const { t } = useLanguage();
@@ -21,6 +22,8 @@ export default function CommunityClient() {
   const [posts, setPosts] = useState(communityPostsData);
   const [newPostContent, setNewPostContent] = useState('');
   const [likedPosts, setLikedPosts] = useState<Set<number>>(new Set());
+  const [activeCommentId, setActiveCommentId] = useState<number | null>(null);
+  const [commentContent, setCommentContent] = useState('');
 
   const handlePost = () => {
     if (newPostContent.trim() && user) {
@@ -66,6 +69,33 @@ export default function CommunityClient() {
         post.id === postId ? { ...post, likes: post.likes + likeAdjustment } : post
     ));
   };
+
+  const toggleCommentInput = (postId: number) => {
+    if (!user) {
+        toast({
+            variant: 'destructive',
+            title: 'Login Required',
+            description: 'You must be logged in to comment on a post.',
+        });
+        return;
+    }
+    if (activeCommentId === postId) {
+      setActiveCommentId(null);
+    } else {
+      setActiveCommentId(postId);
+      setCommentContent(''); // Reset content when switching
+    }
+  };
+
+  const handlePostComment = (postId: number) => {
+    if (commentContent.trim()) {
+        setPosts(posts.map(post => 
+            post.id === postId ? { ...post, comments: post.comments + 1 } : post
+        ));
+        setCommentContent('');
+        setActiveCommentId(null);
+    }
+  }
 
 
   return (
@@ -131,7 +161,7 @@ export default function CommunityClient() {
                     </div>
                     )}
                 </CardContent>
-                <CardFooter className="bg-muted/50 p-2 border-t">
+                <CardFooter className="bg-muted/50 p-2 border-t flex-col items-stretch">
                     <div className="flex w-full justify-around">
                         <Button 
                             variant="ghost" 
@@ -141,13 +171,28 @@ export default function CommunityClient() {
                         >
                             <ThumbsUp className={cn("h-4 w-4", isLiked && "fill-current")} /> {t.like_button} {post.likes > 0 && `(${post.likes})`}
                         </Button>
-                        <Button variant="ghost" size="sm" className="flex-1 gap-2">
+                        <Button variant="ghost" size="sm" className="flex-1 gap-2" onClick={() => toggleCommentInput(post.id)}>
                             <MessageSquare className="h-4 w-4" /> {t.comment_button} {post.comments > 0 && `(${post.comments})`}
                         </Button>
                         <Button variant="ghost" size="sm" className="flex-1 gap-2">
                             <Share2 className="h-4 w-4" /> {t.share_button}
                         </Button>
                     </div>
+                    {activeCommentId === post.id && (
+                        <div className="p-4 border-t w-full">
+                            <div className="flex items-center gap-2">
+                                <Input 
+                                    placeholder="Add a comment..." 
+                                    value={commentContent}
+                                    onChange={(e) => setCommentContent(e.target.value)}
+                                    className="flex-1"
+                                />
+                                <Button size="sm" onClick={() => handlePostComment(post.id)} disabled={!commentContent.trim()}>
+                                    Post
+                                </Button>
+                            </div>
+                        </div>
+                    )}
                 </CardFooter>
                 </Card>
             )
