@@ -35,12 +35,13 @@ export const useCommunityPosts = () => {
         }
     }, [posts, isMounted]);
 
-    const addPost = useCallback((content: string, user: { name: string; avatar: string; }) => {
+    const addPost = useCallback((content: string, user: { name: string; avatar: string; }, image: string | null = null) => {
         const newPost: CommunityPost = {
             id: Date.now(),
             user,
             timestamp: 'Just now',
             content,
+            image: image || undefined,
             likes: 0,
             comments: [],
             isLikedByCurrentUser: false,

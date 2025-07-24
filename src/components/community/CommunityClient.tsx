@@ -1,12 +1,12 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, ChangeEvent } from 'react';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ThumbsUp, MessageSquare, Send, Trash2 } from 'lucide-react';
+import { ThumbsUp, MessageSquare, Send, Trash2, Paperclip, X } from 'lucide-react';
 import { Comment } from '@/data/community-posts';
 import Image from 'next/image';
 import { useLanguage } from '@/hooks/use-language';
@@ -25,16 +25,34 @@ export default function CommunityClient() {
   const { posts, addPost, likePost, addComment, deletePost } = useCommunityPosts();
   
   const [newPostContent, setNewPostContent] = useState('');
+  const [newPostImage, setNewPostImage] = useState<string | null>(null);
   const [activeCommentId, setActiveCommentId] = useState<number | null>(null);
   const [commentContent, setCommentContent] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setNewPostImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handlePost = () => {
-    if (newPostContent.trim() && user) {
-        addPost(newPostContent, {
+    if ((newPostContent.trim() || newPostImage) && user) {
+        addPost(
+          newPostContent, 
+          {
             name: user.name,
             avatar: `https://ui-avatars.com/api/?name=${user.name.replace(' ', '+')}&background=random`,
-        });
+          }, 
+          newPostImage
+        );
         setNewPostContent('');
+        setNewPostImage(null);
     }
   };
 
@@ -102,12 +120,27 @@ export default function CommunityClient() {
                         value={newPostContent}
                         onChange={(e) => setNewPostContent(e.target.value)}
                     />
-                    <Button onClick={handlePost} disabled={!newPostContent.trim()}>
-                        <Send className="mr-2 h-4 w-4" />
-                        {t.create_post_button}
-                    </Button>
+                    {newPostImage && (
+                        <div className="relative">
+                            <Image src={newPostImage} alt="Preview" width={100} height={100} className="rounded-md border" />
+                            <Button variant="ghost" size="icon" className="absolute top-0 right-0 h-6 w-6" onClick={() => setNewPostImage(null)}>
+                                <X className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    )}
+                    <Input type="file" ref={fileInputRef} onChange={handleImageChange} accept="image/*" className="hidden" />
                 </div>
             </CardContent>
+             <CardFooter className="justify-between">
+                <Button variant="ghost" onClick={() => fileInputRef.current?.click()}>
+                    <Paperclip className="mr-2 h-4 w-4" />
+                    Attach Photo
+                </Button>
+                <Button onClick={handlePost} disabled={!newPostContent.trim() && !newPostImage}>
+                    <Send className="mr-2 h-4 w-4" />
+                    {t.create_post_button}
+                </Button>
+             </CardFooter>
             </Card>
         )}
 
