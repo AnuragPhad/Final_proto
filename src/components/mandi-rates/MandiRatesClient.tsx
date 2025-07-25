@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
@@ -464,7 +463,7 @@ export default function MandiRatesClient() {
                     variant="ghost" 
                     size="icon" 
                     onClick={handlePlaySummary} 
-                    disabled={isSpeaking || !aiSummary}
+                    disabled={isSpeaking || !aiSummary || isSummarizing}
                     className="text-blue-600 hover:bg-blue-100"
                 >
                     {isSpeaking ? <Loader2 className="h-4 w-4 animate-spin" /> : <Volume2 className="h-4 w-4" />}
@@ -689,3 +688,5 @@ export default function MandiRatesClient() {
     </div>
   );
 }
+
+    
