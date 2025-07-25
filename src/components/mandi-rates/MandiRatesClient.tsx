@@ -73,10 +73,6 @@ export default function MandiRatesClient() {
   const { language, t } = useLanguage();
 
   const { toast } = useToast();
-  
-  const getMandiRates = useCallback(async (state: string, district: string): Promise<MandiRate[]> => {
-    return getMandiRates(state, district);
-  }, []);
 
   const handleVoiceSearch = async (query: string) => {
     if (!query) return;
