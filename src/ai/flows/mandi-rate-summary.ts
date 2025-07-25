@@ -24,6 +24,7 @@ const MandiRateSummaryInputSchema = z.object({
   district: z.string().describe('The district where the market is located.'),
   date: z.string().describe("The date for the rates in 'do MMMM yyyy' format."),
   rates: z.array(MandiRateDataSchema).optional().describe('The list of market rates for the given commodity and location.'),
+  language: z.string().optional().describe("The language for the response, e.g., 'en', 'hi', 'mr'."),
 });
 
 export type MandiRateSummaryInput = z.infer<typeof MandiRateSummaryInputSchema>;
@@ -46,7 +47,10 @@ const prompt = ai.definePrompt({
     schema: MandiRateSummaryInputSchema,
   },
   output: {schema: MandiRateSummaryOutputSchema},
-  prompt: `You are a helpful assistant for farmers. Your task is to provide a clear and concise summary of commodity prices.
+  prompt: `You are a helpful assistant for farmers. Your task is to provide a clear and concise summary of commodity prices in the requested language.
+  
+  VERY IMPORTANT: Generate the entire response (all fields in the output schema) in the following language: {{language}}.
+
   The user wants to know the price of "{{commodity}}" in "{{district}}" for {{date}}.
 
   {{#if rates}}

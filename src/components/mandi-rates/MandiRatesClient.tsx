@@ -131,6 +131,7 @@ export default function MandiRatesClient() {
             maxPrice: r.maxPrice,
             modalPrice: r.modalPrice,
         })),
+        language: language,
       });
 
       setAiSummary(summaryResult.summary);
@@ -378,7 +379,7 @@ export default function MandiRatesClient() {
     }
   };
   
-  const handlePlaySummary = async () => {
+  const handlePlaySummary = useCallback(async () => {
     if (!aiSummary || isSpeaking) return;
 
     setIsSpeaking(true);
@@ -394,13 +395,22 @@ export default function MandiRatesClient() {
       });
       setIsSpeaking(false);
     }
-  };
+  }, [aiSummary, isSpeaking, toast]);
+
 
   useEffect(() => {
     if (audioSrc && audioRef.current) {
         audioRef.current.play();
     }
   }, [audioSrc]);
+
+   useEffect(() => {
+    // Automatically play the summary when it's generated from a voice search
+    if (aiSummary && isVoiceSearchActive) {
+      handlePlaySummary();
+    }
+  }, [aiSummary, isVoiceSearchActive, handlePlaySummary]);
+
 
   const chartConfig = {
     price: {
@@ -687,5 +697,6 @@ export default function MandiRatesClient() {
     
 
     
+
 
 
