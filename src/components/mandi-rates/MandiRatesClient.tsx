@@ -13,7 +13,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { CalendarIcon, Mic, LocateFixed, Bot, LayoutGrid, List, Wheat, Apple, Carrot, Grape, LeafyGreen, Citrus, HandPlatter, Volume2, LineChart, TrendingUp, Check, Loader2 } from 'lucide-react';
 import { format, subDays } from 'date-fns';
 import { states, districts } from '@/data/locations';
-import { getMandiRates as getMandiRatesFromApi, type MandiRate } from '@/data/mandi-rates';
+import { getMandiRates, type MandiRate } from '@/data/mandi-rates';
 import { useSpeechRecognition } from '@/hooks/use-speech-recognition';
 import { understandMandiRateQuery, MandiRateQueryOutput } from '@/ai/flows/mandi-rate-nlu';
 import { mandiRateSummary } from '@/ai/flows/mandi-rate-summary';
@@ -75,7 +75,7 @@ export default function MandiRatesClient() {
   const { toast } = useToast();
   
   const getMandiRates = useCallback(async (state: string, district: string): Promise<MandiRate[]> => {
-    return getMandiRatesFromApi(state, district);
+    return getMandiRates(state, district);
   }, []);
 
   const handleVoiceSearch = async (query: string) => {
@@ -194,7 +194,7 @@ export default function MandiRatesClient() {
     } finally {
       setIsLoading(false);
     }
-  }, [toast, getMandiRates]);
+  }, [toast]);
 
   useEffect(() => {
     // This effect should not run if a voice search is active, to prevent race conditions.
@@ -693,10 +693,3 @@ export default function MandiRatesClient() {
     </div>
   );
 }
-
-    
-
-    
-
-
-
