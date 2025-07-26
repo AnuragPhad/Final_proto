@@ -5,52 +5,16 @@ import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Carrot, HeartPulse, ScrollText, Settings, BrainCircuit, Tractor, Users, Mic, LocateFixed, Bot } from 'lucide-react';
 import { useLanguage } from '@/hooks/use-language';
-import { useSpeechRecognition } from '@/hooks/use-speech-recognition';
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
 import { Button } from '../ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useLocation } from '@/hooks/use-location';
-import { voiceAssistant } from '@/ai/flows/voice-assistant-flow';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 
 export default function DashboardClient() {
   const { t } = useLanguage();
   const { toast } = useToast();
   const { location, setLocation, setIsLocating, isLocating } = useLocation();
-  const router = useRouter();
-
-  const [isSummarizing, setIsSummarizing] = useTransition();
-  const [aiSummary, setAiSummary] = useState('');
-
-  const handleVoiceSearch = async (query: string) => {
-    if (!query) return;
-
-    setIsSummarizing(async () => {
-       setAiSummary(`Thinking about "${query}"...`);
-       try {
-        const result = await voiceAssistant({
-            query: query,
-            location: location ? `${location.district}, ${location.state}` : undefined,
-            language: 'en'
-        });
-        setAiSummary(result);
-       } catch (e: any) {
-        console.error("Voice Assistant Error:", e);
-        toast({ variant: 'destructive', title: 'AI Error', description: e.message || 'Could not process your voice command.' });
-        setAiSummary('Sorry, I encountered an error.');
-       }
-    });
-  };
- 
-  const {
-    transcript,
-    isListening,
-    startListening,
-    stopListening,
-    hasRecognitionSupport,
-  } = useSpeechRecognition({
-    onTranscriptFinal: handleVoiceSearch,
-  });
 
   const handleUseLocation = () => {
     setIsLocating(true);
@@ -174,37 +138,6 @@ export default function DashboardClient() {
         )}
         
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        
-        {hasRecognitionSupport && (
-          <Card className="sm:col-span-2 lg:col-span-3 bg-primary/10 border-primary/20">
-            <CardHeader>
-              <CardTitle className="font-headline text-xl font-semibold">Quick Voice Search</CardTitle>
-              <CardDescription>Tap the button and ask a question like "What is the price of onions today?" or "What's the weather like in Pune?".</CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col items-center justify-center gap-4">
-               <Button 
-                onClick={isListening ? stopListening : startListening} 
-                className={`rounded-full h-20 w-20 p-0 shadow-lg transition-transform transform hover:scale-110 ${isListening ? 'bg-destructive animate-pulse' : 'bg-primary'}`}
-                aria-label={isListening ? 'Stop listening' : 'Start voice search'}
-              >
-                <Mic className="h-8 w-8" />
-              </Button>
-               <p className="text-sm text-muted-foreground h-4">
-                {isListening ? `${t.listening} "${transcript}"` : (isSummarizing ? '' : t.tap_to_search_voice)}
-              </p>
-              {aiSummary && (
-                <Alert className="mt-4 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
-                    <Bot className="h-4 w-4 text-blue-600" />
-                    <AlertTitle className="font-headline text-blue-800 dark:text-blue-300">{t.ai_summary}</AlertTitle>
-                    <AlertDescription className="text-blue-700 dark:text-blue-400">
-                      {aiSummary}
-                    </AlertDescription>
-                </Alert>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
         {features.map((feature) => (
             <Link href={feature.href} key={feature.href} className="group">
                 <Card className="h-full transform transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-xl hover:border-primary/50">
