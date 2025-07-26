@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -11,7 +12,7 @@ import { z } from 'zod';
 import wav from 'wav';
 
 // Define input schema for the flow
-export const WeatherVoiceInputSchema = z.object({
+const WeatherVoiceInputSchema = z.object({
   latitude: z.number(),
   longitude: z.number(),
   language: z.string().optional().describe("The language for the response, e.g., 'en', 'hi', 'mr'."),
@@ -19,7 +20,7 @@ export const WeatherVoiceInputSchema = z.object({
 export type WeatherVoiceInput = z.infer<typeof WeatherVoiceInputSchema>;
 
 // Define output schema for the flow
-export const WeatherVoiceOutputSchema = z.object({
+const WeatherVoiceOutputSchema = z.object({
   summary: z.string().describe("A concise, friendly summary of the weather conditions."),
   audioDataUri: z.string().describe("The base64 encoded data URI for the generated audio."),
 });
@@ -45,7 +46,7 @@ async function toWav(pcmData: Buffer): Promise<string> {
 }
 
 // Define the main flow
-export const getWeatherVoiceSummaryFlow = ai.defineFlow(
+const getWeatherVoiceSummaryFlow = ai.defineFlow(
   {
     name: 'getWeatherVoiceSummaryFlow',
     inputSchema: WeatherVoiceInputSchema,
