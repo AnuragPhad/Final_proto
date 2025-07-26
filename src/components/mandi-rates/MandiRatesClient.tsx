@@ -89,32 +89,41 @@ export default function MandiRatesClient() {
 
   const handleVoiceSearch = async (query: string) => {
     if (!query) return;
+    setIsVoiceSearchActive(true);
     setIsSummarizing(true);
     setAiSummary(t.listening);
 
     try {
-        // 1. Understand the user's query to get the commodity
-        const nluResult = await understandMandiRateQuery({ query });
-        setCommodityFilter(nluResult.commodity);
-        setAiSummary(nluResult.summary);
-        
-        // 2. Use the currently selected date and location for the search
-        const searchDate = selectedDate || new Date();
+      const nluResult = await understandMandiRateQuery({ query });
+      setAiSummary(nluResult.summary);
+      setCommodityFilter(nluResult.commodity);
 
-        // 3. Filter the already fetched rates for the selected location
+      if (nluResult.market && nluResult.state) {
+        // If location is detected, update filters. This will trigger fetchRates.
+        const stateExists = states.find(s => s.toLowerCase() === nluResult.state!.toLowerCase());
+        if (stateExists) {
+            const districtExists = districts[stateExists]?.find(d => d.toLowerCase() === nluResult.market!.toLowerCase());
+            if (districtExists) {
+                setSelectedState(stateExists);
+                setSelectedDistrict(districtExists);
+                // Data will be fetched by the useEffect hook watching these state variables.
+                // We'll let the effect handle the rest.
+                toast({ title: 'Location Detected', description: `Searching rates in ${districtExists}, ${stateExists}.`});
+            }
+        }
+      } else {
+        // If no location, search in current location.
         const ratesForSummary = allRates.filter(rate => {
             const [day, month, year] = rate.arrival_date.split('/');
             const apiDate = new Date(Number(year), Number(month) - 1, Number(day));
-            const isDateMatch = format(apiDate, 'yyyy-MM-dd') === format(searchDate, 'yyyy-MM-dd');
-            const isCommodityMatch = rate.commodity.toLowerCase().includes(nluResult.commodity.toLowerCase());
-            return isDateMatch && isCommodityMatch;
+            const isDateMatch = format(apiDate, 'yyyy-MM-dd') === format(selectedDate || new Date(), 'yyyy-MM-dd');
+            return isDateMatch && rate.commodity.toLowerCase().includes(nluResult.commodity.toLowerCase());
         });
 
-        // 4. Generate the AI summary based on the filtered results
         const summaryResult = await mandiRateSummary({
             commodity: nluResult.commodity,
             district: selectedDistrict,
-            date: format(searchDate, 'do MMMM yyyy'),
+            date: format(selectedDate || new Date(), 'do MMMM yyyy'),
             rates: ratesForSummary.map(r => ({
                 market: r.market,
                 minPrice: r.minPrice,
@@ -123,15 +132,16 @@ export default function MandiRatesClient() {
             })),
             language: language
         });
-
         setAiSummary(summaryResult.summary);
-
+        setIsSummarizing(false);
+        setIsVoiceSearchActive(false);
+      }
     } catch (e: any) {
         console.error(e);
         toast({ variant: 'destructive', title: 'AI Error', description: e.message || 'Could not process your voice command.' });
         setAiSummary('Sorry, I had trouble understanding. Please try again.');
-    } finally {
         setIsSummarizing(false);
+        setIsVoiceSearchActive(false);
     }
   };
 
@@ -178,12 +188,44 @@ export default function MandiRatesClient() {
     }
   }, [toast, getMandiRates]);
 
-  useEffect(() => {
-    // This effect should not run if a voice search is active, to prevent race conditions.
-    if (selectedState && selectedDistrict && !isVoiceSearchActive) {
+ useEffect(() => {
+    if (selectedState && selectedDistrict) {
       fetchRates(selectedState, selectedDistrict);
     }
-  }, [selectedState, selectedDistrict, fetchRates, isVoiceSearchActive]);
+  }, [selectedState, selectedDistrict, fetchRates]);
+
+  useEffect(() => {
+    // This effect runs after a voice search updates the location and new rates are fetched.
+    if (isVoiceSearchActive && !isLoading && commodityFilter) {
+      const ratesForSummary = allRates.filter(rate => {
+        const [day, month, year] = rate.arrival_date.split('/');
+        const apiDate = new Date(Number(year), Number(month) - 1, Number(day));
+        const isDateMatch = format(apiDate, 'yyyy-MM-dd') === format(selectedDate || new Date(), 'yyyy-MM-dd');
+        return isDateMatch && rate.commodity.toLowerCase().includes(commodityFilter.toLowerCase());
+      });
+
+      const generateSummary = async () => {
+        const summaryResult = await mandiRateSummary({
+          commodity: commodityFilter,
+          district: selectedDistrict,
+          date: format(selectedDate || new Date(), 'do MMMM yyyy'),
+          rates: ratesForSummary.map(r => ({
+              market: r.market,
+              minPrice: r.minPrice,
+              maxPrice: r.maxPrice,
+              modalPrice: r.modalPrice,
+          })),
+          language: language
+        });
+        setAiSummary(summaryResult.summary);
+        setIsSummarizing(false);
+        setIsVoiceSearchActive(false); // End the voice search flow
+      };
+
+      generateSummary();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isVoiceSearchActive, isLoading, allRates, commodityFilter]);
 
 
   const filteredRates = useMemo(() => {
@@ -659,6 +701,7 @@ export default function MandiRatesClient() {
     
 
     
+
 
 
 
