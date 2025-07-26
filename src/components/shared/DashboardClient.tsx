@@ -17,7 +17,7 @@ export default function DashboardClient() {
   const { t } = useLanguage();
   const [isListening, setIsListening] = useState(false);
   const { toast } = useToast();
-  const { location, setLocation, setIsLocating } = useLocation();
+  const { location, setLocation, setIsLocating, isLocating } = useLocation();
   const router = useRouter();
 
   const handleVoiceSearch = async (query: string) => {
@@ -33,8 +33,14 @@ export default function DashboardClient() {
       const nluResult = await understandMandiRateQuery({ query });
       
       const commodity = nluResult.commodity || '';
-      const state = nluResult.state || location.state;
-      const district = nluResult.market || location.district;
+      let state = nluResult.state || location?.state;
+      let district = nluResult.market || location?.district;
+      
+      // If no location was found in the query, use the user's current location.
+      if (!nluResult.market && !nluResult.state && location) {
+          state = location.state;
+          district = location.district;
+      }
       
       router.push(`/mandi-rates?commodity=${encodeURIComponent(commodity)}&state=${encodeURIComponent(state)}&district=${encodeURIComponent(district)}`);
 
@@ -157,6 +163,23 @@ export default function DashboardClient() {
             {t.welcome_subtitle}
           </p>
         </div>
+
+        {!location && (
+          <Alert className="mb-8 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 flex items-center justify-between">
+            <div className="flex items-center">
+              <LocateFixed className="h-5 w-5 mr-3 text-blue-600" />
+              <div>
+                <AlertTitle className="font-semibold text-blue-800 dark:text-blue-300">Set Your Location</AlertTitle>
+                <AlertDescription className="text-blue-700 dark:text-blue-400 text-xs md:text-sm">
+                  Enable location to get personalized information for weather and mandi rates.
+                </AlertDescription>
+              </div>
+            </div>
+            <Button onClick={handleUseLocation} variant="secondary" size="sm" disabled={isLocating}>
+              {isLocating ? 'Locating...' : t.use_my_location}
+            </Button>
+          </Alert>
+        )}
         
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         
@@ -180,19 +203,6 @@ export default function DashboardClient() {
             </CardContent>
           </Card>
         )}
-        
-        <Card className="sm:col-span-2 lg:col-span-3 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
-            <CardHeader>
-              <CardTitle className="font-headline text-xl font-semibold text-blue-800 dark:text-blue-300">Set Your Location</CardTitle>
-              <CardDescription className="text-blue-700 dark:text-blue-400">Set your location to get personalized information for weather and mandi rates.</CardDescription>
-            </CardHeader>
-            <CardContent className="flex items-center justify-center">
-               <Button onClick={handleUseLocation} variant="secondary">
-                  <LocateFixed className="mr-2 h-4 w-4" /> {t.use_my_location}
-                </Button>
-            </CardContent>
-          </Card>
-
 
         {features.map((feature) => (
             <Link href={feature.href} key={feature.href} className="group">
