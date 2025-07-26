@@ -89,75 +89,49 @@ export default function MandiRatesClient() {
 
   const handleVoiceSearch = async (query: string) => {
     if (!query) return;
-    setIsVoiceSearchActive(true);
     setIsSummarizing(true);
     setAiSummary(t.listening);
-    
+
     try {
-      // 1. Understand the user's query
-      const nluResult = await understandMandiRateQuery({ query });
-      setAiSummary(nluResult.summary);
-      
-      // 2. Determine target location from NLU result
-      let targetDistrict = selectedDistrict;
-      let targetState = selectedState;
-  
-      if (nluResult.market) {
-        for (const state of states) {
-          const district = districts[state]?.find(d => nluResult.market!.toLowerCase().includes(d.toLowerCase()));
-          if (district) {
-            targetState = state;
-            targetDistrict = district;
-            break;
-          }
-        }
-      }
+        // 1. Understand the user's query to get the commodity
+        const nluResult = await understandMandiRateQuery({ query });
+        setCommodityFilter(nluResult.commodity);
+        setAiSummary(nluResult.summary);
+        
+        // 2. Use the currently selected date and location for the search
+        const searchDate = selectedDate || new Date();
 
-      // 3. Set date and commodity filters without triggering other effects yet
-      const newDate = nluResult.date ? new Date(nluResult.date) : new Date();
-      
-      // 4. Fetch rates for the determined location directly.
-      const ratesToProcess = await getMandiRates(targetState, targetDistrict);
-      
-      // 5. Filter the fetched rates for the summary
-      const ratesForSummary = ratesToProcess.filter(rate => {
-        const [day, month, year] = rate.arrival_date.split('/');
-        const apiDate = new Date(Number(year), Number(month) - 1, Number(day));
-        const isDateMatch = format(apiDate, 'yyyy-MM-dd') === format(newDate, 'yyyy-MM-dd');
-        const isCommodityMatch = rate.commodity.toLowerCase().includes(nluResult.commodity.toLowerCase());
-        return isDateMatch && isCommodityMatch;
-      });
+        // 3. Filter the already fetched rates for the selected location
+        const ratesForSummary = allRates.filter(rate => {
+            const [day, month, year] = rate.arrival_date.split('/');
+            const apiDate = new Date(Number(year), Number(month) - 1, Number(day));
+            const isDateMatch = format(apiDate, 'yyyy-MM-dd') === format(searchDate, 'yyyy-MM-dd');
+            const isCommodityMatch = rate.commodity.toLowerCase().includes(nluResult.commodity.toLowerCase());
+            return isDateMatch && isCommodityMatch;
+        });
 
-      // 6. Generate detailed AI summary
-      setAiSummary('Generating detailed summary...');
-      const summaryResult = await mandiRateSummary({
-        commodity: nluResult.commodity,
-        district: nluResult.market || targetDistrict,
-        date: format(newDate, 'do MMMM yyyy'),
-        rates: ratesForSummary.map(r => ({
-            market: r.market,
-            minPrice: r.minPrice,
-            maxPrice: r.maxPrice,
-            modalPrice: r.modalPrice,
-        })),
-      });
+        // 4. Generate the AI summary based on the filtered results
+        const summaryResult = await mandiRateSummary({
+            commodity: nluResult.commodity,
+            district: selectedDistrict,
+            date: format(searchDate, 'do MMMM yyyy'),
+            rates: ratesForSummary.map(r => ({
+                market: r.market,
+                minPrice: r.minPrice,
+                maxPrice: r.maxPrice,
+                modalPrice: r.modalPrice,
+            })),
+            language: language
+        });
 
-      setAiSummary(summaryResult.summary);
-
-      // 7. Now, update all state variables at once to reflect the search
-      setAllRates(ratesToProcess);
-      setSelectedState(targetState);
-      setSelectedDistrict(targetDistrict);
-      setSelectedDate(newDate);
-      setCommodityFilter(nluResult.commodity);
+        setAiSummary(summaryResult.summary);
 
     } catch (e: any) {
-      console.error(e);
-      toast({ variant: 'destructive', title: 'AI Error', description: e.message || 'Could not process your voice command.' });
-      setAiSummary('Sorry, I had trouble understanding. Please try again.');
+        console.error(e);
+        toast({ variant: 'destructive', title: 'AI Error', description: e.message || 'Could not process your voice command.' });
+        setAiSummary('Sorry, I had trouble understanding. Please try again.');
     } finally {
-      setIsSummarizing(false);
-      setIsVoiceSearchActive(false); // Release the lock
+        setIsSummarizing(false);
     }
   };
 
@@ -685,5 +659,6 @@ export default function MandiRatesClient() {
     
 
     
+
 
 
