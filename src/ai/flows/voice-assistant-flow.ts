@@ -10,6 +10,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { getWeather, getMandiRatesForCommodity } from '@/ai/tools/assistant-tools';
+import { run } from 'genkit';
 
 const VoiceAssistantInputSchema = z.object({
   query: z.string().describe("The user's transcribed query."),
@@ -35,6 +36,15 @@ export async function voiceAssistant(input: VoiceAssistantInput): Promise<VoiceA
 - Keep your answers to the point. For example, when asked for weather, just give the weather.`,
   });
 
-  const llmResponse = await prompt(input);
+  const llmResponse = await run('invoke-assistant', async () => {
+    return await prompt(input);
+  });
+  
+  if (llmResponse.toolRequest) {
+    const toolResponse = await llmResponse.toolRequest.next();
+    const finalResponse = await toolResponse.next(toolResponse.output);
+    return finalResponse.text;
+  }
+  
   return llmResponse.text;
 }
