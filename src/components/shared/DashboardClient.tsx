@@ -14,6 +14,8 @@ import { textToSpeech } from '@/ai/flows/tts';
 import { useState, useRef, useEffect, FormEvent } from 'react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { Avatar } from '@/components/ui/avatar';
+
 
 interface Message {
   role: 'user' | 'assistant';
@@ -156,8 +158,8 @@ export default function DashboardClient() {
         
         <Accordion type="single" collapsible className="w-full mb-8" defaultValue="item-1">
           <AccordionItem value="item-1" className="border-none">
-              <AccordionTrigger asChild>
-                  <Card className="p-4 cursor-pointer hover:bg-muted/50 transition-colors">
+              <AccordionTrigger className="p-0 hover:no-underline" hideChevron>
+                  <Card className="p-4 cursor-pointer hover:bg-muted/50 transition-colors w-full">
                      <div className="flex justify-between items-center">
                        <div className="flex items-center gap-4">
                         <div className="p-3 bg-primary/10 rounded-full">
