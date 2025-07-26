@@ -15,6 +15,7 @@ import { useState, useRef, useEffect, FormEvent } from 'react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar } from '@/components/ui/avatar';
+import { useLocation } from '@/hooks/use-location';
 
 
 interface Message {
@@ -24,6 +25,7 @@ interface Message {
 
 export default function DashboardClient() {
   const { t, language } = useLanguage();
+  const { location } = useLocation();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isThinking, setIsThinking] = useState(false);
@@ -65,7 +67,11 @@ export default function DashboardClient() {
     setIsThinking(true);
 
     try {
-      const result = await conversationalChat({ query, language });
+      const result = await conversationalChat({ 
+          query, 
+          language,
+          location: location ? `${location.district}, ${location.state}` : undefined
+      });
       const assistantMessage: Message = { role: 'assistant', content: result.response };
       setMessages(prev => [...prev, assistantMessage]);
       handleAudioResponse(result.response);
