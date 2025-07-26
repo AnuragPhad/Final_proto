@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -8,8 +9,6 @@
  * - `ChatOutput`: The output type for the `conversationalChat` function.
  */
 
-import { ai } from '@/ai/genkit';
-import { getWeather } from '@/ai/tools/weather-tool';
 import { z } from 'zod';
 
 const ChatInputSchema = z.object({
@@ -23,25 +22,38 @@ const ChatOutputSchema = z.string().describe('The chatbot\'s response to the que
 export type ChatOutput = z.infer<typeof ChatOutputSchema>;
 
 export async function conversationalChat(input: ChatInput): Promise<ChatOutput> {
-  const prompt = ai.definePrompt({
-    name: 'conversationalChatPrompt',
-    input: { schema: ChatInputSchema },
-    output: { schema: ChatOutputSchema },
-    tools: [getWeather],
-    prompt: `You are Kisan AI, a friendly and helpful agricultural assistant for Indian farmers. 
-    Your goal is to answer the user's questions clearly and concisely.
+  const url = 'https://genai-app-agriculturalassistantchat-1-17535471072-32985753477.us-central1.run.app/?key=0epa65s5kopbicmp';
+  
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query: input.query,
+        language: input.language,
+        location: input.location,
+      }),
+    });
 
-    The user's current location is {{location}}. Use this information to provide location-specific answers when relevant. If the user asks for weather and has not provided a location, use this location.
-    
-    If you need to find out real-time information, like the weather, use the provided tools.
-    
-    IMPORTANT: You MUST generate the entire response in the following language: {{language}}.
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`API call failed with status ${response.status}: ${errorText}`);
+    }
 
-    User's query: "{{query}}"
+    const result = await response.json();
     
-    Your response:`,
-  });
+    // Assuming the API returns an object like { response: "..." }
+    if (result && result.response) {
+      return result.response;
+    } else {
+      // Fallback if the response format is unexpected
+      return JSON.stringify(result);
+    }
 
-  const { output } = await prompt(input);
-  return output!;
+  } catch (error: any) {
+    console.error('Error calling the custom Vertex AI API:', error);
+    throw new Error('Failed to get a response from the assistant API.');
+  }
 }
