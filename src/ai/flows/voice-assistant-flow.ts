@@ -4,7 +4,6 @@
  * @fileOverview Defines a voice assistant Genkit flow that can use tools to answer user queries.
  *
  * - `voiceAssistant`: A function that takes a user's query, optional location, and language, and returns an AI-generated response.
- * - `VoiceAssistantInputSchema`: The Zod schema for the input.
  */
 
 import { ai } from '@/ai/genkit';
@@ -12,7 +11,7 @@ import { z } from 'zod';
 import { getWeather } from '../tools/weather-tool';
 import { getMandiRatesForCommodity } from '../tools/mandi-rates-tool';
 
-export const VoiceAssistantInputSchema = z.object({
+const VoiceAssistantInputSchema = z.object({
   query: z.string().describe("The user's query."),
   language: z.string().describe("The language for the response, e.g., 'en', 'hi', 'mr'."),
   location: z.string().optional().describe("The user's current location as 'City, State'. Use this as context for weather or mandi rates if a location is not specified in the query."),
