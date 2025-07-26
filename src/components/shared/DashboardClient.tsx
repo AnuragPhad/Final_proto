@@ -2,9 +2,8 @@
 
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Carrot, HeartPulse, ScrollText, Settings, BrainCircuit, Tractor, Users, Mic } from 'lucide-react';
+import { Carrot, HeartPulse, ScrollText, Settings, BrainCircuit, Tractor, Users } from 'lucide-react';
 import { useLanguage } from '@/hooks/use-language';
-import { useState } from 'react';
 
 export default function DashboardClient() {
   const { t } = useLanguage();
@@ -52,25 +51,7 @@ export default function DashboardClient() {
       href: '/settings',
       icon: <Settings className="h-8 w-8 text-primary" />,
     },
-    {
-      title: 'Voice Assistant',
-      description: 'Ask questions with your voice',
-      href: '#',
-      icon: <Mic className="h-8 w-8 text-primary" />,
-    },
   ];
-
-  const renderCard = (feature: typeof features[0]) => (
-     <Card className="h-full transform transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-xl hover:border-primary/50">
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="font-headline text-xl font-semibold">{feature.title}</CardTitle>
-          {feature.icon}
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">{feature.description}</p>
-        </CardContent>
-      </Card>
-  )
 
   return (
     <div className="container mx-auto p-4 md:p-8">
@@ -86,7 +67,15 @@ export default function DashboardClient() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {features.map((feature) => (
             <Link href={feature.href} key={feature.href} className="group">
-                {renderCard(feature)}
+                <Card className="h-full transform transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-xl hover:border-primary/50">
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="font-headline text-xl font-semibold">{feature.title}</CardTitle>
+                    {feature.icon}
+                    </CardHeader>
+                    <CardContent>
+                    <p className="text-sm text-muted-foreground">{feature.description}</p>
+                    </CardContent>
+                </Card>
             </Link>
         ))}
       </div>
