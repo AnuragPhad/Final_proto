@@ -1,4 +1,3 @@
-'use server';
 /**
  * @fileOverview This file defines a Genkit tool for fetching real-time weather data.
  * - `getWeather`: A tool that takes a city name and returns the current weather conditions.
@@ -27,7 +26,7 @@ export const getWeather = ai.defineTool(
   async ({ city }) => {
     const apiKey = process.env.OPENWEATHER_API_KEY;
     if (!apiKey) {
-      throw new Error('OpenWeatherMap API key is not configured.');
+      throw new Error('OpenWeatherMap API key is not configured in .env file.');
     }
 
     const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
