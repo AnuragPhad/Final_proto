@@ -3,13 +3,11 @@
 
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Carrot, HeartPulse, ScrollText, Settings, BrainCircuit, Tractor, Users, MapPin } from 'lucide-react';
+import { Carrot, HeartPulse, ScrollText, Settings, BrainCircuit, Tractor, Users } from 'lucide-react';
 import { useLanguage } from '@/hooks/use-language';
-import { useLocation } from '@/hooks/use-location';
 
 export default function DashboardClient() {
   const { t } = useLanguage();
-  const { location, isLocating } = useLocation();
 
   const features = [
     {
@@ -58,8 +56,7 @@ export default function DashboardClient() {
 
   return (
     <div className="container mx-auto p-4 md:p-8">
-       <div className="flex justify-between items-start mb-8">
-        <div className="text-center w-full">
+       <div className="text-center mb-8">
           <h1 className="font-headline text-4xl md:text-5xl font-bold tracking-tighter mb-2">
             {t.welcome_to_kisan_ai}
           </h1>
@@ -67,17 +64,6 @@ export default function DashboardClient() {
             {t.welcome_subtitle}
           </p>
         </div>
-        <div className="flex-shrink-0 text-sm bg-muted px-3 py-1.5 rounded-md flex items-center gap-2 whitespace-nowrap">
-            <MapPin className="h-4 w-4 text-muted-foreground" />
-            {isLocating ? (
-              <span className="text-muted-foreground italic">Detecting location...</span>
-            ) : location ? (
-              <span className="font-medium">{location.district}, {location.state}</span>
-            ) : (
-              <span className="text-muted-foreground">Location not set</span>
-            )}
-        </div>
-      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {features.map((feature) => (

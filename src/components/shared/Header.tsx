@@ -1,7 +1,7 @@
 
 'use client';
 
-import { ArrowLeft, Flower2, Globe, Menu, User, LogOut } from 'lucide-react';
+import { ArrowLeft, Flower2, Globe, Menu, User, LogOut, MapPin } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,8 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useIsClient } from '@/hooks/use-is-client';
 import { useAuth } from '@/hooks/use-auth';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { useLocation } from '@/hooks/use-location';
+import { Skeleton } from '../ui/skeleton';
 
 
 export default function Header() {
@@ -32,6 +34,7 @@ export default function Header() {
   const isMobile = useIsMobile();
   const isClient = useIsClient();
   const { user, logout } = useAuth();
+  const { location, isLocating } = useLocation();
 
 
   return (
@@ -58,6 +61,17 @@ export default function Header() {
         </div>
         
         <div className="flex items-center gap-2">
+            <div className="flex-shrink-0 text-sm bg-muted px-3 py-1.5 rounded-md  items-center gap-2 whitespace-nowrap hidden sm:flex">
+              <MapPin className="h-4 w-4 text-muted-foreground" />
+              {isLocating ? (
+                <Skeleton className="h-4 w-24" />
+              ) : location ? (
+                <span className="font-medium">{location.district}, {location.state}</span>
+              ) : (
+                <span className="text-muted-foreground">Location not set</span>
+              )}
+            </div>
+
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon">
