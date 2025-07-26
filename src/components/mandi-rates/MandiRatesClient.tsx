@@ -220,43 +220,44 @@ function MandiRatesContent() {
   }, [allRates, selectedDate, commodityFilter]);
   
   const generateAndSetSummary = useCallback(async () => {
-        if (!commodityFilter) return;
+    if (!commodityFilter) return;
 
-        setIsSummarizing(true);
-        const ratesForSummary = filteredRates.filter(rate => rate.commodity.toLowerCase().includes(commodityFilter.toLowerCase()));
+    setIsSummarizing(true);
+    setAiSummary("Summarizing...");
+    const ratesForSummary = filteredRates.filter(rate => rate.commodity.toLowerCase().includes(commodityFilter.toLowerCase()));
 
-        try {
-            const summaryResult = await mandiRateSummary({
-                commodity: commodityFilter,
-                district: selectedDistrict,
-                date: format(selectedDate || new Date(), 'do MMMM yyyy'),
-                rates: ratesForSummary.map(r => ({
-                    market: r.market,
-                    minPrice: r.minPrice,
-                    maxPrice: r.maxPrice,
-                    modalPrice: r.modalPrice,
-                })),
-                language: language
-            });
-            setAiSummary(summaryResult.summary);
-        } catch (e) {
-            console.error("Summary generation error", e);
-            setAiSummary("Could not generate a summary for this commodity.");
-        } finally {
-            setIsSummarizing(false);
-        }
-    }, [commodityFilter, filteredRates, selectedDistrict, selectedDate, language]);
+    try {
+        const summaryResult = await mandiRateSummary({
+            commodity: commodityFilter,
+            district: selectedDistrict,
+            date: format(selectedDate || new Date(), 'do MMMM yyyy'),
+            rates: ratesForSummary.map(r => ({
+                market: r.market,
+                minPrice: r.minPrice,
+                maxPrice: r.maxPrice,
+                modalPrice: r.modalPrice,
+            })),
+            language: language
+        });
+        setAiSummary(summaryResult.summary);
+    } catch (e) {
+        console.error("Summary generation error", e);
+        setAiSummary("Could not generate a summary for this commodity.");
+    } finally {
+        setIsSummarizing(false);
+    }
+  }, [commodityFilter, filteredRates, selectedDistrict, selectedDate, language]);
 
-    useEffect(() => {
-        // This effect runs when the component mounts with query params
-        if (commodityFilter) {
-            generateAndSetSummary();
-        }
-    }, [commodityFilter, generateAndSetSummary]);
+  useEffect(() => {
+    // This effect runs when the component mounts with query params OR when data has finished loading.
+    if (commodityFilter && !isLoading) {
+        generateAndSetSummary();
+    }
+  }, [commodityFilter, isLoading, generateAndSetSummary]);
 
   // This effect generates the trend data and advice when a commodity filter is applied.
   useEffect(() => {
-    if (commodityFilter && allRates.length > 0) {
+    if (commodityFilter && allRates.length > 0 && !isLoading) {
       setIsTrendLoading(true);
       const today = new Date();
       const thirtyDaysAgo = subDays(today, 30);
@@ -305,7 +306,7 @@ function MandiRatesContent() {
       setTrendData([]);
       setTrendAdvice(null);
     }
-  }, [commodityFilter, allRates, language]);
+  }, [commodityFilter, allRates, language, isLoading]);
 
   const ratesByMarket = useMemo(() => {
     return filteredRates.reduce((acc, rate) => {
