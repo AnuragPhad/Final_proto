@@ -1,9 +1,8 @@
-
 'use client';
 
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Carrot, HeartPulse, ScrollText, Settings, BrainCircuit, Tractor, Users } from 'lucide-react';
+import { Carrot, HeartPulse, ScrollText, Settings, BrainCircuit, Tractor, Users, Mic } from 'lucide-react';
 import { useLanguage } from '@/hooks/use-language';
 import { useState } from 'react';
 
@@ -53,6 +52,12 @@ export default function DashboardClient() {
       href: '/settings',
       icon: <Settings className="h-8 w-8 text-primary" />,
     },
+    {
+      title: 'Voice Assistant',
+      description: 'Ask questions with your voice',
+      href: '#',
+      icon: <Mic className="h-8 w-8 text-primary" />,
+    },
   ];
 
   const renderCard = (feature: typeof features[0]) => (
@@ -68,7 +73,6 @@ export default function DashboardClient() {
   )
 
   return (
-    <>
     <div className="container mx-auto p-4 md:p-8">
        <div className="text-center mb-8">
           <h1 className="font-headline text-4xl md:text-5xl font-bold tracking-tighter mb-2">
@@ -87,6 +91,5 @@ export default function DashboardClient() {
         ))}
       </div>
     </div>
-    </>
   );
 }
