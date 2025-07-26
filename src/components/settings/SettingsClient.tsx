@@ -49,6 +49,10 @@ export default function SettingsClient() {
                   <RadioGroupItem value="mr" id="mr" />
                   <Label htmlFor="mr">{t.marathi}</Label>
                 </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="kn" id="kn" />
+                  <Label htmlFor="kn">{t.kannada}</Label>
+                </div>
               </RadioGroup>
             </CardContent>
           </Card>
