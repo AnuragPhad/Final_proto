@@ -6,6 +6,7 @@ import { useState, useEffect, useRef } from 'react';
 interface SpeechRecognitionOptions {
   onTranscript?: (transcript: string) => void;
   onTranscriptFinal?: (transcript: string) => void;
+  onListening?: (isListening: boolean) => void;
 }
 
 interface SpeechRecognitionHook {
@@ -24,7 +25,7 @@ export const useSpeechRecognition = (
   const [transcript, setTranscript] = useState('');
   const [error, setError] = useState<string | null>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
-  const { onTranscript, onTranscriptFinal } = options;
+  const { onTranscript, onTranscriptFinal, onListening } = options;
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -42,15 +43,19 @@ export const useSpeechRecognition = (
 
     recognition.onstart = () => {
       setIsListening(true);
+      if(onListening) onListening(true);
       setTranscript('');
     };
 
     recognition.onend = () => {
       setIsListening(false);
+      if(onListening) onListening(false);
     };
 
     recognition.onerror = (event) => {
       setError(event.error);
+      setIsListening(false);
+      if(onListening) onListening(false);
     };
 
     recognition.onresult = (event) => {
@@ -64,6 +69,7 @@ export const useSpeechRecognition = (
 
       if (event.results[event.results.length - 1]?.isFinal && onTranscriptFinal) {
         onTranscriptFinal(currentTranscript.trim());
+        recognition.stop();
       }
     };
 
@@ -98,5 +104,3 @@ export const useSpeechRecognition = (
     hasRecognitionSupport: !!recognitionRef.current,
   };
 };
-
-    

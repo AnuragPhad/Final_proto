@@ -2,7 +2,8 @@
 
 'use client';
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -10,7 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { CalendarIcon, Mic, LocateFixed, Bot, LayoutGrid, List, Wheat, Apple, Carrot, Grape, LeafyGreen, Citrus, HandPlatter, Volume2, LineChart, TrendingUp, Check } from 'lucide-react';
+import { CalendarIcon, Mic, LocateFixed, Bot, LineChart } from 'lucide-react';
 import { format, subDays } from 'date-fns';
 import { states, districts } from '@/data/locations';
 import { getMandiRates as getMandiRatesFromApi, type MandiRate } from '@/data/mandi-rates';
@@ -19,20 +20,18 @@ import { nashikMandiRates } from '@/data/nashik-mandi-rates';
 import { solapurMandiRates } from '@/data/solapur-mandi-rates';
 import { bengaluruUrbanMandiRates } from '@/data/bengaluru-urban-mandi-rates';
 import { useSpeechRecognition } from '@/hooks/use-speech-recognition';
-import { understandMandiRateQuery, MandiRateQueryOutput } from '@/ai/flows/mandi-rate-nlu';
+import { understandMandiRateQuery } from '@/ai/flows/mandi-rate-nlu';
 import { mandiRateSummary } from '@/ai/flows/mandi-rate-summary';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { priceTrendFlow, PriceTrendInput, PriceTrendOutput } from '@/ai/flows/price-trend-flow';
-import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { priceTrendFlow, PriceTrendOutput } from '@/ai/flows/price-trend-flow';
+import { AreaChart, Area, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 import { useLanguage } from '@/hooks/use-language';
 import { translateCommodity } from '@/lib/commodity-translations';
-import { cn } from '@/lib/utils';
+import { HandPlatter, Carrot, Apple, Wheat, LeafyGreen, Citrus, Grape } from 'lucide-react';
 
-
-type ViewMode = 'table' | 'tile';
 
 const commodityIcons: { [key: string]: React.ReactNode } = {
   'Onion': <HandPlatter className="inline-block mr-2 text-red-500" />,
@@ -63,24 +62,23 @@ const mockData: { [key: string]: MandiRate[] } = {
   'Bengaluru Urban': bengaluruUrbanMandiRates,
 };
 
+function MandiRatesContent() {
+  const searchParams = useSearchParams();
+  const { toast } = useToast();
+  const { language, t } = useLanguage();
 
-export default function MandiRatesClient() {
-  const [selectedState, setSelectedState] = useState<string>('Maharashtra');
-  const [selectedDistrict, setSelectedDistrict] = useState<string>('Pune');
+  const [selectedState, setSelectedState] = useState<string>(searchParams.get('state') || 'Maharashtra');
+  const [selectedDistrict, setSelectedDistrict] = useState<string>(searchParams.get('district') || 'Pune');
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [allRates, setAllRates] = useState<MandiRate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [aiSummary, setAiSummary] = useState<string | null>(null);
-  const [commodityFilter, setCommodityFilter] = useState<string | null>(null);
+  const [commodityFilter, setCommodityFilter] = useState<string | null>(searchParams.get('commodity'));
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [trendData, setTrendData] = useState<any[]>([]);
   const [trendAdvice, setTrendAdvice] = useState<PriceTrendOutput | null>(null);
   const [isTrendLoading, setIsTrendLoading] = useState(false);
-  const [isVoiceSearchActive, setIsVoiceSearchActive] = useState(false);
-  const { language, t } = useLanguage();
-
-  const { toast } = useToast();
   
   const getMandiRates = useCallback(async (state: string, district: string): Promise<MandiRate[]> => {
     if (mockData[district]) {
@@ -91,7 +89,6 @@ export default function MandiRatesClient() {
 
   const handleVoiceSearch = async (query: string) => {
     if (!query) return;
-    setIsVoiceSearchActive(true);
     setIsSummarizing(true);
     setAiSummary(t.listening);
 
@@ -103,7 +100,6 @@ export default function MandiRatesClient() {
       let targetState = selectedState;
       let targetDistrict = selectedDistrict;
 
-      // If location is detected in the query, update filters and fetch new data
       if (nluResult.market && nluResult.state) {
         const stateExists = states.find(s => s.toLowerCase() === nluResult.state!.toLowerCase());
         if (stateExists) {
@@ -118,11 +114,9 @@ export default function MandiRatesClient() {
         }
       }
 
-      // Fetch rates for the target location (either original or from voice)
       const rates = await getMandiRates(targetState, targetDistrict);
-      setAllRates(rates); // Update allRates with new data if location changed
+      setAllRates(rates);
 
-      // Now filter and summarize based on the (potentially new) rates
        const ratesForSummary = rates.filter(rate => {
             const [day, month, year] = rate.arrival_date.split('/');
             const apiDate = new Date(Number(year), Number(month) - 1, Number(day));
@@ -145,17 +139,14 @@ export default function MandiRatesClient() {
         setAiSummary(summaryResult.summary);
         setCommodityFilter(commodity);
 
-
     } catch (e: any) {
         console.error(e);
         toast({ variant: 'destructive', title: 'AI Error', description: e.message || 'Could not process your voice command.' });
         setAiSummary('Sorry, I had trouble understanding. Please try again.');
     } finally {
         setIsSummarizing(false);
-        setIsVoiceSearchActive(false);
     }
   };
-
 
   const {
     isListening,
@@ -164,7 +155,7 @@ export default function MandiRatesClient() {
     stopListening,
     error: speechError,
     hasRecognitionSupport,
-  } = useSpeechRecognition({onTranscript: handleVoiceSearch});
+  } = useSpeechRecognition({onTranscriptFinal: handleVoiceSearch});
 
   const clearFiltersAndRefresh = () => {
     setCommodityFilter(null);
@@ -228,6 +219,40 @@ export default function MandiRatesClient() {
     return rates;
   }, [allRates, selectedDate, commodityFilter]);
   
+  const generateAndSetSummary = useCallback(async () => {
+        if (!commodityFilter) return;
+
+        setIsSummarizing(true);
+        const ratesForSummary = filteredRates.filter(rate => rate.commodity.toLowerCase().includes(commodityFilter.toLowerCase()));
+
+        try {
+            const summaryResult = await mandiRateSummary({
+                commodity: commodityFilter,
+                district: selectedDistrict,
+                date: format(selectedDate || new Date(), 'do MMMM yyyy'),
+                rates: ratesForSummary.map(r => ({
+                    market: r.market,
+                    minPrice: r.minPrice,
+                    maxPrice: r.maxPrice,
+                    modalPrice: r.modalPrice,
+                })),
+                language: language
+            });
+            setAiSummary(summaryResult.summary);
+        } catch (e) {
+            console.error("Summary generation error", e);
+            setAiSummary("Could not generate a summary for this commodity.");
+        } finally {
+            setIsSummarizing(false);
+        }
+    }, [commodityFilter, filteredRates, selectedDistrict, selectedDate, language]);
+
+    useEffect(() => {
+        // This effect runs when the component mounts with query params
+        if (commodityFilter) {
+            generateAndSetSummary();
+        }
+    }, [commodityFilter, generateAndSetSummary]);
 
   // This effect generates the trend data and advice when a commodity filter is applied.
   useEffect(() => {
@@ -427,7 +452,7 @@ export default function MandiRatesClient() {
               <AlertTitle className="font-headline text-blue-800 dark:text-blue-300">{t.ai_summary}</AlertTitle>
             </div>
             <AlertDescription className="text-blue-700 dark:text-blue-400">
-              {isSummarizing && !aiSummary ? 'Listening...' : aiSummary}
+              {isSummarizing && !aiSummary ? t.listening : aiSummary}
             </AlertDescription>
         </Alert>
       )}
@@ -610,6 +635,7 @@ export default function MandiRatesClient() {
                                     className="w-full text-left"
                                     onClick={() => {
                                         setCommodityFilter(rate.commodity);
+                                        generateAndSetSummary();
                                         window.scrollTo({ top: 0, behavior: 'smooth' });
                                     }}
                                 >
@@ -646,13 +672,10 @@ export default function MandiRatesClient() {
   );
 }
 
-    
-
-    
-
-
-
-
-
-
-    
+export default function MandiRatesPage() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <MandiRatesContent />
+        </Suspense>
+    )
+}
