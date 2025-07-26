@@ -27,11 +27,12 @@ export const useLanguage = () => {
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    const detectAndSetLanguage = async () => {
+    const detectAndSetLanguage = () => {
       const savedLang = localStorage.getItem('kisan-ai-lang') as Language | null;
       if (savedLang && translations[savedLang]) {
         setLanguage(savedLang);
         setT(translations[savedLang]);
+        setIsMounted(true);
       } else {
         // If no language is saved, try to detect from location
         navigator.geolocation.getCurrentPosition(
@@ -44,6 +45,7 @@ export const useLanguage = () => {
                 const detectedLang = stateToLang[data.state];
                 if (detectedLang) {
                   handleLanguageChange(detectedLang, false); // Don't reload, just set
+                  setIsMounted(true);
                   return;
                 }
               }
@@ -53,15 +55,16 @@ export const useLanguage = () => {
             // Fallback to English if detection fails
             setLanguage('en');
             setT(translations.en);
+            setIsMounted(true);
           },
           () => {
              // Geolocation denied or failed, default to English
             setLanguage('en');
             setT(translations.en);
+            setIsMounted(true);
           }
         );
       }
-      setIsMounted(true);
     };
 
     detectAndSetLanguage();
