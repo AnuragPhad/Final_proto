@@ -38,11 +38,19 @@ export const useLanguage = () => {
         // Also try to set location if lang is saved but location isn't
          navigator.geolocation.getCurrentPosition(async (position) => {
             const { latitude, longitude } = position.coords;
-            const response = await fetch(`/api/geocode?lat=${latitude}&lon=${longitude}`);
-            if (response.ok) {
-              const data = await response.json();
-              setLocation(data);
+            try {
+              const response = await fetch(`/api/geocode?lat=${latitude}&lon=${longitude}`);
+              if (response.ok) {
+                const data = await response.json();
+                setLocation(data);
+              }
+            } catch (error) {
+              console.error("Could not fetch location in background", error);
+            } finally {
+              setIsLocating(false);
             }
+         }, () => {
+          setIsLocating(false); // Location denied
          });
       } else {
         // If no language is saved, try to detect from location
@@ -64,10 +72,10 @@ export const useLanguage = () => {
               }
             } catch (error) {
               console.error("Could not auto-detect language based on location.", error);
+              // Fallback to English if detection fails
+              setLanguage('en');
+              setT(translations.en);
             } finally {
-                // Fallback to English if detection fails
-                setLanguage('en');
-                setT(translations.en);
                 setIsMounted(true);
                 setIsLocating(false);
             }
