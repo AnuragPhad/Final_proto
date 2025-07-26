@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Sheet, SheetContent, SheetHeader } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { Carrot, HeartPulse, ScrollText, Settings, BrainCircuit, Flower2, X, Tractor, Users } from 'lucide-react';
+import { Carrot, HeartPulse, ScrollText, Settings, BrainCircuit, Flower2, X, Tractor, Users, LifeBuoy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/hooks/use-language';
 
@@ -58,6 +58,11 @@ export function Sidebar({ open, onOpenChange }: { open: boolean, onOpenChange: (
       title: t.market_intel_title,
       href: '/market-intelligence',
       icon: <BrainCircuit className="h-5 w-5" />,
+    },
+    {
+      title: t.talk_to_expert_title,
+      href: '/experts',
+      icon: <LifeBuoy className="h-5 w-5" />,
     },
     {
       title: t.govt_schemes_title,

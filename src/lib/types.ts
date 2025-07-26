@@ -37,6 +37,9 @@ export interface Translation {
   my_farm_desc: string;
   community_title: string;
   community_desc: string;
+  talk_to_expert_title: string;
+  talk_to_expert_desc: string;
+  talk_to_expert_subtitle: string;
 
   // Mandi Rates
   mandi_rates_page_title: string;

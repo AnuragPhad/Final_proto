@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Carrot, HeartPulse, ScrollText, Settings, BrainCircuit, Tractor, Users } from 'lucide-react';
+import { Carrot, HeartPulse, ScrollText, Settings, BrainCircuit, Tractor, Users, LifeBuoy } from 'lucide-react';
 import { useLanguage } from '@/hooks/use-language';
 
 export default function DashboardClient() {
@@ -45,6 +45,12 @@ export default function DashboardClient() {
       description: t.govt_schemes_desc,
       href: '/schemes',
       icon: <ScrollText className="h-8 w-8 text-primary" />,
+    },
+     {
+      title: t.talk_to_expert_title,
+      description: t.talk_to_expert_desc,
+      href: '/experts',
+      icon: <LifeBuoy className="h-8 w-8 text-primary" />,
     },
   ];
 

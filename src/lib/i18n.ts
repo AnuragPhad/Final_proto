@@ -38,6 +38,9 @@ export const translations: Translations = {
     my_farm_desc: 'Manage your crop cycles & planning',
     community_title: 'Community',
     community_desc: 'Connect with other farmers',
+    talk_to_expert_title: 'Talk to an Expert',
+    talk_to_expert_desc: 'Get advice from agricultural specialists',
+    talk_to_expert_subtitle: 'Find and connect with agricultural experts to get advice for your farming needs.',
     
     // Mandi Rates
     mandi_rates_page_title: 'Mandi Rates',
@@ -182,6 +185,9 @@ export const translations: Translations = {
     my_farm_desc: 'अपने फसल चक्र और योजना का प्रबंधन करें',
     community_title: 'समुदाय',
     community_desc: 'अन्य किसानों से जुड़ें',
+    talk_to_expert_title: 'विशेषज्ञ से बात करें',
+    talk_to_expert_desc: 'कृषि विशेषज्ञों से सलाह लें',
+    talk_to_expert_subtitle: 'अपनी खेती की जरूरतों के लिए सलाह लेने के लिए कृषि विशेषज्ञों को ढूंढें और उनसे जुड़ें।',
 
     // Mandi Rates
     mandi_rates_page_title: 'मंडी दरें',
@@ -326,6 +332,9 @@ export const translations: Translations = {
     my_farm_desc: 'तुमची पीक चक्रे आणि नियोजन व्यवस्थापित करा',
     community_title: 'समुदाय',
     community_desc: 'इतर शेतकऱ्यांशी कनेक्ट व्हा',
+    talk_to_expert_title: 'तज्ञांशी बोला',
+    talk_to_expert_desc: 'कृषी तज्ञांकडून सल्ला मिळवा',
+    talk_to_expert_subtitle: 'तुमच्या शेतीच्या गरजांसाठी सल्ला घेण्यासाठी कृषी तज्ञांना शोधा आणि त्यांच्याशी संपर्क साधा.',
     
     // Mandi Rates
     mandi_rates_page_title: 'मंडी दर',
@@ -469,6 +478,9 @@ export const translations: Translations = {
     my_farm_desc: 'ನಿಮ್ಮ ಬೆಳೆ ಚಕ್ರಗಳು ಮತ್ತು ಯೋಜನೆಯನ್ನು ನಿರ್ವಹಿಸಿ',
     community_title: 'ಸಮುದಾಯ',
     community_desc: 'ಇತರ ರೈತರೊಂದಿಗೆ ಸಂಪರ್ಕ ಸಾಧಿಸಿ',
+    talk_to_expert_title: 'ತಜ್ಞರೊಂದಿಗೆ ಮಾತನಾಡಿ',
+    talk_to_expert_desc: 'ಕೃಷಿ ತಜ್ಞರಿಂದ ಸಲಹೆ ಪಡೆಯಿರಿ',
+    talk_to_expert_subtitle: 'ನಿಮ್ಮ ಕೃಷಿ ಅಗತ್ಯಗಳಿಗಾಗಿ ಸಲಹೆ ಪಡೆಯಲು ಕೃಷಿ ತಜ್ಞರನ್ನು ಹುಡುಕಿ ಮತ್ತು ಸಂಪರ್ಕಿಸಿ.',
 
     // Mandi Rates
     mandi_rates_page_title: 'ಮಂಡಿ ದರಗಳು',
@@ -612,6 +624,9 @@ export const translations: Translations = {
     my_farm_desc: 'உங்கள் பயிர் சுழற்சிகள் மற்றும் திட்டமிடலை நிர்வகிக்கவும்',
     community_title: 'சமூகம்',
     community_desc: 'மற்ற விவசாயிகளுடன் இணையுங்கள்',
+    talk_to_expert_title: 'நிபுணரிடம் பேசுங்கள்',
+    talk_to_expert_desc: 'விவசாய நிபுணர்களிடமிருந்து ஆலோசனை பெறுங்கள்',
+    talk_to_expert_subtitle: 'உங்கள் விவசாயத் தேவைகளுக்கு ஆலோசனை பெற விவசாய நிபுணர்களைக் கண்டறிந்து தொடர்பு கொள்ளுங்கள்.',
     
     // Mandi Rates
     mandi_rates_page_title: 'மண்டி விலைகள்',
