@@ -8,3 +8,5 @@ import '@/ai/flows/price-trend-flow.ts';
 import '@/ai/flows/commodity-analysis-flow.ts';
 import '@/ai/flows/conversational-chat-flow.ts';
 import '@/ai/tools/weather-tool.ts';
+import '@/ai/flows/voice-assistant-flow.ts';
+import '@/ai/tools/assistant-tools.ts';
