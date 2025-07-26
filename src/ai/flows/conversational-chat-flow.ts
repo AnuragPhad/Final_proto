@@ -28,7 +28,7 @@ export async function conversationalChat(input: ChatInput): Promise<ChatOutput> 
     data: [
       { text: input.query, files: [] }, // Corresponds to `message`
       input.language,                   // Corresponds to `param_2`
-      input.query,                      // Corresponds to `param_3`
+      input.query,                      // Corresponds to `param_3` -> Re-using query here as per user's finding.
     ]
   };
   
@@ -50,10 +50,11 @@ export async function conversationalChat(input: ChatInput): Promise<ChatOutput> 
     
     // Gradio APIs typically return data in a "data" array.
     if (result && Array.isArray(result.data) && result.data.length > 0) {
+      // The actual response text is the first element in the data array
       return result.data[0];
     } else {
       // Fallback for unexpected response format.
-      return JSON.stringify(result);
+      return "Sorry, I received an unexpected response from the assistant.";
     }
 
   } catch (error: any) {
