@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Carrot, HeartPulse, ScrollText, Settings, BrainCircuit, Tractor, Users, LifeBuoy } from 'lucide-react';
+import { Carrot, HeartPulse, ScrollText, Settings, BrainCircuit, Tractor, Users, LifeBuoy, CloudSun } from 'lucide-react';
 import { useLanguage } from '@/hooks/use-language';
 
 export default function DashboardClient() {
@@ -27,6 +27,12 @@ export default function DashboardClient() {
         description: t.my_farm_desc,
         href: '/my-farm',
         icon: <Tractor className="h-8 w-8 text-primary" />,
+    },
+    {
+        title: 'Voice Weather',
+        description: 'Get a spoken summary of the weather',
+        href: '/voice-weather',
+        icon: <CloudSun className="h-8 w-8 text-primary" />,
     },
     {
         title: t.community_title,

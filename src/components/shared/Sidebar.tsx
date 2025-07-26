@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Sheet, SheetContent, SheetHeader } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { Carrot, HeartPulse, ScrollText, Settings, BrainCircuit, Flower2, X, Tractor, Users, LifeBuoy } from 'lucide-react';
+import { Carrot, HeartPulse, ScrollText, Settings, BrainCircuit, Flower2, X, Tractor, Users, LifeBuoy, CloudSun } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/hooks/use-language';
 
@@ -48,6 +48,11 @@ export function Sidebar({ open, onOpenChange }: { open: boolean, onOpenChange: (
         title: t.my_farm_title,
         href: '/my-farm',
         icon: <Tractor className="h-5 w-5" />,
+    },
+    {
+        title: 'Voice Weather',
+        href: '/voice-weather',
+        icon: <CloudSun className="h-5 w-5" />,
     },
     {
         title: t.community_title,
