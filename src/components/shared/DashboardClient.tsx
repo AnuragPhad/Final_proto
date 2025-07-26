@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Carrot, HeartPulse, ScrollText, Settings, BrainCircuit, Tractor, Users, Mic } from 'lucide-react';
+import { Carrot, HeartPulse, ScrollText, Settings, BrainCircuit, Tractor, Users, Mic, LocateFixed, Bot } from 'lucide-react';
 import { useLanguage } from '@/hooks/use-language';
 import { useSpeechRecognition } from '@/hooks/use-speech-recognition';
 import { useState } from 'react';
@@ -17,7 +17,7 @@ export default function DashboardClient() {
   const { t } = useLanguage();
   const [isListening, setIsListening] = useState(false);
   const { toast } = useToast();
-  const { location } = useLocation();
+  const { location, setLocation, setIsLocating } = useLocation();
   const router = useRouter();
 
   const handleVoiceSearch = async (query: string) => {
@@ -53,6 +53,60 @@ export default function DashboardClient() {
     onTranscriptFinal: handleVoiceSearch,
     onListening: setIsListening
   });
+
+  const handleUseLocation = () => {
+    setIsLocating(true);
+    toast({ title: 'Locating...', description: 'Please wait while we fetch your location.' });
+    
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          
+          try {
+            const response = await fetch(`/api/geocode?lat=${latitude}&lon=${longitude}`);
+            const data = await response.json();
+            
+            if (response.ok && data.state && data.district) {
+              setLocation({ state: data.state, district: data.district });
+              toast({ title: 'Location Found!', description: `Setting location to ${data.district}, ${data.state}.` });
+            } else {
+                 toast({
+                  variant: 'destructive',
+                  title: 'Location Not Found',
+                  description: data.error || 'Could not determine your location from the coordinates.',
+                });
+            }
+          } catch (error) {
+              console.error("Reverse geocoding error:", error);
+              toast({
+                  variant: 'destructive',
+                  title: 'Geocoding Error',
+                  description: 'Could not fetch location details. Please try again.',
+              });
+          } finally {
+            setIsLocating(false);
+          }
+        },
+        (error) => {
+          console.error("Geolocation error:", error);
+          toast({
+            variant: 'destructive',
+            title: 'Location Error',
+            description: 'Could not get your location. Please ensure you have granted permission.',
+          });
+          setIsLocating(false);
+        }
+      );
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'Unsupported',
+        description: 'Geolocation is not supported by your browser.',
+      });
+      setIsLocating(false);
+    }
+  };
 
   const features = [
     {
@@ -91,12 +145,6 @@ export default function DashboardClient() {
       href: '/schemes',
       icon: <ScrollText className="h-8 w-8 text-primary" />,
     },
-    {
-      title: t.settings_title,
-      description: t.settings_desc,
-      href: '/settings',
-      icon: <Settings className="h-8 w-8 text-primary" />,
-    },
   ];
 
   return (
@@ -132,6 +180,18 @@ export default function DashboardClient() {
             </CardContent>
           </Card>
         )}
+        
+        <Card className="sm:col-span-2 lg:col-span-3 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+            <CardHeader>
+              <CardTitle className="font-headline text-xl font-semibold text-blue-800 dark:text-blue-300">Set Your Location</CardTitle>
+              <CardDescription className="text-blue-700 dark:text-blue-400">Set your location to get personalized information for weather and mandi rates.</CardDescription>
+            </CardHeader>
+            <CardContent className="flex items-center justify-center">
+               <Button onClick={handleUseLocation} variant="secondary">
+                  <LocateFixed className="mr-2 h-4 w-4" /> {t.use_my_location}
+                </Button>
+            </CardContent>
+          </Card>
 
 
         {features.map((feature) => (
@@ -147,6 +207,18 @@ export default function DashboardClient() {
                 </Card>
             </Link>
         ))}
+        
+        <Link href="/settings" key="/settings" className="group">
+          <Card className="h-full transform transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-xl hover:border-primary/50">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="font-headline text-xl font-semibold">{t.settings_title}</CardTitle>
+              <Settings className="h-8 w-8 text-primary" />
+              </CardHeader>
+              <CardContent>
+              <p className="text-sm text-muted-foreground">{t.settings_desc}</p>
+              </CardContent>
+          </Card>
+        </Link>
       </div>
     </div>
   );

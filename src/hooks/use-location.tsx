@@ -1,4 +1,3 @@
-
 'use client';
 
 import { createContext, useContext, useState, ReactNode, useCallback } from 'react';
@@ -19,7 +18,7 @@ const LocationContext = createContext<LocationContextType | undefined>(undefined
 
 export const LocationProvider = ({ children }: { children: ReactNode }) => {
   const [location, setLocation] = useState<Location | null>(null);
-  const [isLocating, setIsLocating] = useState(true);
+  const [isLocating, setIsLocating] = useState(false);
 
   return (
     <LocationContext.Provider value={{ location, isLocating, setLocation, setIsLocating }}>
