@@ -4,7 +4,7 @@
 /**
  * @fileOverview This file defines a Genkit flow for a conversational chatbot.
  *
- * - `conversationalChat`: A function that takes a user's query and language, and returns a text response.
+ * - `conversationalChat`: A function that takes a user's query and language, and returns a text response by calling a custom Vertex AI endpoint.
  * - `ChatInput`: The input type for the `conversationalChat` function.
  * - `ChatOutput`: The output type for the `conversationalChat` function.
  */
@@ -22,7 +22,15 @@ const ChatOutputSchema = z.string().describe('The chatbot\'s response to the que
 export type ChatOutput = z.infer<typeof ChatOutputSchema>;
 
 export async function conversationalChat(input: ChatInput): Promise<ChatOutput> {
-  const url = 'https://genai-app-agriculturalassistantchat-1-17535471072-32985753477.us-central1.run.app/?key=0epa65s5kopbicmp';
+  const url = 'https://genai-app-agriculturalassistantchat-1-17535471072-32985753477.us-central1.run.app/api/predict';
+
+  const requestBody = {
+    data: [
+      { text: input.query, files: [] }, // Corresponds to `message`
+      input.language,                   // Corresponds to `param_2`
+      input.query,                      // Corresponds to `param_3`
+    ]
+  };
   
   try {
     const response = await fetch(url, {
@@ -30,11 +38,7 @@ export async function conversationalChat(input: ChatInput): Promise<ChatOutput> 
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        query: input.query,
-        language: input.language,
-        location: input.location,
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {
@@ -44,11 +48,11 @@ export async function conversationalChat(input: ChatInput): Promise<ChatOutput> 
 
     const result = await response.json();
     
-    // Assuming the API returns an object like { response: "..." }
-    if (result && result.response) {
-      return result.response;
+    // Gradio APIs typically return data in a "data" array.
+    if (result && Array.isArray(result.data) && result.data.length > 0) {
+      return result.data[0];
     } else {
-      // Fallback if the response format is unexpected
+      // Fallback for unexpected response format.
       return JSON.stringify(result);
     }
 
