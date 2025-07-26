@@ -14,7 +14,7 @@ const VoiceAssistantInputSchema = z.object({
 export async function voiceAssistant(input: z.infer<typeof VoiceAssistantInputSchema>): Promise<string> {
   
   const llmResponse = await run('ask-llm', async () => {
-    return ai.generate({
+    return await ai.generate({
         prompt: `You are Kisan AI, a helpful farming assistant.
           Your goal is to answer the user's query.
           Use the provided tools to answer questions about real-time data like weather or mandi prices.
@@ -42,7 +42,7 @@ export async function voiceAssistant(input: z.infer<typeof VoiceAssistantInputSc
     });
 
     const finalResponse = await run('summarize-tool-output', async () => {
-        return ai.generate({
+        return await ai.generate({
             prompt: `Summarize the following tool output in a user-friendly way. The user's original query was: "${input.query}". The response must be in ${input.language}. Tool Output: ${JSON.stringify(toolResponse)}`,
             model: 'googleai/gemini-2.0-flash',
         });
