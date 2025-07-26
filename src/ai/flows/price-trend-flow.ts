@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -14,7 +15,7 @@ import { z } from 'zod';
 const PriceTrendInputSchema = z.object({
   commodity: z.string().describe('The commodity being analyzed.'),
   prices: z.array(z.number()).describe('An array of historical modal prices for the last 30 days.'),
-  language: z.string().optional().describe("The language for the response, e.g., 'en', 'hi', 'mr'."),
+  language: z.string().optional().describe("The language for the response, e.g., 'en', 'hi', 'mr', 'kn', 'ta'."),
 });
 export type PriceTrendInput = z.infer<typeof PriceTrendInputSchema>;
 

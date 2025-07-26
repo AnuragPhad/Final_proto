@@ -1,4 +1,5 @@
-export type Language = 'en' | 'hi' | 'mr' | 'kn';
+
+export type Language = 'en' | 'hi' | 'mr' | 'kn' | 'ta';
 
 export interface Translation {
   // Settings
@@ -8,6 +9,7 @@ export interface Translation {
   hindi: string;
   marathi: string;
   kannada: string;
+  tamil: string;
   notifications: string;
   push_notifications: string;
   email_notifications: string;

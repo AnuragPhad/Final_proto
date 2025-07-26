@@ -9,6 +9,7 @@ import { useLocation } from './use-location';
 const stateToLang: Record<string, Language> = {
   'Maharashtra': 'mr',
   'Karnataka': 'kn',
+  'Tamil Nadu': 'ta',
   'Uttar Pradesh': 'hi',
   'Bihar': 'hi',
   'Delhi': 'hi',

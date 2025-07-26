@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -24,7 +25,7 @@ const MandiRateSummaryInputSchema = z.object({
   district: z.string().describe('The district where the market is located.'),
   date: z.string().describe("The date for the rates in 'do MMMM yyyy' format."),
   rates: z.array(MandiRateDataSchema).optional().describe('The list of market rates for the given commodity and location.'),
-  language: z.string().optional().describe("The language for the response, e.g., 'en', 'hi', 'mr'."),
+  language: z.string().optional().describe("The language for the response, e.g., 'en', 'hi', 'mr', 'kn', 'ta'."),
 });
 
 export type MandiRateSummaryInput = z.infer<typeof MandiRateSummaryInputSchema>;

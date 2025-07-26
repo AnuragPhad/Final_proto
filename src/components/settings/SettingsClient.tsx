@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -52,6 +53,10 @@ export default function SettingsClient() {
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="kn" id="kn" />
                   <Label htmlFor="kn">{t.kannada}</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="ta" id="ta" />
+                  <Label htmlFor="ta">{t.tamil}</Label>
                 </div>
               </RadioGroup>
             </CardContent>

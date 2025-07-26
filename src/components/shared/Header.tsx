@@ -73,6 +73,7 @@ export default function Header() {
                         <DropdownMenuRadioItem value="hi">{t.hindi}</DropdownMenuRadioItem>
                         <DropdownMenuRadioItem value="mr">{t.marathi}</DropdownMenuRadioItem>
                         <DropdownMenuRadioItem value="kn">{t.kannada}</DropdownMenuRadioItem>
+                        <DropdownMenuRadioItem value="ta">{t.tamil}</DropdownMenuRadioItem>
                     </DropdownMenuRadioGroup>
                 </DropdownMenuContent>
             </DropdownMenu>

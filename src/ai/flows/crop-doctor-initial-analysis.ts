@@ -17,7 +17,7 @@ const CropDoctorInitialAnalysisInputSchema = z.object({
     .describe(
       "A photo of a diseased crop, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
     ),
-  language: z.string().optional().describe("The language for the response, e.g., 'en', 'hi', 'mr', 'kn'."),
+  language: z.string().optional().describe("The language for the response, e.g., 'en', 'hi', 'mr', 'kn', 'ta'."),
 });
 export type CropDoctorInitialAnalysisInput = z.infer<typeof CropDoctorInitialAnalysisInputSchema>;
 
