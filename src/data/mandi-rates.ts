@@ -1,6 +1,7 @@
 import { puneMandiRates } from "./pune-mandi-rates";
 import { nashikMandiRates } from "./nashik-mandi-rates";
 import { solapurMandiRates } from "./solapur-mandi-rates";
+import { bengaluruUrbanMandiRates } from "./bengaluru-urban-mandi-rates";
 
 export interface MandiRate {
   state: string;
@@ -30,6 +31,7 @@ const mockData: { [key: string]: MandiRate[] } = {
   'Pune': puneMandiRates,
   'Nashik': nashikMandiRates,
   'Solapur': solapurMandiRates,
+  'Bengaluru Urban': bengaluruUrbanMandiRates,
 };
 
 export const getMandiRates = async (state: string, district: string): Promise<MandiRate[]> => {

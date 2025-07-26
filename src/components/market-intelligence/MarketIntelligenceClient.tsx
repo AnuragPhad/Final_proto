@@ -8,6 +8,7 @@ import { HandPlatter, Wheat, Apple, Carrot, LeafyGreen, Citrus, LineChart, Brain
 import { puneMandiRates } from '@/data/pune-mandi-rates';
 import { nashikMandiRates } from '@/data/nashik-mandi-rates';
 import { solapurMandiRates } from '@/data/solapur-mandi-rates';
+import { bengaluruUrbanMandiRates } from '@/data/bengaluru-urban-mandi-rates';
 import type { MandiRate } from '@/data/mandi-rates';
 import { subDays, format, parse } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -35,6 +36,7 @@ const allSimulatedRates: { [key: string]: MandiRate[] } = {
     'Pune': puneMandiRates,
     'Nashik': nashikMandiRates,
     'Solapur': solapurMandiRates,
+    'Bengaluru Urban': bengaluruUrbanMandiRates,
 };
 
 interface MarketComparisonData {
@@ -149,13 +151,13 @@ export default function MarketIntelligenceClient() {
                         }}>
                           <SelectTrigger><SelectValue placeholder={t.select_state} /></SelectTrigger>
                           <SelectContent>
-                            {['Maharashtra'].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                            {['Maharashtra', 'Karnataka'].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                           </SelectContent>
                         </Select>
                         <Select value={selectedDistrict} onValueChange={setSelectedDistrict} disabled={!selectedState}>
                           <SelectTrigger><SelectValue placeholder={t.select_district} /></SelectTrigger>
                           <SelectContent>
-                            {Object.keys(allSimulatedRates).map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                            {Object.keys(allSimulatedRates).filter(d => districts[selectedState]?.includes(d)).map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
                           </SelectContent>
                         </Select>
                     </div>
