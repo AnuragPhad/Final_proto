@@ -1,9 +1,11 @@
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
 
 interface SpeechRecognitionOptions {
   onTranscript?: (transcript: string) => void;
+  onTranscriptFinal?: (transcript: string) => void;
 }
 
 interface SpeechRecognitionHook {
@@ -22,7 +24,7 @@ export const useSpeechRecognition = (
   const [transcript, setTranscript] = useState('');
   const [error, setError] = useState<string | null>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
-  const { onTranscript } = options;
+  const { onTranscript, onTranscriptFinal } = options;
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -34,7 +36,7 @@ export const useSpeechRecognition = (
     }
 
     const recognition = new SpeechRecognition();
-    recognition.continuous = false; // Important: set to false for single commands
+    recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = 'en-IN';
 
@@ -58,10 +60,10 @@ export const useSpeechRecognition = (
         .join('');
         
       setTranscript(currentTranscript);
+      if(onTranscript) onTranscript(currentTranscript);
 
-      if (event.results[0]?.isFinal && onTranscript) {
-        onTranscript(currentTranscript.trim());
-        recognition.stop();
+      if (event.results[event.results.length - 1]?.isFinal && onTranscriptFinal) {
+        onTranscriptFinal(currentTranscript.trim());
       }
     };
 

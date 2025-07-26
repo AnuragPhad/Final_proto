@@ -72,9 +72,9 @@ export default function DashboardClient() {
           language,
           location: location ? `${location.district}, ${location.state}` : undefined
       });
-      const assistantMessage: Message = { role: 'assistant', content: result.response };
+      const assistantMessage: Message = { role: 'assistant', content: result };
       setMessages(prev => [...prev, assistantMessage]);
-      handleAudioResponse(result.response);
+      handleAudioResponse(result);
     } catch (err) {
       console.error("Chatbot error", err);
       const errorMessage: Message = { role: 'assistant', content: "Sorry, I couldn't process that. Please try again." };
@@ -86,12 +86,13 @@ export default function DashboardClient() {
 
   const {
     isListening,
+    transcript,
     startListening,
     stopListening,
     error: speechError,
     hasRecognitionSupport
   } = useSpeechRecognition({
-      onTranscript: (transcript) => {
+      onTranscriptFinal: (transcript) => {
         handleSubmit(transcript);
       }
   });
