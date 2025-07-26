@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react';
 import { translations } from '@/lib/i18n';
 import type { Translation, Language } from '@/lib/types';
+import { useLocation } from './use-location';
 
 const stateToLang: Record<string, Language> = {
   'Maharashtra': 'mr',
@@ -22,6 +23,7 @@ const stateToLang: Record<string, Language> = {
 
 
 export const useLanguage = () => {
+  const { setLocation, setIsLocating } = useLocation();
   const [language, setLanguage] = useState<Language>('en');
   const [t, setT] = useState<Translation>(translations.en);
   const [isMounted, setIsMounted] = useState(false);
@@ -33,35 +35,49 @@ export const useLanguage = () => {
         setLanguage(savedLang);
         setT(translations[savedLang]);
         setIsMounted(true);
+        // Also try to set location if lang is saved but location isn't
+         navigator.geolocation.getCurrentPosition(async (position) => {
+            const { latitude, longitude } = position.coords;
+            const response = await fetch(`/api/geocode?lat=${latitude}&lon=${longitude}`);
+            if (response.ok) {
+              const data = await response.json();
+              setLocation(data);
+            }
+         });
       } else {
         // If no language is saved, try to detect from location
+        setIsLocating(true);
         navigator.geolocation.getCurrentPosition(
           async (position) => {
             try {
               const { latitude, longitude } = position.coords;
               const response = await fetch(`/api/geocode?lat=${latitude}&lon=${longitude}`);
-              const data = await response.json();
-              if (response.ok && data.state) {
-                const detectedLang = stateToLang[data.state];
-                if (detectedLang) {
-                  handleLanguageChange(detectedLang, false); // Don't reload, just set
-                  setIsMounted(true);
-                  return;
+              if (response.ok) {
+                const data = await response.json();
+                setLocation(data);
+                if(data.state) {
+                    const detectedLang = stateToLang[data.state];
+                    if (detectedLang) {
+                      handleLanguageChange(detectedLang, false); // Don't reload, just set
+                    }
                 }
               }
             } catch (error) {
               console.error("Could not auto-detect language based on location.", error);
+            } finally {
+                // Fallback to English if detection fails
+                setLanguage('en');
+                setT(translations.en);
+                setIsMounted(true);
+                setIsLocating(false);
             }
-            // Fallback to English if detection fails
-            setLanguage('en');
-            setT(translations.en);
-            setIsMounted(true);
           },
           () => {
              // Geolocation denied or failed, default to English
             setLanguage('en');
             setT(translations.en);
             setIsMounted(true);
+            setIsLocating(false);
           }
         );
       }
@@ -76,6 +92,7 @@ export const useLanguage = () => {
       setLanguage(newLang);
       setT(translations[newLang]);
       localStorage.setItem('kisan-ai-lang', newLang);
+      setIsMounted(true); // Ensure it's true after a manual change too
       if (shouldReload) {
         window.location.reload();
       }
@@ -86,5 +103,5 @@ export const useLanguage = () => {
   // then hydration mismatch on client.
   const currentTranslations = isMounted ? t : translations.en;
 
-  return { language, t: currentTranslations, handleLanguageChange };
+  return { language, t: currentTranslations, handleLanguageChange, isMounted };
 }
