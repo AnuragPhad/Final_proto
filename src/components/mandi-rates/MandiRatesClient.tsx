@@ -15,6 +15,9 @@ import { format, subDays } from 'date-fns';
 import { states, districts } from '@/data/locations';
 import { getMandiRates as getMandiRatesFromApi, type MandiRate } from '@/data/mandi-rates';
 import { puneMandiRates } from '@/data/pune-mandi-rates';
+import { nashikMandiRates } from '@/data/nashik-mandi-rates';
+import { solapurMandiRates } from '@/data/solapur-mandi-rates';
+import { bengaluruUrbanMandiRates } from '@/data/bengaluru-urban-mandi-rates';
 import { useSpeechRecognition } from '@/hooks/use-speech-recognition';
 import { understandMandiRateQuery, MandiRateQueryOutput } from '@/ai/flows/mandi-rate-nlu';
 import { mandiRateSummary } from '@/ai/flows/mandi-rate-summary';
@@ -54,6 +57,13 @@ const getCommodityIcon = (commodity: string) => {
     return commodityIcons['default'];
 };
 
+const mockData: { [key: string]: MandiRate[] } = {
+  'Pune': puneMandiRates,
+  'Nashik': nashikMandiRates,
+  'Solapur': solapurMandiRates,
+  'Bengaluru Urban': bengaluruUrbanMandiRates,
+};
+
 
 export default function MandiRatesClient() {
   const [selectedState, setSelectedState] = useState<string>('Maharashtra');
@@ -78,12 +88,9 @@ export default function MandiRatesClient() {
   const { toast } = useToast();
   
   const getMandiRates = useCallback(async (state: string, district: string): Promise<MandiRate[]> => {
-    // For this example, we use mock data for Pune to avoid API calls during development.
-    // In a real application, you would remove this and rely on the API.
-    if (district.toLowerCase() === 'pune') {
-      return puneMandiRates;
+    if (mockData[district]) {
+      return mockData[district];
     }
-    // This is the real API call, which you can enable for production.
     return getMandiRatesFromApi(state, district);
   }, []);
 
@@ -96,33 +103,41 @@ export default function MandiRatesClient() {
     try {
       const nluResult = await understandMandiRateQuery({ query });
       setAiSummary(nluResult.summary);
-      setCommodityFilter(nluResult.commodity);
+      
+      const commodity = nluResult.commodity;
+      let targetState = selectedState;
+      let targetDistrict = selectedDistrict;
 
+      // If location is detected in the query, update filters and fetch new data
       if (nluResult.market && nluResult.state) {
-        // If location is detected, update filters. This will trigger fetchRates.
         const stateExists = states.find(s => s.toLowerCase() === nluResult.state!.toLowerCase());
         if (stateExists) {
             const districtExists = districts[stateExists]?.find(d => d.toLowerCase() === nluResult.market!.toLowerCase());
             if (districtExists) {
-                setSelectedState(stateExists);
-                setSelectedDistrict(districtExists);
-                // Data will be fetched by the useEffect hook watching these state variables.
-                // We'll let the effect handle the rest.
-                toast({ title: 'Location Detected', description: `Searching rates in ${districtExists}, ${stateExists}.`});
+                targetState = stateExists;
+                targetDistrict = districtExists;
+                setSelectedState(targetState);
+                setSelectedDistrict(targetDistrict);
+                toast({ title: 'Location Detected', description: `Searching rates in ${targetDistrict}, ${targetState}.`});
             }
         }
-      } else {
-        // If no location, search in current location.
-        const ratesForSummary = allRates.filter(rate => {
+      }
+
+      // Fetch rates for the target location (either original or from voice)
+      const rates = await getMandiRates(targetState, targetDistrict);
+      setAllRates(rates); // Update allRates with new data if location changed
+
+      // Now filter and summarize based on the (potentially new) rates
+       const ratesForSummary = rates.filter(rate => {
             const [day, month, year] = rate.arrival_date.split('/');
             const apiDate = new Date(Number(year), Number(month) - 1, Number(day));
             const isDateMatch = format(apiDate, 'yyyy-MM-dd') === format(selectedDate || new Date(), 'yyyy-MM-dd');
-            return isDateMatch && rate.commodity.toLowerCase().includes(nluResult.commodity.toLowerCase());
+            return isDateMatch && rate.commodity.toLowerCase().includes(commodity.toLowerCase());
         });
-
+        
         const summaryResult = await mandiRateSummary({
-            commodity: nluResult.commodity,
-            district: selectedDistrict,
+            commodity: commodity,
+            district: targetDistrict,
             date: format(selectedDate || new Date(), 'do MMMM yyyy'),
             rates: ratesForSummary.map(r => ({
                 market: r.market,
@@ -133,13 +148,14 @@ export default function MandiRatesClient() {
             language: language
         });
         setAiSummary(summaryResult.summary);
-        setIsSummarizing(false);
-        setIsVoiceSearchActive(false);
-      }
+        setCommodityFilter(commodity);
+
+
     } catch (e: any) {
         console.error(e);
         toast({ variant: 'destructive', title: 'AI Error', description: e.message || 'Could not process your voice command.' });
         setAiSummary('Sorry, I had trouble understanding. Please try again.');
+    } finally {
         setIsSummarizing(false);
         setIsVoiceSearchActive(false);
     }
@@ -193,39 +209,6 @@ export default function MandiRatesClient() {
       fetchRates(selectedState, selectedDistrict);
     }
   }, [selectedState, selectedDistrict, fetchRates]);
-
-  useEffect(() => {
-    // This effect runs after a voice search updates the location and new rates are fetched.
-    if (isVoiceSearchActive && !isLoading && commodityFilter) {
-      const ratesForSummary = allRates.filter(rate => {
-        const [day, month, year] = rate.arrival_date.split('/');
-        const apiDate = new Date(Number(year), Number(month) - 1, Number(day));
-        const isDateMatch = format(apiDate, 'yyyy-MM-dd') === format(selectedDate || new Date(), 'yyyy-MM-dd');
-        return isDateMatch && rate.commodity.toLowerCase().includes(commodityFilter.toLowerCase());
-      });
-
-      const generateSummary = async () => {
-        const summaryResult = await mandiRateSummary({
-          commodity: commodityFilter,
-          district: selectedDistrict,
-          date: format(selectedDate || new Date(), 'do MMMM yyyy'),
-          rates: ratesForSummary.map(r => ({
-              market: r.market,
-              minPrice: r.minPrice,
-              maxPrice: r.maxPrice,
-              modalPrice: r.modalPrice,
-          })),
-          language: language
-        });
-        setAiSummary(summaryResult.summary);
-        setIsSummarizing(false);
-        setIsVoiceSearchActive(false); // End the voice search flow
-      };
-
-      generateSummary();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isVoiceSearchActive, isLoading, allRates, commodityFilter]);
 
 
   const filteredRates = useMemo(() => {
@@ -705,3 +688,6 @@ export default function MandiRatesClient() {
 
 
 
+
+
+    
