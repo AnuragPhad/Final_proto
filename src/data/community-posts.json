@@ -1,0 +1,32 @@
+
+[
+    {
+        "user": { "name": "Ravi Kumar", "avatar": "https://ui-avatars.com/api/?name=Ravi+Kumar&background=random" },
+        "content": "Just finished planting my wheat crop for the season! Hoping for a good yield this year. What is everyone else planting?",
+        "image": "https://placehold.co/600x400.png",
+        "likes": 5,
+        "likedBy": ["Sunita Sharma", "Anil Verma"],
+        "comments": [
+            { "user": { "name": "Anil Verma", "avatar": "https://ui-avatars.com/api/?name=Anil+Verma&background=random" }, "text": "I'm planting potatoes this year. Good luck with the wheat!" }
+        ]
+    },
+    {
+        "user": { "name": "Sunita Sharma", "avatar": "https://ui-avatars.com/api/?name=Sunita+Sharma&background=random" },
+        "content": "I noticed some yellowing leaves on my tomato plants. Has anyone seen this before? Any advice would be appreciated!",
+        "image": "https://placehold.co/600x400.png",
+        "likes": 12,
+        "likedBy": ["Ravi Kumar"],
+        "comments": []
+    },
+    {
+        "user": { "name": "Anil Verma", "avatar": "https://ui-avatars.com/api/?name=Anil+Verma&background=random" },
+        "content": "The market price for onions in Nashik seems to be rising. Is now a good time to sell?",
+        "image": null,
+        "likes": 8,
+        "likedBy": [],
+        "comments": [
+            { "user": { "name": "Ravi Kumar", "avatar": "https://ui-avatars.com/api/?name=Ravi+Kumar&background=random" }, "text": "I heard the same thing. I'm considering selling a portion of my stock." },
+            { "user": { "name": "Sunita Sharma", "avatar": "https://ui-avatars.com/api/?name=Sunita+Sharma&background=random" }, "text": "Be careful, it might just be a temporary spike." }
+        ]
+    }
+]

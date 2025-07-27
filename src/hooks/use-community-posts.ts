@@ -5,53 +5,12 @@ import { useState, useEffect, useCallback } from 'react';
 import type { CommunityPost } from '@/data/community-posts';
 import { useAuth } from './use-auth';
 import { useToast } from './use-toast';
-import { database } from '@/lib/firebase';
-import { ref, onValue, get, set, serverTimestamp, push } from "firebase/database";
+import { db } from '@/lib/firebase';
+import { collection, onSnapshot, query, orderBy, Timestamp } from 'firebase/firestore';
 
-// Helper function to seed initial data if the database is empty
-const seedInitialData = async () => {
-    const postsRef = ref(database, 'posts');
-    const snapshot = await get(postsRef);
-    if (!snapshot.exists()) {
-        console.log("No posts found. Seeding initial data...");
-        const samplePosts: Omit<CommunityPost, 'id' | 'timestamp'>[] = [
-            {
-                user: { name: 'Ravi Kumar', avatar: 'https://ui-avatars.com/api/?name=Ravi+Kumar&background=random' },
-                content: 'Just finished planting my wheat crop for the season! Hoping for a good yield this year. What is everyone else planting?',
-                image: `https://placehold.co/600x400.png`,
-                likes: 5,
-                comments: [],
-                likedBy: ['Sunita', 'Anil'],
-            },
-            {
-                user: { name: 'Sunita Sharma', avatar: 'https://ui-avatars.com/api/?name=Sunita+Sharma&background=random' },
-                content: 'I noticed some yellowing leaves on my tomato plants. Has anyone seen this before? Any advice would be appreciated!',
-                image: `https://placehold.co/600x400.png`,
-                likes: 12,
-                comments: [],
-                likedBy: ['Ravi Kumar'],
-            },
-            {
-                user: { name: 'Anil Verma', avatar: 'https://ui-avatars.com/api/?name=Anil+Verma&background=random' },
-                content: 'The market price for onions in Nashik seems to be rising. Is now a good time to sell?',
-                likes: 8,
-                comments: [],
-                likedBy: [],
-            }
-        ];
-
-        for (const postData of samplePosts) {
-            const newPostRef = push(postsRef);
-            const newPost = {
-                ...postData,
-                timestamp: serverTimestamp(),
-            };
-            await set(newPostRef, newPost);
-        }
-        console.log("Initial data seeded.");
-    }
-};
-
+interface PostFromFirestore extends Omit<CommunityPost, 'timestamp'> {
+    timestamp: Timestamp;
+}
 
 export const useCommunityPosts = () => {
     const [posts, setPosts] = useState<CommunityPost[]>([]);
@@ -59,33 +18,55 @@ export const useCommunityPosts = () => {
     const [error, setError] = useState<string | null>(null);
     const { user } = useAuth();
     const { toast } = useToast();
+    
+    const fetchPosts = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const response = await fetch('/api/community/posts');
+            if (!response.ok) {
+                throw new Error('Failed to fetch posts');
+            }
+            const data = await response.json();
+            
+            // The real-time listener will handle updates, but this gives a quick initial load.
+            const processedData = data.map((post: any) => ({
+                ...post,
+                isLikedByCurrentUser: user ? post.likedBy?.includes(user.name) : false
+            }));
+            setPosts(processedData);
+
+        } catch (err: any) {
+            setError(err.message);
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch community posts.' });
+        } finally {
+            setIsLoading(false);
+        }
+    }, [toast, user]);
 
     useEffect(() => {
-        const postsRef = ref(database, 'posts');
-        setIsLoading(true);
+        // Initial fetch for quick load
+        fetchPosts();
 
-        const unsubscribe = onValue(postsRef, async (snapshot) => {
-            if (snapshot.exists()) {
-                const postsObject = snapshot.val();
-                const postsArray = Object.keys(postsObject).map(key => ({
-                    id: key,
-                    ...postsObject[key]
-                })).sort((a, b) => b.timestamp - a.timestamp);
-
-                const processedData = postsArray.map(post => ({
-                    ...post,
-                    isLikedByCurrentUser: user ? post.likedBy?.includes(user.name) : false
-                }));
-                setPosts(processedData);
-            } else {
-                // If no posts, seed the data and then let the listener pick it up
-                await seedInitialData();
-                // The onValue listener will be triggered again once data is seeded.
-                 setPosts([]);
-            }
+        // Set up real-time listener
+        const postsCollection = collection(db, 'posts');
+        const q = query(postsCollection, orderBy('timestamp', 'desc'));
+        
+        const unsubscribe = onSnapshot(q, (querySnapshot) => {
+            const postsArray: CommunityPost[] = [];
+            querySnapshot.forEach((doc) => {
+                const data = doc.data() as PostFromFirestore;
+                postsArray.push({
+                    id: doc.id,
+                    ...data,
+                    // Convert Firestore Timestamp to JS Date number
+                    timestamp: data.timestamp.toMillis(), 
+                    isLikedByCurrentUser: user ? data.likedBy?.includes(user.name) : false,
+                });
+            });
+            setPosts(postsArray);
             setIsLoading(false);
-        }, (error) => {
-            console.error(error);
+        }, (err) => {
+            console.error(err);
             setError("Failed to listen for post updates.");
             toast({ variant: 'destructive', title: 'Error', description: 'Could not connect to community feed.' });
             setIsLoading(false);
@@ -93,10 +74,11 @@ export const useCommunityPosts = () => {
 
         // Cleanup the listener when the component unmounts
         return () => unsubscribe();
-    }, [user, toast]);
+    }, [fetchPosts, toast, user]);
 
 
     const performAction = async (url: string, method: string, body?: any) => {
+        setIsLoading(true);
         try {
             const response = await fetch(url, {
                 method: method,
@@ -111,6 +93,8 @@ export const useCommunityPosts = () => {
             // No need to manually refetch, real-time listener will handle it.
         } catch (err: any) {
             toast({ variant: 'destructive', title: 'Error', description: err.message });
+        } finally {
+            setIsLoading(false);
         }
     };
 
