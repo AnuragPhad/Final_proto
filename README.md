@@ -1,4 +1,4 @@
-# Kisan AI - Your Digital Farming Assistant
+# Kisan AI - Your Digital Farming Assistant (using firebase studio and published on google cloud)
 
 Kisan AI is a modern, AI-powered web application designed to be a digital assistant for India's farmers. It provides real-time data, AI-driven insights, and community features to help farmers make informed decisions, improve crop health, and get better market returns.
 
@@ -7,6 +7,7 @@ Kisan AI is a modern, AI-powered web application designed to be a digital assist
 
 Access the platform here:  
 [https://studio--kisan-ai2-deploy.us-central1.hosted.app](https://studio--kisan-ai2-deploy.us-central1.hosted.app)
+
 
 ## ✨ Features
 
