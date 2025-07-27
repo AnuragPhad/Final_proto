@@ -9,7 +9,7 @@ import { db } from '@/lib/firebase';
 import { collection, onSnapshot, query, orderBy, Timestamp } from 'firebase/firestore';
 
 interface PostFromFirestore extends Omit<CommunityPost, 'timestamp'> {
-    timestamp: Timestamp;
+    timestamp: Timestamp | { _seconds: number, _nanoseconds: number };
 }
 
 export const useCommunityPosts = () => {
@@ -19,6 +19,29 @@ export const useCommunityPosts = () => {
     const { user } = useAuth();
     const { toast } = useToast();
     
+    // Helper to process a post from either API fetch or Firestore snapshot
+    const processPost = (post: PostFromFirestore, id: string): CommunityPost => {
+        let timestampInMillis: number;
+
+        if (post.timestamp instanceof Timestamp) {
+            // Comes from Firestore snapshot
+            timestampInMillis = post.timestamp.toMillis();
+        } else if (post.timestamp && typeof post.timestamp === 'object' && '_seconds' in post.timestamp) {
+            // Comes from initial API fetch (serialized)
+            timestampInMillis = post.timestamp._seconds * 1000;
+        } else {
+            // Fallback for any other case
+            timestampInMillis = new Date().getTime();
+        }
+
+        return {
+            id,
+            ...post,
+            timestamp: timestampInMillis,
+            isLikedByCurrentUser: user ? post.likedBy?.includes(user.name) : false,
+        };
+    };
+
     const fetchPosts = useCallback(async () => {
         setIsLoading(true);
         try {
@@ -26,13 +49,10 @@ export const useCommunityPosts = () => {
             if (!response.ok) {
                 throw new Error('Failed to fetch posts');
             }
-            const data = await response.json();
+            const data: PostFromFirestore[] = await response.json();
             
             // The real-time listener will handle updates, but this gives a quick initial load.
-            const processedData = data.map((post: any) => ({
-                ...post,
-                isLikedByCurrentUser: user ? post.likedBy?.includes(user.name) : false
-            }));
+            const processedData = data.map((post: any) => processPost(post, post.id));
             setPosts(processedData);
 
         } catch (err: any) {
@@ -55,13 +75,7 @@ export const useCommunityPosts = () => {
             const postsArray: CommunityPost[] = [];
             querySnapshot.forEach((doc) => {
                 const data = doc.data() as PostFromFirestore;
-                postsArray.push({
-                    id: doc.id,
-                    ...data,
-                    // Convert Firestore Timestamp to JS Date number
-                    timestamp: data.timestamp.toMillis(), 
-                    isLikedByCurrentUser: user ? data.likedBy?.includes(user.name) : false,
-                });
+                postsArray.push(processPost(data, doc.id));
             });
             setPosts(postsArray);
             setIsLoading(false);
