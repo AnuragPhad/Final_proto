@@ -2,8 +2,6 @@
 
 Kisan AI is a modern, AI-powered web application designed to be a digital assistant for India's farmers. It provides real-time data, AI-driven insights, and community features to help farmers make informed decisions, improve crop health, and get better market returns.
 
-![Kisan AI Dashboard](https://placehold.co/800x400.png)
-
 ## ✨ Features
 
 *   **Mandi Rates**: Check real-time commodity prices from various agricultural markets (mandis). Includes voice search (NLU), AI summaries, and price trend analysis.
