@@ -1,16 +1,26 @@
+
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Phone, Mail } from 'lucide-react';
+import { Phone, Mail, MapPin } from 'lucide-react';
 import { useLanguage } from '@/hooks/use-language';
 import { expertsData } from '@/data/experts';
-import Image from 'next/image';
+import { useLocation } from '@/hooks/use-location';
+import { Skeleton } from '@/components/ui/skeleton';
+
 
 export default function ExpertsClient() {
   const { t } = useLanguage();
+  const { location, isLocating } = useLocation();
+
+  const mapQuery = location 
+    ? `agronomists in ${location.district}, ${location.state}`
+    : 'agronomists near me';
+
+  const mapUrl = `https://maps.google.com/maps?q=${encodeURIComponent(mapQuery)}&output=embed`;
 
   return (
     <div className="container mx-auto p-4 md:p-8">
@@ -22,6 +32,39 @@ export default function ExpertsClient() {
           {t.talk_to_expert_subtitle}
         </p>
       </div>
+
+      <Card className="mb-8">
+        <CardHeader>
+            <CardTitle className="font-headline flex items-center gap-2">
+                <MapPin /> Find Local Agronomists
+            </CardTitle>
+            <CardDescription>
+                {location ? `Showing results for "${mapQuery}"` : "Allow location access to see nearby experts."}
+            </CardDescription>
+        </CardHeader>
+        <CardContent>
+            {isLocating ? (
+                <Skeleton className="w-full h-96" />
+            ) : (
+                <iframe
+                    className="w-full h-96 rounded-md border"
+                    src={mapUrl}
+                    loading="lazy"
+                    allowFullScreen
+                    referrerPolicy="no-referrer-when-downgrade"
+                ></iframe>
+            )}
+        </CardContent>
+      </Card>
+
+        <div className="text-center my-12">
+            <h2 className="font-headline text-2xl md:text-3xl font-bold tracking-tighter">
+                Featured Remote Experts
+            </h2>
+            <p className="text-md text-muted-foreground max-w-xl mx-auto mt-2">
+                Get advice from our curated list of specialists available for remote consultation.
+            </p>
+        </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {expertsData.map((expert) => (
