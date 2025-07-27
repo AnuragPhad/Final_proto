@@ -48,8 +48,8 @@ export default function CommunityClient() {
         await addPost(
           newPostContent, 
           {
-            name: user.name,
-            avatar: `https://ui-avatars.com/api/?name=${user.name.replace(' ', '+')}&background=random`,
+            name: user.name || 'Anonymous',
+            avatar: user.photoURL || `https://ui-avatars.com/api/?name=${user.name?.replace(' ', '+') || 'A'}&background=random`,
           }, 
           newPostImage
         );
@@ -90,8 +90,8 @@ export default function CommunityClient() {
   const handlePostComment = async (postId: string) => {
     if (commentContent.trim() && user) {
         const newCommentUser = {
-            name: user.name,
-            avatar: `https://ui-avatars.com/api/?name=${user.name.replace(' ', '+')}&background=random`,
+            name: user.name || 'Anonymous',
+            avatar: user.photoURL || `https://ui-avatars.com/api/?name=${user.name?.replace(' ', '+') || 'A'}&background=random`,
         };
         await addComment(postId, commentContent, newCommentUser);
         setCommentContent('');

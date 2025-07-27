@@ -21,7 +21,7 @@ import { useSidebar } from './Sidebar';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useIsClient } from '@/hooks/use-is-client';
 import { useAuth } from '@/hooks/use-auth';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useLocation } from '@/hooks/use-location';
 import { Skeleton } from '../ui/skeleton';
 
@@ -33,7 +33,7 @@ export default function Header() {
   const { setOpen } = useSidebar();
   const isMobile = useIsMobile();
   const isClient = useIsClient();
-  const { user, logout } = useAuth();
+  const { user, logout, isLoading } = useAuth();
   const { location, isLocating } = useLocation();
 
 
@@ -92,14 +92,17 @@ export default function Header() {
                 </DropdownMenuContent>
             </DropdownMenu>
 
-            {user ? (
+            {isLoading ? (
+                <Skeleton className="h-8 w-24" />
+            ) : user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex items-center gap-2">
-                    <span className="font-medium hidden sm:inline-block">{user.name}</span>
+                  <Button variant="ghost" className="flex items-center gap-2 p-0 h-8 w-8 sm:w-auto sm:px-2 sm:py-1">
                     <Avatar className="h-8 w-8">
-                       <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
+                       <AvatarImage src={user.photoURL || undefined} alt={user.name || ''} />
+                       <AvatarFallback>{user.name ? user.name.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
                     </Avatar>
+                    <span className="font-medium hidden sm:inline-block">{user.name}</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
@@ -112,10 +115,10 @@ export default function Header() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Button variant="ghost" size="icon" asChild>
+              <Button variant="ghost" asChild>
                   <Link href="/login">
-                      <User className="h-5 w-5" />
-                      <span className="sr-only">Login</span>
+                      <User className="h-5 w-5 sm:mr-2" />
+                      <span className="hidden sm:inline-block">Login</span>
                   </Link>
               </Button>
             )}
