@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ThumbsUp, MessageSquare, Send, Trash2, Paperclip, X } from 'lucide-react';
-import { Comment } from '@/data/community-posts';
+import type { Comment, CommunityPost } from '@/data/community-posts';
 import Image from 'next/image';
 import { useLanguage } from '@/hooks/use-language';
 import { useAuth } from '@/hooks/use-auth';
@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input';
 import { useCommunityPosts } from '@/hooks/use-community-posts';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
+import { formatDistanceToNow } from 'date-fns';
 
 
 export default function CommunityClient() {
@@ -27,7 +28,7 @@ export default function CommunityClient() {
   
   const [newPostContent, setNewPostContent] = useState('');
   const [newPostImage, setNewPostImage] = useState<string | null>(null);
-  const [activeCommentId, setActiveCommentId] = useState<number | null>(null);
+  const [activeCommentId, setActiveCommentId] = useState<string | null>(null);
   const [commentContent, setCommentContent] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -57,7 +58,7 @@ export default function CommunityClient() {
     }
   };
 
-  const handleLike = (postId: number) => {
+  const handleLike = (postId: string) => {
     if (!user) {
         toast({
             variant: 'destructive',
@@ -69,7 +70,7 @@ export default function CommunityClient() {
     likePost(postId);
   };
 
-  const toggleCommentInput = (postId: number) => {
+  const toggleCommentInput = (postId: string) => {
     if (!user) {
         toast({
             variant: 'destructive',
@@ -86,7 +87,7 @@ export default function CommunityClient() {
     }
   };
 
-  const handlePostComment = async (postId: number) => {
+  const handlePostComment = async (postId: string) => {
     if (commentContent.trim() && user) {
         const newCommentUser = {
             name: user.name,
@@ -97,8 +98,12 @@ export default function CommunityClient() {
     }
   }
 
-  const handleDelete = async (postId: number) => {
+  const handleDelete = async (postId: string) => {
     await deletePost(postId);
+  }
+  
+  const getCommentsForPost = (post: CommunityPost): Comment[] => {
+    return post.comments ? Object.keys(post.comments).map(key => ({ id: key, ...((post.comments as any)[key]) })) : [];
   }
 
   return (
@@ -162,6 +167,8 @@ export default function CommunityClient() {
             posts.map((post) => {
                 const isLiked = post.isLikedByCurrentUser;
                 const isOwnPost = user && user.name === post.user.name;
+                const comments = getCommentsForPost(post);
+
                 return (
                     <Card key={post.id} className="overflow-hidden">
                     <CardHeader className="flex flex-row items-center gap-4">
@@ -171,7 +178,7 @@ export default function CommunityClient() {
                         </Avatar>
                         <div className="flex-1">
                         <p className="font-semibold">{post.user.name}</p>
-                        <p className="text-xs text-muted-foreground">{post.timestamp}</p>
+                        <p className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(post.timestamp), { addSuffix: true })}</p>
                         </div>
                         {isOwnPost && (
                             <AlertDialog>
@@ -223,13 +230,13 @@ export default function CommunityClient() {
                                 <ThumbsUp className={cn("h-4 w-4", isLiked && "fill-current")} /> {t.like_button} {post.likes > 0 && `(${post.likes})`}
                             </Button>
                             <Button variant="ghost" size="sm" className="flex-1 gap-2" onClick={() => toggleCommentInput(post.id)}>
-                                <MessageSquare className="h-4 w-4" /> {t.comment_button} {post.comments.length > 0 && `(${post.comments.length})`}
+                                <MessageSquare className="h-4 w-4" /> {t.comment_button} {comments.length > 0 && `(${comments.length})`}
                             </Button>
                         </div>
-                        {(activeCommentId === post.id || post.comments.length > 0) && (
+                        {(activeCommentId === post.id || comments.length > 0) && (
                             <div className="p-4 pt-2 border-t w-full mt-2">
                                 <div className="space-y-4">
-                                    {post.comments.map(comment => (
+                                    {comments.map(comment => (
                                         <div key={comment.id} className="flex items-start gap-3">
                                             <Avatar className="h-8 w-8">
                                                 <AvatarImage src={comment.user.avatar} alt={comment.user.name} />
