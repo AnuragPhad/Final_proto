@@ -1,6 +1,6 @@
 
 export interface Comment {
-    id: number;
+    id: string; // Changed to string for Firebase keys
     user: {
         name: string;
         avatar: string;
@@ -9,16 +9,16 @@ export interface Comment {
 }
 
 export interface CommunityPost {
-    id: number;
+    id: string; // Changed to string for Firebase keys
     user: {
         name: string;
         avatar: string;
     };
-    timestamp: string;
+    timestamp: number; // Changed to number for server timestamps
     content: string;
     image?: string | null;
     likes: number;
     comments: Comment[];
-    likedBy?: string[]; // Array of user names who liked the post
+    likedBy?: string[];
     isLikedByCurrentUser?: boolean;
 }

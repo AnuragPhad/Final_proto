@@ -2,10 +2,11 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import type { CommunityPost, Comment } from '@/data/community-posts';
+import type { CommunityPost } from '@/data/community-posts';
 import { useAuth } from './use-auth';
 import { useToast } from './use-toast';
-
+import { database } from '@/lib/firebase';
+import { ref, onValue } from "firebase/database";
 
 export const useCommunityPosts = () => {
     const [posts, setPosts] = useState<CommunityPost[]>([]);
@@ -14,6 +15,7 @@ export const useCommunityPosts = () => {
     const { user } = useAuth();
     const { toast } = useToast();
 
+    // Re-fetcher function for individual actions to call
     const fetchPosts = useCallback(async () => {
         setIsLoading(true);
         try {
@@ -22,15 +24,11 @@ export const useCommunityPosts = () => {
                 throw new Error('Failed to fetch posts');
             }
             const data: CommunityPost[] = await response.json();
-            
-            // Add isLikedByCurrentUser field based on current user
             const processedData = data.map(post => ({
                 ...post,
                 isLikedByCurrentUser: user ? post.likedBy?.includes(user.name) : false
             }));
-
-            setPosts(processedData.sort((a, b) => b.id - a.id)); // Sort by newest first
-            setError(null);
+            setPosts(processedData);
         } catch (err: any) {
             setError(err.message);
             toast({ variant: 'destructive', title: 'Error', description: 'Could not load community posts.' });
@@ -39,9 +37,39 @@ export const useCommunityPosts = () => {
         }
     }, [toast, user]);
 
+
     useEffect(() => {
-        fetchPosts();
-    }, [fetchPosts]);
+        const postsRef = ref(database, 'posts');
+        setIsLoading(true);
+
+        const unsubscribe = onValue(postsRef, (snapshot) => {
+            if (snapshot.exists()) {
+                const postsObject = snapshot.val();
+                const postsArray = Object.keys(postsObject).map(key => ({
+                    id: key,
+                    ...postsObject[key]
+                })).sort((a, b) => b.timestamp - a.timestamp);
+
+                const processedData = postsArray.map(post => ({
+                    ...post,
+                    isLikedByCurrentUser: user ? post.likedBy?.includes(user.name) : false
+                }));
+                setPosts(processedData);
+            } else {
+                setPosts([]);
+            }
+            setIsLoading(false);
+        }, (error) => {
+            console.error(error);
+            setError("Failed to listen for post updates.");
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not connect to community feed.' });
+            setIsLoading(false);
+        });
+
+        // Cleanup the listener when the component unmounts
+        return () => unsubscribe();
+    }, [user, toast]);
+
 
     const performAction = async (url: string, method: string, body?: any) => {
         try {
@@ -55,35 +83,31 @@ export const useCommunityPosts = () => {
                 const errorData = await response.json();
                 throw new Error(errorData.message || 'An error occurred.');
             }
-
-            const updatedPost: CommunityPost = await response.json();
-             // After any action, re-fetch all posts to ensure UI consistency
-            await fetchPosts();
-
+            // No need to manually refetch, real-time listener will handle it.
         } catch (err: any) {
             toast({ variant: 'destructive', title: 'Error', description: err.message });
         }
     };
 
-    const addPost = useCallback(async (content: string, author: { name: string; avatar: string; }, image: string | null = null) => {
+    const addPost = async (content: string, author: { name: string; avatar: string; }, image: string | null = null) => {
         await performAction('/api/community/posts', 'POST', { content, user: author, image });
-    }, []);
+    };
 
-    const likePost = useCallback(async (postId: number) => {
+    const likePost = async (postId: number) => {
         if (!user) {
             toast({ variant: 'destructive', title: 'Login Required', description: 'You must be logged in.' });
             return;
         }
         await performAction(`/api/community/posts/${postId}/like`, 'POST', { userName: user.name });
-    }, [user, toast]);
+    };
 
-    const addComment = useCallback(async (postId: number, text: string, author: { name: string; avatar: string; }) => {
+    const addComment = async (postId: number, text: string, author: { name: string; avatar: string; }) => {
         await performAction(`/api/community/posts/${postId}/comment`, 'POST', { text, user: author });
-    }, []);
+    };
 
-    const deletePost = useCallback(async (postId: number) => {
+    const deletePost = async (postId: number) => {
         await performAction(`/api/community/posts/${postId}/delete`, 'POST');
-    }, []);
+    };
 
-    return { posts, isLoading, error, fetchPosts, addPost, likePost, addComment, deletePost };
+    return { posts, isLoading, error, addPost, likePost, addComment, deletePost };
 };

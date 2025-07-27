@@ -1,99 +1,80 @@
 
 import { NextResponse } from 'next/server';
-import fs from 'fs/promises';
-import path from 'path';
+import { database } from '@/lib/firebase';
+import { ref, get, set, push, runTransaction } from "firebase/database";
 import type { CommunityPost, Comment } from '@/data/community-posts';
-
-const jsonFilePath = path.join(process.cwd(), 'src', 'data', 'community-posts.json');
-
-// Helper function to read posts from the JSON file
-async function getPosts(): Promise<CommunityPost[]> {
-    try {
-        const fileData = await fs.readFile(jsonFilePath, 'utf-8');
-        return JSON.parse(fileData);
-    } catch (error) {
-        return [];
-    }
-}
-
-// Helper function to write posts to the JSON file
-async function savePosts(posts: CommunityPost[]): Promise<void> {
-    await fs.writeFile(jsonFilePath, JSON.stringify(posts, null, 4));
-}
 
 export async function POST(
   request: Request,
   { params }: { params: { postId: string; action: string } }
 ) {
-    const postId = parseInt(params.postId, 10);
-    const action = params.action;
+    const { postId, action } = params;
 
-    if (isNaN(postId)) {
+    if (!postId) {
         return NextResponse.json({ message: 'Invalid post ID' }, { status: 400 });
     }
+    
+    const postRef = ref(database, `posts/${postId}`);
 
-    let posts = await getPosts();
-    const postIndex = posts.findIndex(p => p.id === postId);
+    try {
+        let updatedData: any = null;
 
-    if (postIndex === -1) {
-        return NextResponse.json({ message: 'Post not found' }, { status: 404 });
-    }
-
-    let updatedPost: CommunityPost | undefined;
-
-    switch (action) {
-        case 'like': {
-            const { userName } = await request.json();
-            if (!userName) {
-                 return NextResponse.json({ message: 'User name is required to like a post' }, { status: 400 });
+        switch (action) {
+            case 'like': {
+                const { userName } = await request.json();
+                if (!userName) {
+                    return NextResponse.json({ message: 'User name is required' }, { status: 400 });
+                }
+                
+                await runTransaction(postRef, (post: CommunityPost) => {
+                    if (post) {
+                        if (post.likedBy && post.likedBy.includes(userName)) {
+                            post.likes--;
+                            post.likedBy = post.likedBy.filter(u => u !== userName);
+                        } else {
+                            post.likes++;
+                            if (!post.likedBy) {
+                                post.likedBy = [];
+                            }
+                            post.likedBy.push(userName);
+                        }
+                    }
+                    updatedData = post;
+                    return post;
+                });
+                break;
             }
-            const post = posts[postIndex];
-            const likedBy = post.likedBy || [];
-            
-            if (likedBy.includes(userName)) {
-                // Unlike
-                post.likes = Math.max(0, post.likes - 1);
-                post.likedBy = likedBy.filter(name => name !== userName);
-            } else {
-                // Like
-                post.likes += 1;
-                post.likedBy = [...likedBy, userName];
+
+            case 'comment': {
+                const { text, user } = await request.json();
+                if (!text || !user) {
+                    return NextResponse.json({ message: 'Text and user are required' }, { status: 400 });
+                }
+                
+                const commentsRef = ref(database, `posts/${postId}/comments`);
+                const newCommentRef = push(commentsRef);
+                const newComment: Omit<Comment, 'id'> = { text, user };
+                await set(newCommentRef, newComment);
+                
+                const snapshot = await get(postRef);
+                updatedData = snapshot.val();
+                break;
             }
-            updatedPost = post;
-            break;
+
+            case 'delete': {
+                await set(postRef, null);
+                return NextResponse.json({ message: 'Post deleted successfully' });
+            }
+
+            default:
+                return NextResponse.json({ message: 'Invalid action' }, { status: 400 });
         }
 
-        case 'comment': {
-            const { text, user } = await request.json();
-             if (!text || !user) {
-                return NextResponse.json({ message: 'Text and user are required for a comment' }, { status: 400 });
-            }
-            const post = posts[postIndex];
-            const newComment: Comment = {
-                id: Date.now(),
-                text,
-                user,
-            };
-            post.comments.push(newComment);
-            updatedPost = post;
-            break;
-        }
+        const finalSnapshot = await get(postRef);
+        return NextResponse.json({ id: postId, ...finalSnapshot.val() });
 
-        case 'delete': {
-            posts.splice(postIndex, 1);
-            await savePosts(posts);
-            return NextResponse.json({ message: 'Post deleted successfully' });
-        }
-
-        default:
-            return NextResponse.json({ message: 'Invalid action' }, { status: 400 });
+    } catch (error) {
+        console.error(`Firebase action '${action}' error:`, error);
+        return NextResponse.json({ message: 'Failed to perform action on Firebase post' }, { status: 500 });
     }
-
-    if (updatedPost) {
-        posts[postIndex] = updatedPost;
-        await savePosts(posts);
-        return NextResponse.json(updatedPost);
-    }
-
-    return NextResponse.json({ message: 'Could not perform action' }, { status: 500 });
 }
