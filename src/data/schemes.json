@@ -89,5 +89,35 @@
     "state": "Uttar Pradesh",
     "age": [18, 100],
     "link": "https://www.myscheme.gov.in/schemes/sps/uptass"
+  },
+  {
+    "id": 10,
+    "title": "Post-Matric Scholarship for Students with Disabilities",
+    "description": "Scholarship to provide financial assistance to the parents of students with disabilities for studying in the pre-matric level and post-matric level.",
+    "category": "Education",
+    "ministry": "Ministry of Social Justice and Empowerment",
+    "state": "Central",
+    "age": [14, 25],
+    "link": "https://scholarships.gov.in/"
+  },
+  {
+    "id": 11,
+    "title": "Mukhyamantri Amrutum Yojana",
+    "description": "A health insurance scheme in Gujarat providing financial protection to families living below the poverty line.",
+    "category": "Health & Wellness",
+    "ministry": "Government of Gujarat",
+    "state": "Gujarat",
+    "age": [0, 100],
+    "link": "https://www.ma.gujarat.gov.in/"
+  },
+  {
+    "id": 12,
+    "title": "Rythu Bandhu Scheme",
+    "description": "A farmer investment support scheme by the Government of Telangana to support farmer's investment for two crops a year.",
+    "category": "Agriculture & Rural Development",
+    "ministry": "Government of Telangana",
+    "state": "Telangana",
+    "age": [18, 100],
+    "link": "https://rythubandhu.telangana.gov.in/"
   }
 ]
